@@ -24,8 +24,7 @@ export function Welcome() {
           {SCHOOL_NAME}
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Here is what&apos;s happening across your school today — Spring
-          Session 2026.
+          Here is what&apos;s happening across your school today — Session 2026.
         </p>
       </div>
 

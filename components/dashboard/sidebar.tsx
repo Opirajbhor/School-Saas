@@ -3,26 +3,23 @@
 import { cn } from "@/lib/utils";
 import {
   BookOpen,
-  CalendarDays,
   ClipboardList,
   FileBarChart,
   GraduationCap,
-  LayoutDashboard,
   Layers,
   Library,
   PencilLine,
   School,
   Settings,
-  UserCog,
-  Users,
 } from "lucide-react";
 import { RxDashboard } from "react-icons/rx";
 import { PiStudentDuotone } from "react-icons/pi";
 import { LuUsers } from "react-icons/lu";
+import Link from "next/link";
 const nav = [
   {
     group: "Overview",
-    items: [{ name: "Dashboard", icon: RxDashboard, active: true }],
+    items: [{ name: "Dashboard", icon: RxDashboard }],
   },
   {
     group: "People",
@@ -34,7 +31,6 @@ const nav = [
   {
     group: "Academics",
     items: [
-      { name: "Sessions", icon: CalendarDays },
       { name: "Classes", icon: School },
       { name: "Sections", icon: Layers },
       { name: "Subjects", icon: Library },
@@ -85,22 +81,19 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
             <ul className="flex flex-col gap-1">
               {section.items.map((item) => (
                 <li key={item.name}>
-                  <a
+                  <Link
                     href="#"
                     title={collapsed ? item.name : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                       collapsed && "justify-center",
-                      item?.active
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                     )}
                   >
                     <item.icon className="size-4.5 shrink-0" />
                     {!collapsed && (
                       <span className="truncate">{item.name}</span>
                     )}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -109,7 +102,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       </nav>
 
       <div className="border-t border-sidebar-border p-3">
-        <a
+        <Link
           href="#"
           title={collapsed ? "Settings" : undefined}
           className={cn(
@@ -119,7 +112,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         >
           <Settings className="size-[18px] shrink-0" />
           {!collapsed && <span>Settings</span>}
-        </a>
+        </Link>
       </div>
     </aside>
   );

@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +10,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Bell, ChevronDown, PanelLeft, Search } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { Bell, ChevronDown, PanelLeft, Search } from "lucide-react";
+import { currentSession } from "@/lib/utils/current-session";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   return (
@@ -32,6 +33,12 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
           placeholder="Search students, exams, results..."
           className="h-9 border-border bg-secondary/60 pl-9 text-sm"
         />
+      </div>
+      <div>
+        <h2>
+          Current Session -{" "}
+          <span className="text-primary font-bold">{currentSession}</span>
+        </h2>
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
@@ -55,7 +62,9 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
               </AvatarFallback>
             </Avatar>
             <div className="hidden text-left leading-tight lg:block">
-              <p className="text-sm font-medium text-foreground">Rania Adeyemi</p>
+              <p className="text-sm font-medium text-foreground">
+                Rania Adeyemi
+              </p>
               <p className="text-xs text-muted-foreground">Administrator</p>
             </div>
             <ChevronDown className="hidden size-4 text-muted-foreground lg:block" />
@@ -72,9 +81,9 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }
 
 function Separator() {
-  return <div className="mx-1 hidden h-6 w-px bg-border lg:block" />
+  return <div className="mx-1 hidden h-6 w-px bg-border lg:block" />;
 }

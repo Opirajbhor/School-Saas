@@ -5,7 +5,7 @@ import { TrendingDown, TrendingUp } from "lucide-react"
 
 export function StatCards() {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.label} className="gap-0 p-5">
           <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
