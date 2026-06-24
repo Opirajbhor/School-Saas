@@ -9,8 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { recentResults } from "@/lib/dashboard-data"
-import { cn } from "@/lib/utils"
+import { recentResults } from "@/src/lib/dashboard-data"
+import { cn } from "@/src/lib/utils"
 
 const statusStyle = {
   Published: "border-chart-3/20 bg-chart-3/10 text-chart-3",

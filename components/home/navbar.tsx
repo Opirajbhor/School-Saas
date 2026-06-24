@@ -4,7 +4,7 @@ import stationery from "@/public/stationery.png";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import Image from "next/image";
 import { PiShieldChevronBold } from "react-icons/pi";
 

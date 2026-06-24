@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import { cn } from "@/src/lib/utils"
 import { classes, type ClassRow } from "@/lib/classes-data"
 import { MoreHorizontal, Search } from "lucide-react"
 import { useMemo, useState } from "react"

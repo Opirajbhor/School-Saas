@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bell, ChevronDown, PanelLeft, Search } from "lucide-react";
-import { currentSession } from "@/lib/utils/current-session";
+import { currentSession } from "@/src/lib/utils/current-session";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   return (

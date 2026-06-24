@@ -1,5 +1,5 @@
 "use client";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -7,6 +7,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { SignUpType, signUpZod } from "@/src/validation/auth.zod";
@@ -35,10 +36,15 @@ export function SignupForm({
       confirmPassword: "",
     },
   });
-  const onSubmit = (data: SignUpType) => {
-    console.log(data);
+  toast.success("data");
 
-    
+  const onSubmit = async (data: SignUpType) => {
+      try{
+        const res = await fetch('/api/')
+      }
+      catch(err){
+
+      }
   };
 
   return (

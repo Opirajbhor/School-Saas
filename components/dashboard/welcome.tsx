@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { SCHOOL_NAME } from "@/lib/dashboard-data";
+import { SCHOOL_NAME } from "@/src/lib/dashboard-data";
 import {
   FileBarChart,
   GraduationCap,

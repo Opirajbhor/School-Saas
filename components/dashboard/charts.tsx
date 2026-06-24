@@ -7,7 +7,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { resultPerformance, studentGrowth } from "@/lib/dashboard-data"
+import { resultPerformance, studentGrowth } from "@/src/lib/dashboard-data"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 const growthConfig = {

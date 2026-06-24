@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({
        h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
+      <Toaster />
     </html>
   );
 }
