@@ -17,7 +17,7 @@ import {
 import { useState } from "react";
 import { string } from "zod";
 
-export default function BdAddress() {
+export default function BdAddress({ control, setValue }) {
   // divisions
   const [selectDivision, setSelectDivision] = useState(null);
   const divisionId = bd_divisions?.divisions?.find(
@@ -32,25 +32,27 @@ export default function BdAddress() {
     (item) => item.bn_name === selectDistrict,
   );
   // upazila
-  const [selectUpzaila, setSelectUpzaila] = useState(null);
   const upazilas = bd_upazilas?.upazilas?.filter(
     (item) => item?.district_id === districtId?.id,
   );
-  const UpzailaId = bd_upazilas?.upazilas?.find(
-    (item) => item.bn_name === selectUpzaila,
-  );
 
   return (
-    <div className="flex items-center justify-around">
+    <div className="flex items-center justify-left gap-10">
       {/* divison */}
-      <div className="flex items-center gap-2 ">
+      <div className="flex items-center gap-1  ">
         <h5>বিভাগ :</h5>
-        <Select onValueChange={setSelectDivision}>
+        <Select
+          className="border-3 p-5 bg-green-500"
+          onValueChange={(value) => {
+            setSelectDivision(value);
+            setValue("division", value);
+          }}
+        >
           <SelectTrigger className={`cursor-pointer`}>
             <SelectValue placeholder="Select Division" />
           </SelectTrigger>
 
-          <SelectContent>
+          <SelectContent className={"p-2"}>
             {bd_divisions.divisions.map((item) => (
               <SelectItem key={item.id} value={String(item.bn_name)}>
                 {item.bn_name}
@@ -60,14 +62,19 @@ export default function BdAddress() {
         </Select>
       </div>
       {/* district */}
-      <div className="flex items-center gap-2 ">
+      <div className="flex items-center gap-1 ">
         <h5>জেলা :</h5>
-        <Select onValueChange={setSelectDistrict}>
+        <Select
+          onValueChange={(value) => {
+            setSelectDistrict(value);
+            setValue("district", value);
+          }}
+        >
           <SelectTrigger className={`cursor-pointer`}>
             <SelectValue placeholder="Select Division" />
           </SelectTrigger>
 
-          <SelectContent>
+          <SelectContent className={"p-2"}>
             {districts.map((item) => (
               <SelectItem key={item.id} value={String(item.bn_name)}>
                 {item.bn_name}
@@ -77,14 +84,18 @@ export default function BdAddress() {
         </Select>
       </div>
       {/* upazila */}
-      <div className="flex items-center gap-2 ">
+      <div className="flex items-center gap-1 ">
         <h5> উপজেলা :</h5>
-        <Select onValueChange={setSelectUpzaila}>
+        <Select
+          onValueChange={(value) => {
+            setValue("upazila", value);
+          }}
+        >
           <SelectTrigger className={`cursor-pointer`}>
             <SelectValue placeholder="Select Division" />
           </SelectTrigger>
 
-          <SelectContent>
+          <SelectContent className={"p-2"}>
             {upazilas.map((item) => (
               <SelectItem key={item.id} value={String(item.bn_name)}>
                 {item.bn_name}
