@@ -10,11 +10,32 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Welcome } from "@/components/dashboard/welcome";
-import { useState } from "react";
+import { authClient } from "@/src/better-auth/auth-client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Page() {
   const [collapsed, setCollapsed] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
 
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/auth/login");
+    }
+  }, [session, isPending, router]);
+
+  if (isPending) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p>Verifying authentication...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar collapsed={collapsed} />

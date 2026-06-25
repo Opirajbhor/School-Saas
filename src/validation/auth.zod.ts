@@ -63,3 +63,18 @@ export const signUpZod = z
   });
 
 export type SignUpType = z.infer<typeof signUpZod>;
+
+export const logInZod = z.object({
+  email: z.string().email("Please enter a valid email address"),
+
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(100, "Password is too long")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/,
+      "Password must contain uppercase, lowercase and number",
+    ),
+});
+
+export type LogInType = z.infer<typeof logInZod>;

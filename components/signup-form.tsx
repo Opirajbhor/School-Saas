@@ -13,8 +13,9 @@ import { SignUpType, signUpZod } from "@/src/validation/auth.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MdOutlineSchool } from "react-icons/md";
 import BdAddress from "@/components/bd-address/bd-address";
-import { signUpAction } from "@/src/server-actions/auth.action";
+import { signUpAction } from "@/src/server-actions/signup.action";
 import { toast } from "sonner";
+import { redirect } from "next/navigation";
 
 export function SignupForm({
   className,
@@ -40,12 +41,11 @@ export function SignupForm({
   });
 
   const onSubmit = async (data: SignUpType) => {
-    try {
-      const res = await signUpAction(data);
-      console.log(res);
-    } catch (error) {
-      console.error(error);
-      throw error;
+    const result = await signUpAction(data);
+    if (result?.success) {
+      redirect("/dashboard");
+    } else {
+      toast.error("error sign up");
     }
   };
 

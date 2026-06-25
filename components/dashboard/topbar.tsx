@@ -13,8 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, ChevronDown, PanelLeft, Search } from "lucide-react";
 import { currentSession } from "@/src/lib/utils/current-session";
+import { authClient } from "@/src/better-auth/auth-client";
+import Image from "next/image";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
       <Button
@@ -58,14 +62,20 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
           <DropdownMenuTrigger className="flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-secondary">
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-                RA
+                <Image
+                  src={user?.image || "/avatar.png"}
+                  alt={user?.name || "user"}
+                  height={30}
+                  width={30}
+                  className="rounded-full"
+                />
               </AvatarFallback>
             </Avatar>
             <div className="hidden text-left leading-tight lg:block">
               <p className="text-sm font-medium text-foreground">
-                Rania Adeyemi
+                {user?.name}
               </p>
-              <p className="text-xs text-muted-foreground">Administrator</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
             <ChevronDown className="hidden size-4 text-muted-foreground lg:block" />
           </DropdownMenuTrigger>

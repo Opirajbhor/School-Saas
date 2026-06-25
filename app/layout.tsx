@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Inter, Source_Serif_4, JetBrains_Mono, Geist } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
 
-const fontSans = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const fontSerif = Source_Serif_4({
   subsets: ["latin"],
@@ -31,11 +29,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`
-                ${fontSans.variable} 
-                ${fontSerif.variable}
-      ${fontMono.variable}
-       h-full antialiased`}
+      className={cn("h-full", "antialiased", fontSerif.variable, fontMono.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-full flex flex-col">
         {children}
