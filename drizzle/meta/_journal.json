@@ -15,6 +15,27 @@
       "when": 1782145832199,
       "tag": "0001_clean_piledriver",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782395283303,
+      "tag": "0002_robust_sugar_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782395725790,
+      "tag": "0003_dear_bulldozer",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782399207220,
+      "tag": "0004_wakeful_leo",
+      "breakpoints": true
     }
   ]
 }

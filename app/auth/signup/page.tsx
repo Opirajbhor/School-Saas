@@ -1,9 +1,16 @@
 import { SignupForm } from "@/components/signup-form";
-import Image from "next/image";
 import { PiShieldChevronBold } from "react-icons/pi";
 import Link from "next/link";
+import { auth } from "@/auth";
+import { headers } from "next/headers";
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  console.log("session", session);
+
   return (
     <div className="flex flex-col p-6">
       {/* Logo */}

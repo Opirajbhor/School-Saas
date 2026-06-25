@@ -37,8 +37,11 @@ export default function RootLayout({
       ${fontMono.variable}
        h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
-      <Toaster />
+      <body className="min-h-full flex flex-col">
+        {children}
+
+        <Toaster />
+      </body>
     </html>
   );
 }

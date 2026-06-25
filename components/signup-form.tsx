@@ -7,13 +7,15 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { SignUpType, signUpZod } from "@/src/validation/auth.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MdOutlineSchool } from "react-icons/md";
 import BdAddress from "@/components/bd-address/bd-address";
+import { signUpAction } from "@/src/server-actions/auth.action";
+import { toast } from "sonner";
+
 export function SignupForm({
   className,
   ...props
@@ -25,26 +27,26 @@ export function SignupForm({
       district: "",
       upazila: "",
       eiin: "",
-      institute_name_bangla: "",
-      institute_name_english: "",
-      admin_name_bangla: "",
-      admin_name_english: "",
-      admin_designation: "",
-      admin_phone: "",
+      instituteNameBangla: "",
+      instituteNameEnglish: "",
+      adminNameBangla: "",
+      adminNameEnglish: "",
+      adminDesignation: "",
+      adminPhone: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
-  toast.success("data");
 
   const onSubmit = async (data: SignUpType) => {
-      try{
-        const res = await fetch('/api/')
-      }
-      catch(err){
-
-      }
+    try {
+      const res = await signUpAction(data);
+      console.log(res);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   };
 
   return (
@@ -132,16 +134,16 @@ export function SignupForm({
               placeholder="শিক্ষা প্রতিষ্ঠানের নাম লিখুন বাংলায়"
               required
               className=" p-4"
-              {...form.register("institute_name_bangla")}
+              {...form.register("instituteNameBangla")}
             />
             <FieldDescription
               className={
-                form.formState.errors.institute_name_bangla?.message &&
+                form.formState.errors.instituteNameBangla?.message &&
                 "text-red-400"
               }
             >
-              {form.formState.errors.institute_name_bangla?.message
-                ? form.formState.errors.institute_name_bangla?.message
+              {form.formState.errors.instituteNameBangla?.message
+                ? form.formState.errors.instituteNameBangla?.message
                 : " প্রতিষ্ঠানের নাম বাংলা অক্ষরে লিখুন"}
             </FieldDescription>
           </Field>
@@ -159,16 +161,16 @@ export function SignupForm({
               placeholder="শিক্ষা প্রতিষ্ঠানের নাম লিখুন ইংরেজিতে"
               required
               className=" p-4"
-              {...form.register("institute_name_english")}
+              {...form.register("instituteNameEnglish")}
             />
             <FieldDescription
               className={
-                form.formState.errors.institute_name_english?.message &&
+                form.formState.errors.instituteNameEnglish?.message &&
                 "text-red-400"
               }
             >
-              {form.formState.errors.institute_name_english?.message
-                ? form.formState.errors.institute_name_english?.message
+              {form.formState.errors.instituteNameEnglish?.message
+                ? form.formState.errors.instituteNameEnglish?.message
                 : "প্রতিষ্ঠানের নাম ইংরেজি বড় অক্ষরে লিখুন"}
             </FieldDescription>
           </Field>
@@ -188,16 +190,15 @@ export function SignupForm({
               placeholder=" নাম লিখুন বাংলায়"
               required
               className=" p-4"
-              {...form.register("admin_name_bangla")}
+              {...form.register("adminNameBangla")}
             />
             <FieldDescription
               className={
-                form.formState.errors.admin_name_bangla?.message &&
-                "text-red-400"
+                form.formState.errors.adminNameBangla?.message && "text-red-400"
               }
             >
-              {form.formState.errors.admin_name_bangla?.message
-                ? form.formState.errors.admin_name_bangla?.message
+              {form.formState.errors.adminNameBangla?.message
+                ? form.formState.errors.adminNameBangla?.message
                 : " প্রতিষ্ঠান প্রধানের নাম বাংলায় লিখুন"}
             </FieldDescription>
           </Field>
@@ -215,16 +216,16 @@ export function SignupForm({
               placeholder="প্রতিষ্ঠানের প্রধানের নাম লিখুন ইংরেজিতে"
               required
               className=" p-4"
-              {...form.register("admin_name_english")}
+              {...form.register("adminNameEnglish")}
             />
             <FieldDescription
               className={
-                form.formState.errors.admin_name_english?.message &&
+                form.formState.errors.adminNameEnglish?.message &&
                 "text-red-400"
               }
             >
-              {form.formState.errors.admin_name_english?.message
-                ? form.formState.errors.admin_name_english?.message
+              {form.formState.errors.adminNameEnglish?.message
+                ? form.formState.errors.adminNameEnglish?.message
                 : "প্রতিষ্ঠান প্রধানের নাম ইংরেজি বড় অক্ষরে লিখুন"}
             </FieldDescription>
           </Field>
@@ -241,16 +242,16 @@ export function SignupForm({
               placeholder="প্রতিষ্ঠানের প্রধানের পদবী লিখুন "
               required
               className=" p-4"
-              {...form.register("admin_designation")}
+              {...form.register("adminDesignation")}
             />
             <FieldDescription
               className={
-                form.formState.errors.admin_designation?.message &&
+                form.formState.errors.adminDesignation?.message &&
                 "text-red-400"
               }
             >
-              {form.formState.errors.admin_designation?.message
-                ? form.formState.errors.admin_designation?.message
+              {form.formState.errors.adminDesignation?.message
+                ? form.formState.errors.adminDesignation?.message
                 : "প্রতিষ্ঠান প্রধানের পদবী লিখুন"}
             </FieldDescription>
           </Field>
@@ -269,15 +270,15 @@ export function SignupForm({
               className=" p-4"
               max={11}
               min={11}
-              {...form.register("admin_phone")}
+              {...form.register("adminPhone")}
             />
             <FieldDescription
               className={
-                form.formState.errors.admin_phone?.message && "text-red-400"
+                form.formState.errors.adminPhone?.message && "text-red-400"
               }
             >
-              {form.formState.errors.admin_phone?.message
-                ? form.formState.errors.admin_phone?.message
+              {form.formState.errors.adminPhone?.message
+                ? form.formState.errors.adminPhone?.message
                 : "প্রতিষ্ঠান মোবাইল নম্বর লিখুন"}
             </FieldDescription>
           </Field>
