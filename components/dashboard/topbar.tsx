@@ -1,20 +1,12 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Bell, ChevronDown, PanelLeft, Search } from "lucide-react";
+
+import { Bell, PanelLeft, Search } from "lucide-react";
 import { currentSession } from "@/src/lib/utils/current-session";
 import { authClient } from "@/src/better-auth/auth-client";
-import Image from "next/image";
+import DashboardProfile from "./dashboard-profile";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { data: session, isPending } = authClient.useSession();
@@ -57,38 +49,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         </Button>
 
         <Separator />
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-secondary">
-            <Avatar className="size-8">
-              <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-                <Image
-                  src={user?.image || "/avatar.png"}
-                  alt={user?.name || "user"}
-                  height={30}
-                  width={30}
-                  className="rounded-full"
-                />
-              </AvatarFallback>
-            </Avatar>
-            <div className="hidden text-left leading-tight lg:block">
-              <p className="text-sm font-medium text-foreground">
-                {user?.name}
-              </p>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
-            </div>
-            <ChevronDown className="hidden size-4 text-muted-foreground lg:block" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>School Settings</DropdownMenuItem>
-            <DropdownMenuItem>Billing</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <DashboardProfile user={session?.user} />
       </div>
     </header>
   );

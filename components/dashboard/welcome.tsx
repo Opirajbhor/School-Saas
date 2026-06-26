@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { SCHOOL_NAME } from "@/src/lib/dashboard-data";
+
 import {
   FileBarChart,
   GraduationCap,
@@ -8,20 +8,44 @@ import {
   UserPlus,
 } from "lucide-react";
 
+export type Profile = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  eiin: string;
+  instituteNameBangla: string;
+  instituteNameEnglish: string;
+  adminNameBangla: string;
+  adminNameEnglish: string;
+  adminDesignation: string;
+  adminPhone: string;
+  division: string;
+  district: string;
+  upazila: string;
+};
+interface ProfileComponentProps {
+  profile: Profile | undefined | null;
+}
 const quickActions = [
   { label: "Add Student", icon: UserPlus, primary: true },
   { label: "Create Exam", icon: FileBarChart, primary: false },
   { label: "Enter Marks", icon: PencilLine, primary: false },
   { label: "Publish Result", icon: GraduationCap, primary: false },
 ];
+export async function Welcome(profile: ProfileComponentProps) {
+  
+  const userInfo = profile.profile;
+  console.log("userInfo", userInfo);
 
-export function Welcome() {
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="text-sm font-medium text-primary">Welcome back, Rania</p>
+        <p className="text-sm font-medium text-primary">
+          Welcome back, {userInfo?.adminNameEnglish}
+        </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground text-balance">
-          {SCHOOL_NAME}
+          {userInfo?.instituteNameEnglish}
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Here is what&apos;s happening across your school today — Session 2026.
