@@ -78,3 +78,20 @@ export const logInZod = z.object({
 });
 
 export type LogInType = z.infer<typeof logInZod>;
+
+export type Profile = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  eiin: string;
+  instituteNameBangla: string;
+  instituteNameEnglish: string;
+  adminNameBangla: string;
+  adminNameEnglish: string;
+  adminDesignation: string;
+  adminPhone: string;
+  division: string;
+  district: string;
+  upazila: string;
+};

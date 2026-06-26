@@ -36,6 +36,13 @@
       "when": 1782399207220,
       "tag": "0004_wakeful_leo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782482173673,
+      "tag": "0005_premium_magus",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Profile } from "@/src/validation/auth.zod";
 
 import {
   FileBarChart,
@@ -8,22 +9,6 @@ import {
   UserPlus,
 } from "lucide-react";
 
-export type Profile = {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-  eiin: string;
-  instituteNameBangla: string;
-  instituteNameEnglish: string;
-  adminNameBangla: string;
-  adminNameEnglish: string;
-  adminDesignation: string;
-  adminPhone: string;
-  division: string;
-  district: string;
-  upazila: string;
-};
 interface ProfileComponentProps {
   profile: Profile | undefined | null;
 }
@@ -34,9 +19,7 @@ const quickActions = [
   { label: "Publish Result", icon: GraduationCap, primary: false },
 ];
 export async function Welcome(profile: ProfileComponentProps) {
-  
   const userInfo = profile.profile;
-  console.log("userInfo", userInfo);
 
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

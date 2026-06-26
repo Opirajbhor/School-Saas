@@ -5,12 +5,6 @@ import { auth } from "@/auth";
 import { headers } from "next/headers";
 
 export default async function SignupPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  console.log("session", session);
-
   return (
     <div className="flex flex-col p-6">
       {/* Logo */}

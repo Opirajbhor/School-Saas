@@ -30,7 +30,6 @@ export function LoginForm({
   const onSubmit = async (data: LogInType) => {
     try {
       const res = await loginAction(data);
-      console.log(res);
     } catch (error) {
       console.error(error);
       throw error;

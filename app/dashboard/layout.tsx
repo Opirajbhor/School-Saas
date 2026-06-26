@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
   children,
@@ -12,7 +13,7 @@ export default async function DashboardLayout({
   });
 
   if (!session) {
-    return null;
+    return redirect("/auth/login");
   }
 
   return <DashboardShell>{children}</DashboardShell>;

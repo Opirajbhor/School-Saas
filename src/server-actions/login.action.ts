@@ -22,10 +22,9 @@ export async function loginAction(data: LogInType) {
     });
     if (currentUser) {
       isSuccesfull = true;
-      console.log(currentUser);
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
   if (isSuccesfull) {
     redirect("/dashboard");
