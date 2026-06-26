@@ -7,10 +7,10 @@ import { Bell, PanelLeft, Search } from "lucide-react";
 import { currentSession } from "@/src/lib/utils/current-session";
 import { authClient } from "@/src/better-auth/auth-client";
 import DashboardProfile from "./dashboard-profile";
+import { ModeToggle } from "../theme-toggle";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const { data: session, isPending } = authClient.useSession();
-  const user = session?.user;
+  const { data: session } = authClient.useSession();
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
       <Button
@@ -38,6 +38,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <ModeToggle />
         <Button
           variant="ghost"
           size="icon"
