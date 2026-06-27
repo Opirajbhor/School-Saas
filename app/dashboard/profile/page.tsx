@@ -7,17 +7,50 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Key, Lock, User, Shield, Star } from "lucide-react";
-import { getInstituteProfile } from "@/src/server-actions/getInstitituteProfile.action";
+import {
+  getInstituteProfile,
+  instituteProfileUpdate,
+} from "@/src/server-actions/getInstitituteProfile.action";
 import { useEffect, useState } from "react";
 import { Profile } from "@/src/validation/auth.zod";
 import { SpinnerCustom } from "@/components/Spinner";
 import { CiEdit } from "react-icons/ci";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  ProfileUpdateType,
+  profileUpdateZod,
+} from "@/src/validation/profile.zod";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function TabbedUserProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [lock, setLock] = useState<boolean>(true);
+  const [btnSpin, setBtnSpin] = useState<boolean>(false);
+  // update data of profile
+  const form = useForm<ProfileUpdateType>({
+    resolver: zodResolver(profileUpdateZod),
+    defaultValues: {
+      adminNameBangla: profile?.adminNameBangla,
+      adminNameEnglish: profile?.adminNameEnglish,
+      adminDesignation: profile?.adminDesignation,
+      adminPhone: profile?.adminPhone,
+    },
+  });
+  const onSubmit = async (data: ProfileUpdateType) => {
+    setBtnSpin(true);
+    const res = await instituteProfileUpdate(data);
+
+    if (res?.success) {
+      toast.success("successfully updated");
+      setLock(true);
+    }
+    if (!res?.success) {
+      toast.error("error in updating");
+    }
+    setBtnSpin(false);
+  };
 
   useEffect(() => {
     async function getProfile() {
@@ -33,11 +66,9 @@ export default function TabbedUserProfile() {
     }
     getProfile();
   }, []);
-
   if (profile === null) {
     return <SpinnerCustom />;
   }
-
   const editButton = () => {
     setLock(!lock);
   };
@@ -100,38 +131,50 @@ export default function TabbedUserProfile() {
                     <CiEdit /> Edit
                   </Button>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {/* ---------------- */}
-                  <div className="space-y-2">
-                    <Label>প্রতিষ্ঠান প্রধানের নাম: (বাংলায়)</Label>
-                    <Input
-                      disabled={lock}
-                      defaultValue={profile.adminNameBangla}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>প্রতিষ্ঠান প্রধানের নাম: (ইংরেজিতে)</Label>
-                    <Input
-                      disabled={lock}
-                      defaultValue={profile.adminNameEnglish}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>প্রতিষ্ঠান প্রধানের পদবী:</Label>
-                    <Input
-                      disabled={lock}
-                      defaultValue={profile.adminDesignation}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>প্রতিষ্ঠান প্রধানের ফোন:</Label>
-                    <Input disabled={lock} defaultValue={profile.adminPhone} />
-                  </div>
-                </div>
 
-                <div className="mt-6 flex justify-end">
-                  <Button disabled={lock}>Save Changes</Button>
-                </div>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* ---------------- */}
+                    <div className="space-y-2">
+                      <Label>প্রতিষ্ঠান প্রধানের নাম: (বাংলায়)</Label>
+                      <Input
+                        disabled={lock}
+                        defaultValue={profile.adminNameBangla}
+                        {...form.register("adminNameBangla")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>প্রতিষ্ঠান প্রধানের নাম: (ইংরেজিতে)</Label>
+                      <Input
+                        disabled={lock}
+                        defaultValue={profile.adminNameEnglish}
+                        {...form.register("adminNameEnglish")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>প্রতিষ্ঠান প্রধানের পদবী:</Label>
+                      <Input
+                        disabled={lock}
+                        defaultValue={profile.adminDesignation}
+                        {...form.register("adminDesignation")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>প্রতিষ্ঠান প্রধানের ফোন:</Label>
+                      <Input
+                        disabled={lock}
+                        defaultValue={profile.adminPhone}
+                        {...form.register("adminPhone")}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <Button type="submit" disabled={lock}>
+                      {btnSpin && <Spinner />} Save Changes
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
