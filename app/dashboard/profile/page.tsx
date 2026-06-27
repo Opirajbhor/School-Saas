@@ -79,7 +79,7 @@ export default function TabbedUserProfile() {
         {/* Header */}
         <div className="mb-8 flex items-center gap-6">
           <Avatar className="size-20">
-            <AvatarImage src="https://github.com/shadcn.png" alt="User" />
+            <AvatarImage src={"https://github.com/shadcn.png"} alt="User" />
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
           <div>
