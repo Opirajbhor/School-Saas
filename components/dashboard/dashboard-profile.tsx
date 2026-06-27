@@ -1,3 +1,4 @@
+"use client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,8 @@ import { FaRegUserCircle } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import Link from "next/link";
 import { MdPowerSettingsNew } from "react-icons/md";
+import { authClient } from "@/src/better-auth/auth-client";
+import { useRouter } from "next/navigation";
 
 // --------------------------
 interface UserProps {
@@ -39,6 +42,7 @@ const profileItems = [
 ];
 
 const DashboardProfile = ({ user }: DashboardProfileProps) => {
+  const router = useRouter();
   return (
     <div>
       <DropdownMenu>
@@ -78,7 +82,13 @@ const DashboardProfile = ({ user }: DashboardProfileProps) => {
           ))}
 
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="flex items-center  cursor-pointer gap-2">
+          <DropdownMenuItem
+            onClick={async () => {
+              await authClient.signOut();
+              router.push("/auth/login");
+            }}
+            className="flex items-center  cursor-pointer gap-2"
+          >
             <MdPowerSettingsNew />
             Sign out
           </DropdownMenuItem>
