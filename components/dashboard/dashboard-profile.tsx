@@ -17,12 +17,14 @@ import Link from "next/link";
 import { MdPowerSettingsNew } from "react-icons/md";
 import { authClient } from "@/src/better-auth/auth-client";
 import { useRouter } from "next/navigation";
+import RedBadge from "./alert-notice/red-badge";
 
 // --------------------------
 interface UserProps {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  emailVerified: boolean;
 }
 interface DashboardProfileProps {
   user: UserProps | null | undefined;
@@ -43,6 +45,7 @@ const profileItems = [
 
 const DashboardProfile = ({ user }: DashboardProfileProps) => {
   const router = useRouter();
+
   return (
     <div>
       <DropdownMenu>
@@ -60,7 +63,13 @@ const DashboardProfile = ({ user }: DashboardProfileProps) => {
           </Avatar>
           <div className="hidden text-left leading-tight lg:block">
             <p className="text-sm font-medium text-foreground">{user?.name}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
+            <p className="text-xs text-muted-foreground">
+              {!user?.emailVerified ? (
+                <RedBadge title="Not Verified" />
+              ) : (
+                user?.email
+              )}
+            </p>
           </div>
           <ChevronDown className="hidden size-4 text-muted-foreground lg:block" />
         </DropdownMenuTrigger>

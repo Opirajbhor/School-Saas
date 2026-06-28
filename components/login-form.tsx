@@ -13,12 +13,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogInType, logInZod } from "@/src/validation/auth.zod";
 import { loginAction } from "@/src/server-actions/login.action";
+import Link from "next/link";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  
   const form = useForm<LogInType>({
     resolver: zodResolver(logInZod),
     defaultValues: {
@@ -96,7 +96,8 @@ export function LoginForm({
               </Field>
 
               <FieldDescription className="text-center">
-                Don&apos;t have an account? <a href="#">Sign up</a>
+                Don&apos;t have an account?{" "}
+                <Link href="/auth/signup">Sign up</Link>
               </FieldDescription>
             </FieldGroup>
           </form>

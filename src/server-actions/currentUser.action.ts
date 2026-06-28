@@ -1,3 +1,4 @@
+"use server";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 
@@ -6,3 +7,9 @@ export async function currentUser() {
     headers: await headers(),
   });
 }
+
+export type sessionUserType = {
+  email: string;
+  emailVerified: boolean;
+  name: string;
+};

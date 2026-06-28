@@ -79,7 +79,7 @@ export const logInZod = z.object({
 
 export type LogInType = z.infer<typeof logInZod>;
 
-export type Profile = {
+export type ProfileType = {
   id: string;
   createdAt: Date;
   updatedAt: Date;

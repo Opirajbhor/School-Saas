@@ -23,8 +23,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-
 import { cn } from "@/lib/utils";
+import AddTeacher from "@/components/dashboard/teachers/add-teacher";
 
 const usersData = [
   {
@@ -97,16 +97,10 @@ export default function Teacherpage() {
                 Filter
               </Button>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs cursor-pointer"
-                  >
-                    <Download data-icon="inline-start" />
-                    Export
-                    <ChevronDown data-icon="inline-end" />
-                  </Button>
+                <DropdownMenuTrigger render={<Button variant="outline" />}>
+                  <Download data-icon="inline-start" />
+                  Export
+                  <ChevronDown data-icon="inline-end" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuGroup>
@@ -122,13 +116,9 @@ export default function Teacherpage() {
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                size="sm"
-                className="h-8 px-3 text-xs bg-primary cursor-pointer"
-              >
-                <Plus />
-                Add User
-              </Button>
+              {/* add teacher------------------- */}
+
+              <AddTeacher />
             </div>
           </div>
         </CardHeader>
@@ -226,15 +216,11 @@ export default function Teacherpage() {
                     </td>
                     <td className="p-4">
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-3 text-xs cursor-pointer"
-                          >
-                            Actions
-                            <ChevronDown data-icon="inline-end" />
-                          </Button>
+                        <DropdownMenuTrigger
+                          render={<Button variant="outline" />}
+                        >
+                          Actions
+                          <ChevronDown data-icon="inline-end" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuGroup>

@@ -12,7 +12,7 @@ import {
   instituteProfileUpdate,
 } from "@/src/server-actions/getInstitituteProfile.action";
 import { useEffect, useState } from "react";
-import { Profile } from "@/src/validation/auth.zod";
+import { ProfileType } from "@/src/validation/auth.zod";
 import { SpinnerCustom } from "@/components/Spinner";
 import { CiEdit } from "react-icons/ci";
 import { useForm } from "react-hook-form";
@@ -23,11 +23,23 @@ import {
 } from "@/src/validation/profile.zod";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import RedAlert from "@/components/dashboard/alert-notice/red-alert";
+import {
+  currentUser,
+  sessionUserType,
+} from "@/src/server-actions/currentUser.action";
+import { getSession } from "better-auth/api";
+import { authClient } from "@/src/better-auth/auth-client";
+
+type userType = {
+  user: sessionUserType;
+};
 
 export default function TabbedUserProfile() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [lock, setLock] = useState<boolean>(true);
   const [btnSpin, setBtnSpin] = useState<boolean>(false);
+  const [sessionUser, SetSessionUser] = useState<sessionUserType>();
   // update data of profile
   const form = useForm<ProfileUpdateType>({
     resolver: zodResolver(profileUpdateZod),
@@ -59,6 +71,9 @@ export default function TabbedUserProfile() {
         if (!info) {
           setProfile(null);
         }
+        const session = await currentUser();
+        SetSessionUser(session?.user);
+        console.log(sessionUser);
         setProfile(info);
       } catch (error) {
         console.error(error);
@@ -94,7 +109,14 @@ export default function TabbedUserProfile() {
             </p>
           </div>
         </div>
-
+        {!sessionUser?.emailVerified && (
+          <div className="mb-5">
+            <RedAlert
+              title="Account is not verified!"
+              description={`Please verify your account. ${sessionUser?.email}`}
+            />
+          </div>
+        )}
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="h-auto w-full justify-start gap-6 bg-transparent p-0">
