@@ -12,30 +12,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getInstituteProfile } from "@/src/server-actions/getInstitituteProfile.action";
 import { ProfileType } from "@/src/validation/auth.zod";
 import { addTeacherType, addTeacherZod } from "@/src/validation/teacher.zod";
+import { FieldDescription } from "@/components/ui/field";
+
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { addTeacher } from "@/src/server-actions/teacher.action";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function AddTeacher() {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<ProfileType | null>(null);
-  const form = useForm<addTeacherType>({
-    resolver: zodResolver(addTeacherZod),
-    defaultValues: {
-      instituteId: profile?.id,
-      nameBangla: "",
-      nameEnglish: "",
-      designation: "",
-      mobile: "",
-      email: "",
-      photoUrl: "",
-      gender: "MALE",
-      status: "ACTIVE",
-    },
-  });
 
   //   get institute info
   useEffect(() => {
@@ -53,8 +47,46 @@ export default function AddTeacher() {
     getProfile();
   }, []);
   // ------------------
-  const onSubmit = async (data: addTeacherType) => {
-    console.log(data);
+  const form = useForm<addTeacherType>({
+    resolver: zodResolver(addTeacherZod),
+    defaultValues: {
+      instituteId: "",
+      nameBangla: "",
+      nameEnglish: "",
+      designation: "",
+      mobile: "",
+      email: "",
+      photoUrl: "",
+      gender: "MALE",
+      status: "ACTIVE",
+    },
+  });
+  const { isSubmitting } = form.formState;
+  const addBtn = async (data: addTeacherType) => {
+    const res = await addTeacher(data);
+    if (res.success === false) {
+      // If backend Zod validation failed, grab the first specific error message
+      if (res.details) {
+        const firstErrorField = Object.keys(res.details)[0];
+        const messages =
+          res.details[firstErrorField as keyof typeof res.details];
+        if (messages && messages.length > 0) {
+          toast.error(messages[0]);
+          return;
+        }
+      }
+
+      // Fallback error fallback message
+      toast.error(res.error || "An unexpected error occurred.");
+      return;
+    }
+    // Handle successful execution path
+    if (res.success === true) {
+      toast.success("Teacher added successfully");
+      form.reset(); // Wipes form states cleanly
+    }
+    console.log("raw data-", data);
+    console.log("res data-", res.data);
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -67,17 +99,15 @@ export default function AddTeacher() {
           Add User
         </Button>
       </DialogTrigger>
-      <DialogContent className="p-0 sm:max-w-lg gap-0">
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        className="p-0 sm:max-w-lg gap-0"
+      >
         <DialogHeader className="border-b px-6 py-4 pt-5">
-          <DialogTitle>Schedule a Meeting</DialogTitle>
+          <DialogTitle>শিক্ষক যুক্ত করুন</DialogTitle>
         </DialogHeader>
 
-        <form
-          onSubmit={form.handleSubmit(
-            (data) => console.log("Success Data:", data),
-            (errors) => console.log("Validation Errors:", errors), // 👈 ADD THIS TEMPORARILY
-          )}
-        >
+        <form onSubmit={form.handleSubmit(addBtn)}>
           <div className="space-y-6 p-6">
             {/* bangla name */}
             <div className="space-y-2">
@@ -86,6 +116,13 @@ export default function AddTeacher() {
                 {...form.register("nameBangla")}
                 placeholder="নাম বাংলায়"
               />
+              <FieldDescription
+                className={
+                  form.formState.errors.nameBangla?.message && "text-red-400"
+                }
+              >
+                {form.formState.errors.nameBangla?.message}
+              </FieldDescription>
             </div>
             {/* english name */}
             <div className="space-y-2">
@@ -94,44 +131,65 @@ export default function AddTeacher() {
                 {...form.register("nameEnglish")}
                 placeholder="নাম ইংরেজিতে"
               />
+              <FieldDescription
+                className={
+                  form.formState.errors.nameEnglish?.message && "text-red-400"
+                }
+              >
+                {form.formState.errors.nameEnglish?.message}
+              </FieldDescription>
             </div>
             {/* designation */}
             <div className="space-y-2">
               <Label>পদবী</Label>
               <Input {...form.register("designation")} placeholder="পদবী" />
+              <FieldDescription
+                className={
+                  form.formState.errors.designation?.message && "text-red-400"
+                }
+              >
+                {form.formState.errors.designation?.message}
+              </FieldDescription>
             </div>
             {/* mobile */}
             <div className="space-y-2">
               <Label> মোবাইল নম্বর</Label>
               <Input {...form.register("mobile")} placeholder="মোবাইল নম্বর" />
+              <FieldDescription
+                className={
+                  form.formState.errors.mobile?.message && "text-red-400"
+                }
+              >
+                {form.formState.errors.mobile?.message}
+              </FieldDescription>
             </div>
             {/* email */}
             <div className="space-y-2">
               <Label> ই-মেইল</Label>
               <Input {...form.register("email")} placeholder="ই-মেইল" />
+              <FieldDescription
+                className={
+                  form.formState.errors.email?.message && "text-red-400"
+                }
+              >
+                {form.formState.errors.email?.message}
+              </FieldDescription>
             </div>
-
-            <div className="col-span-full sm:col-span-3">
-              <label className="text-sm font-medium block mb-2">
-                লিঙ্গ (Gender)
+            {/* ---------------------gender */}
+            <div className="flex flex-col gap-1.5 w-full max-w-xs">
+              <label className="text-xs font-medium text-muted-foreground">
+                লিঙ্গ
               </label>
 
-              <div className="flex gap-2">
-                {["MALE", "FEMALE", "OTHER"].map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => form.setValue("gender", g)}
-                    className={`px-3 py-1.5 text-xs rounded-md border cursor-pointer transition-all ${
-                      form.watch("gender") === g
-                        ? "bg-primary text-primary-foreground border-primary font-medium"
-                        : "bg-background text-muted-foreground border-input hover:bg-accent"
-                    }`}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
+              <NativeSelect
+                defaultValue={form.getValues("gender")}
+                {...form.register("gender")}
+                className="w-full text-xs h-9"
+              >
+                <NativeSelectOption value="MALE">পুরুষ</NativeSelectOption>
+                <NativeSelectOption value="FEMALE">মহিলা</NativeSelectOption>
+                <NativeSelectOption value="OTHER">অন্যান্য</NativeSelectOption>
+              </NativeSelect>
             </div>
           </div>
 
@@ -141,8 +199,13 @@ export default function AddTeacher() {
                 Cancel
               </Button>
             </DialogClose>
-            <Button className="cursor-pointer" type="submit" size="sm">
-              Add Teacher
+            <Button
+              disabled={isSubmitting}
+              className="cursor-pointer"
+              type="submit"
+              size="sm"
+            >
+              {isSubmitting && <Spinner />} Add Teacher
             </Button>
           </div>
         </form>

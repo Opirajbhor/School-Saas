@@ -1,6 +1,10 @@
 import { z } from "zod";
 export const addTeacherZod = z.object({
-  instituteId: z.uuid("Invalid institute ID"),
+  instituteId: z
+    .string()
+    .uuid("Invalid institute ID")
+    .optional()
+    .or(z.literal("")),
   userId: z.string().optional(),
   nameBangla: z.string().trim().min(3, "Bangla name is required").max(100),
   nameEnglish: z.string().trim().min(3, "English name is required").max(100),
@@ -10,10 +14,24 @@ export const addTeacherZod = z.object({
     .trim()
     .min(11, "Invalid mobile number")
     .max(11, "Invalid mobile number"),
-  email: z.email("Invalid email address"),
+  email: z.string().email("Invalid email address"),
   photoUrl: z.string().url("Invalid photo URL").optional().or(z.literal("")),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   status: z.enum(["ACTIVE", "INACTIVE"]),
 });
 
 export type addTeacherType = z.infer<typeof addTeacherZod>;
+
+export type Teacherlist = {
+  id: string;
+  instituteId: string;
+  userId: string;
+  nameBangla: string;
+  nameEnglish: string;
+  designation: string;
+  mobile: string;
+  email: string;
+  photoUrl: string | "";
+  gender: "MALE" | "FEMALE" | "OTHER";
+  status: "ACTIVE" | "INACTIVE";
+};

@@ -3,7 +3,6 @@ import { auth } from "../../auth";
 import { SignUpType, signUpZod } from "../validation/auth.zod";
 import { instituteProfile } from "../db/schema/institute-profile-schema.drizzle";
 import { db } from "../db";
-import { redirect } from "next/navigation";
 
 export async function signUpAction(data: SignUpType) {
   // zod validation----------

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,30 +25,37 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";
-
-const usersData = [
-  {
-    id: "1",
-    name: "opi",
-    email: "awdkfjkadlsfj",
-    joinedDate: "15 jan",
-    avatar: "/.jpg",
-    role: "teacher",
-    lastLogin: "yesterday",
-    twoStep: true,
-  },
-];
+import { getTeacher } from "@/src/server-actions/teacher.action";
+import { Teacherlist } from "@/src/validation/teacher.zod";
 
 export default function Teacherpage() {
+  const [teachers, setTeachers] = useState<Teacherlist[] | null>();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const itemsPerPage = 6;
-  const totalPages = Math.ceil(usersData.length / itemsPerPage);
+  const totalPages = Math.ceil((teachers?.length ?? 0) / itemsPerPage);
 
-  const currentUsers = usersData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  useEffect(() => {
+    async function getlist() {
+      try {
+        const info = await getTeacher();
+        if (info === null) {
+          setTeachers(null);
+          return;
+        }
+        setTeachers(info.data as Teacherlist[]);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    getlist();
+  }, []);
+  console.log(teachers);
+  const currentUsers =
+    teachers?.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    ) ?? [];
 
   const toggleUserSelection = (userId: string) => {
     setSelectedUsers((prev) =>
@@ -138,19 +145,22 @@ export default function Teacherpage() {
                     />
                   </th>
                   <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                    User
+                    Teacher Name
                   </th>
                   <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                    Role
+                    Designation
                   </th>
                   <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Last Login
+                    GENDER
                   </th>
                   <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Two-Step
+                    E-MAIL
                   </th>
                   <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Joined Date
+                    STATUS
+                  </th>
+                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
+                    PHONE
                   </th>
                   <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
                     Actions
@@ -158,52 +168,64 @@ export default function Teacherpage() {
                 </tr>
               </thead>
               <tbody>
-                {currentUsers.map((user) => (
+                {(teachers === null || teachers?.length === 0) && (
+                  <p>No teachers found.</p>
+                )}
+                {teachers?.map((user, i) => (
                   <tr
-                    key={user.id}
+                    key={i}
                     className="border-b border-border hover:bg-muted/30 transition-colors"
                   >
-                    <td className="p-4">
+                    <td className="p-4 flex items-center justify-center gap-1">
                       <Checkbox
                         checked={selectedUsers.includes(user.id)}
                         onCheckedChange={() => toggleUserSelection(user.id)}
                       />
+                      {i + 1}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="size-10 bg-muted">
-                          <AvatarImage src={user.avatar} alt={user.name} />
+                          <AvatarImage
+                            src={user.photoUrl}
+                            alt={user.nameEnglish}
+                          />
                           <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {getInitials(user.name)}
+                            {getInitials(user.nameEnglish)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="font-medium text-foreground">
-                            {user.name}
+                            {user.nameBangla}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {user.email}
+                            {user.nameEnglish}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <span className="text-sm text-muted-foreground">
-                        {user.role}
+                        {user.designation}
                       </span>
                     </td>
                     <td className="p-4">
                       <span className="text-sm font-medium text-foreground text-nowrap">
-                        {user.lastLogin}
+                        {user.gender}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm font-medium text-foreground text-nowrap">
+                        {user.email}
                       </span>
                     </td>
                     <td className="p-4 text-center">
-                      {user.twoStep ? (
+                      {user.status === "ACTIVE" ? (
                         <Badge
                           variant="outline"
                           className="px-2.5 py-0.5 font-semibold bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800"
                         >
-                          Enabled
+                          Active
                         </Badge>
                       ) : (
                         <span className="text-sm text-muted-foreground">-</span>
@@ -211,7 +233,7 @@ export default function Teacherpage() {
                     </td>
                     <td className="p-4">
                       <span className="text-sm text-muted-foreground text-nowrap">
-                        {user.joinedDate}
+                        {user.mobile}
                       </span>
                     </td>
                     <td className="p-4">
@@ -247,8 +269,8 @@ export default function Teacherpage() {
           <div className="flex items-center justify-between p-4 border-t border-border">
             <div className="text-sm text-muted-foreground">
               Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, usersData.length)} of{" "}
-              {usersData.length} entries
+              {Math.min(currentPage * itemsPerPage, teachers?.length ?? 0)} of{" "}
+              {teachers?.length ?? 0} entries
             </div>
             <div className="flex items-center gap-2">
               <Button

@@ -1,6 +1,6 @@
 import { pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
-import { genderEnum, statusEnum, timestamps } from "../Enums/enums";
+import { timestamps } from "../Enums/enums";
 
 export const teachers = pgTable("teachers", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -16,7 +16,7 @@ export const teachers = pgTable("teachers", {
   mobile: text("mobile").notNull(),
   email: text("email").notNull(),
   photoUrl: text("photo_url"),
-  gender: genderEnum("gender").notNull(),
-  status: statusEnum("status").default("ACTIVE").notNull(),
+  gender: text("gender").notNull(),
+  status: text("status").default("ACTIVE").notNull(),
   ...timestamps,
 });
