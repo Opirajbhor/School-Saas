@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Profile } from "@/src/validation/auth.zod";
+import { ProfileType } from "@/src/validation/auth.zod";
 
 import {
   FileBarChart,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 interface ProfileComponentProps {
-  profile: Profile | undefined | null;
+  profile: ProfileType | undefined | null;
 }
 const quickActions = [
   { label: "Add Student", icon: UserPlus, primary: true },

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";
 import { getTeacher } from "@/src/server-actions/teacher.action";
 import { Teacherlist } from "@/src/validation/teacher.zod";
+import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
 
 export default function Teacherpage() {
   const [teachers, setTeachers] = useState<Teacherlist[] | null>();
@@ -50,7 +51,6 @@ export default function Teacherpage() {
     }
     getlist();
   }, []);
-  console.log(teachers);
   const currentUsers =
     teachers?.slice(
       (currentPage - 1) * itemsPerPage,
@@ -84,6 +84,7 @@ export default function Teacherpage() {
       .toUpperCase();
   };
 
+  // delete item
   return (
     <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
       {/* Main Card */}
@@ -171,6 +172,7 @@ export default function Teacherpage() {
                 {(teachers === null || teachers?.length === 0) && (
                   <p>No teachers found.</p>
                 )}
+                {/* ----------------- */}
                 {teachers?.map((user, i) => (
                   <tr
                     key={i}
@@ -237,27 +239,7 @@ export default function Teacherpage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={<Button variant="outline" />}
-                        >
-                          Actions
-                          <ChevronDown data-icon="inline-end" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuGroup>
-                            <DropdownMenuItem className="cursor-pointer py-2">
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer py-2">
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive cursor-pointer py-2">
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <DeleteTeacher user={user} />
                     </td>
                   </tr>
                 ))}

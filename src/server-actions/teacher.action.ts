@@ -4,7 +4,7 @@ import { db } from "../db";
 import { verifyUser } from "./verifyUser.action";
 import { addTeacherType, addTeacherZod } from "../validation/teacher.zod";
 import { teachers } from "../db/schema/teacher.drizzle";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export async function addTeacher(data: addTeacherType) {
   const verify = await verifyUser();
@@ -74,5 +74,50 @@ export async function getTeacher() {
   } catch (error) {
     console.error("Database error in Teachers list:", error);
     throw new Error("Failed to fetch Teachers list.");
+  }
+}
+
+export async function deleteTeacher(teacherId: string) {
+  const verify = await verifyUser();
+  if (!verify || verify.success === false || !verify.profile) {
+    return {
+      success: false,
+      error:
+        verify?.success === false
+          ? verify.error
+          : "Failed to verify user profile.",
+    };
+  }
+  const instituteId = verify.profile.id;
+  try {
+    // find teacher
+    const teacher = await db.query.teachers.findFirst({
+      where: and(
+        eq(teachers.id, teacherId),
+        eq(teachers.instituteId, instituteId),
+      ),
+    });
+    if (!teacher) {
+      return {
+        success: false,
+        error: "Teacher not found.",
+      };
+    }
+    await db
+      .delete(teachers)
+      .where(
+        and(eq(teachers.id, teacherId), eq(teachers.instituteId, instituteId)),
+      );
+    return {
+      success: true,
+      message: "Teacher deleted successfully.",
+    };
+  } catch (error) {
+    console.error("Delete teacher error:", error);
+
+    return {
+      success: false,
+      error: "Failed to delete teacher.",
+    };
   }
 }

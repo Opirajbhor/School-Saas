@@ -1,22 +1,23 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 interface InfiniteSliderProps {
   children: React.ReactNode;
   duration?: number;
-  direction?: 'left' | 'right';
+  direction?: "left" | "right";
   className?: string;
 }
 
 export function InfiniteSlider({
   children,
   duration = 20,
-  direction = 'left',
+
+  direction = "left",
   className,
 }: InfiniteSliderProps) {
-  const isLeft = direction === 'left';
+  const isLeft = direction === "left";
 
   return (
     <div className={`overflow-hidden ${className}`}>
@@ -28,7 +29,7 @@ export function InfiniteSlider({
         transition={{
           duration,
           repeat: Infinity,
-          ease: 'linear',
+          ease: "linear",
         }}
       >
         {children}
