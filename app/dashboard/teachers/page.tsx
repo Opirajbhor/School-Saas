@@ -40,7 +40,7 @@ export default function Teacherpage() {
     async function getlist() {
       try {
         const info = await getTeacher();
-        if (info === null) {
+        if (info.success === false) {
           setTeachers(null);
           return;
         }

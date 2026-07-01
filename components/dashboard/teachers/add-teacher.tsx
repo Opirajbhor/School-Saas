@@ -29,23 +29,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 export default function AddTeacher() {
   const [open, setOpen] = useState(false);
-  const [profile, setProfile] = useState<ProfileType | null>(null);
 
-  //   get institute info
-  useEffect(() => {
-    async function getProfile() {
-      try {
-        const info = await getInstituteProfile();
-        if (!info) {
-          setProfile(null);
-        }
-        setProfile(info);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    getProfile();
-  }, []);
   // ------------------
   const form = useForm<addTeacherType>({
     resolver: zodResolver(addTeacherZod),

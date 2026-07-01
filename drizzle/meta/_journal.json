@@ -64,6 +64,13 @@
       "when": 1782668488781,
       "tag": "0008_high_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782916221007,
+      "tag": "0009_sturdy_kree",
+      "breakpoints": true
     }
   ]
 }
