@@ -33,7 +33,6 @@ const nav = [
     items: [
       { name: "Sessions", link: "/dashboard/academic-sessions", icon: School },
       { name: "Classes", link: "/dashboard/classes", icon: School },
-      { name: "Sections", link: "/dashboard/sections", icon: Layers },
       { name: "Subjects", link: "/dashboard/subjects", icon: Library },
       { name: "Enrollments", link: "/dashboard/enrollments", icon: BookOpen },
     ],

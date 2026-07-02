@@ -109,7 +109,7 @@ export default function SessionPage() {
           <CardContent className="[&>svg]:text-muted-foreground flex flex-col items-center [&>svg]:size-7">
             <IoMdCheckmarkCircle className="text-green-400" />
 
-            <CardTitle className="mt-4 mb-3 text-2xl leading-10 font-semibold md:text-3xl lg:text-4xl">
+            <CardTitle className="mt-4 mb-3 text-2xl leading-10 font-semibold md:text-xl ">
               {activeSession?.year
                 ? activeSession?.year
                 : "No Active Session Found"}
@@ -125,7 +125,7 @@ export default function SessionPage() {
             <LuCircleEqual />
 
             <CardTitle className="mt-4 mb-3 text-2xl leading-10 font-semibold md:text-3xl lg:text-4xl">
-              {"5"}
+              {sessions?.length}
             </CardTitle>
             <CardDescription className="text-xl font-medium">
               {"Total Sessions"}
@@ -141,7 +141,7 @@ export default function SessionPage() {
           {!sessions && <h4> No Academic Session found</h4>}
 
           {sessions.map((item, i) => (
-            <Card key={i} className="w-1/3">
+            <Card key={i} className="w-full">
               <CardContent className="[&>svg]:text-muted-foreground flex flex-col items-center [&>svg]:size-7">
                 <IoMdCheckmarkCircle className="text-green-400" />
 
