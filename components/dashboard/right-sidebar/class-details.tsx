@@ -1,0 +1,77 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+import ClassDeleteModal from "./delete-class-modal";
+import { classesTypeWithId } from "@/src/validation/classes.zod";
+
+export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
+  const { name, isActive, sessionId, id } = classData;
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button className="cursor-pointer h-25 text-xl" variant="outline">
+          {name}
+        </Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Class Details</SheetTitle>
+          <SheetDescription>
+            Make changes to Class. Click save when you&apos;re done.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="grid flex-1 auto-rows-min gap-6 px-4">
+          <h2 className="text-xl text-primary-foreground">
+            Class Name : {name}
+          </h2>
+          <h2 className="text-xl text-primary-foreground">
+            Session : {sessionId}
+          </h2>
+          <h2 className="text-xl text-primary-foreground">Sections : 6</h2>
+          <h2 className="text-xl text-primary-foreground">Students : 380</h2>
+          <h2 className="text-xl text-primary-foreground">
+            Status :{" "}
+            {isActive ? (
+              <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 text-sm p-3">
+                Active
+              </Badge>
+            ) : (
+              <Badge className="bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 text-sm p-3">
+                Disabled
+              </Badge>
+            )}
+          </h2>
+
+          <div>
+            <Button className="w-full cursor-pointer mb-3" variant={"outline"}>
+              Edit
+            </Button>
+            <Button className="w-full cursor-pointer mb-3" variant={"default"}>
+              Add Section
+            </Button>
+            <ClassDeleteModal classId={id!} />
+          </div>
+        </div>
+
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button variant="outline">Close</Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}

@@ -71,6 +71,20 @@
       "when": 1782916221007,
       "tag": "0009_sturdy_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783011947276,
+      "tag": "0010_oval_steve_rogers",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783057600160,
+      "tag": "0011_groovy_goblin_queen",
+      "breakpoints": true
     }
   ]
 }
