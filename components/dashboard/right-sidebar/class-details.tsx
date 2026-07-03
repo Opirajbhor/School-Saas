@@ -1,7 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetClose,
@@ -15,6 +13,7 @@ import {
 
 import ClassDeleteModal from "./delete-class-modal";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
+import AddClassSection from "./add-section";
 
 export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
   const { name, isActive, sessionId, id } = classData;
@@ -59,9 +58,8 @@ export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
             <Button className="w-full cursor-pointer mb-3" variant={"outline"}>
               Edit
             </Button>
-            <Button className="w-full cursor-pointer mb-3" variant={"default"}>
-              Add Section
-            </Button>
+            <AddClassSection classData={classData} />
+
             <ClassDeleteModal classId={id!} />
           </div>
         </div>

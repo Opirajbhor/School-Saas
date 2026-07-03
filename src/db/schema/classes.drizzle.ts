@@ -17,3 +17,20 @@ export const classesDrizzle = pgTable("classes", {
   isActive: boolean("is_active").notNull().default(true),
   ...timestamps,
 });
+
+export const sectionDrizzle = pgTable("sections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  instituteId: uuid("institute_id")
+    .notNull()
+    .references(() => instituteProfile.id, { onDelete: "cascade" }),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => academicSessions.id, { onDelete: "cascade" }),
+  classId: uuid("class_id")
+    .notNull()
+    .references(() => classesDrizzle.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  ...timestamps,
+});

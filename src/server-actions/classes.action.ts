@@ -8,7 +8,7 @@ import {
   sectionType,
   sectionZod,
 } from "../validation/classes.zod";
-import { classesDrizzle } from "../db/schema/classes.drizzle";
+import { classesDrizzle, sectionDrizzle } from "../db/schema/classes.drizzle";
 import { revalidatePath } from "next/cache";
 
 // get classes and sections
@@ -85,7 +85,6 @@ export async function postClasses(data: classesType) {
 }
 
 // delete class
-
 export async function deleteClass(classId: string) {
   const verify = await verifyUser();
   if (!verify || verify.success === false || !verify.profile) {
@@ -156,7 +155,7 @@ export async function postSection(data: sectionType) {
 
   try {
     const [newSection] = await db
-      .insert(classesDrizzle)
+      .insert(sectionDrizzle)
       .values({
         ...validatedFields.data,
         instituteId: profile?.id,
