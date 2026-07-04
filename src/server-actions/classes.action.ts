@@ -10,6 +10,7 @@ import {
 } from "../validation/classes.zod";
 import { classesDrizzle, sectionDrizzle } from "../db/schema/classes.drizzle";
 import { revalidatePath } from "next/cache";
+import { getActiveSessionId } from "./academicSession.action";
 
 // get classes and sections
 export async function getClasses() {
@@ -27,6 +28,9 @@ export async function getClasses() {
   try {
     const data = await db.query.classesDrizzle.findMany({
       where: eq(classesDrizzle.instituteId, info),
+      with: {
+        sections: true,
+      },
     });
 
     return {
@@ -58,7 +62,8 @@ export async function postClasses(data: classesType) {
       details: errorMessages,
     };
   }
-
+  // active session id
+  const sessionId = await getActiveSessionId(profile?.id);
   try {
     const [newClass] = await db
       .insert(classesDrizzle)
@@ -66,6 +71,7 @@ export async function postClasses(data: classesType) {
         ...validatedFields.data,
         instituteId: profile?.id,
         userId: profile?.userId,
+        sessionId: sessionId,
       })
       .returning();
     revalidatePath("/dashboard/*");
@@ -152,6 +158,7 @@ export async function postSection(data: sectionType) {
       details: errorMessages,
     };
   }
+  const sessionId = await getActiveSessionId(profile?.id);
 
   try {
     const [newSection] = await db
@@ -160,6 +167,7 @@ export async function postSection(data: sectionType) {
         ...validatedFields.data,
         instituteId: profile?.id,
         userId: profile?.userId,
+        sessionId: sessionId,
       })
       .returning();
     revalidatePath("/dashboard/classes");

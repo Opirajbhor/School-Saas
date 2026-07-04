@@ -55,7 +55,7 @@ export default function SessionPage() {
       instituteId: "",
       userId: "",
       year: "",
-      isActive: false,
+      isActive: true,
     },
   });
   const { isSubmitting } = form.formState;

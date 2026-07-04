@@ -19,6 +19,7 @@ export type classesType = z.infer<typeof classesZod>;
 
 export type classesTypeWithId = classesType & {
   id?: string;
+  sections?: sectionType[];
 };
 
 // section

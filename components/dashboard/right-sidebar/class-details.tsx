@@ -16,7 +16,7 @@ import { classesTypeWithId } from "@/src/validation/classes.zod";
 import AddClassSection from "./add-section";
 
 export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
-  const { name, isActive, sessionId, id } = classData;
+  const { name, isActive, sessionId, id, sections } = classData;
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -39,7 +39,7 @@ export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
           <h2 className="text-xl text-primary-foreground">
             Session : {sessionId}
           </h2>
-          <h2 className="text-xl text-primary-foreground">Sections : 6</h2>
+
           <h2 className="text-xl text-primary-foreground">Students : 380</h2>
           <h2 className="text-xl text-primary-foreground">
             Status :{" "}
@@ -53,6 +53,16 @@ export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
               </Badge>
             )}
           </h2>
+          <h2 className="text-xl text-primary-foreground">
+            Sections : {sections?.length}
+          </h2>
+          <div className="grid grid-cols-3">
+            {sections?.map((item, i) => (
+              <p className="border p-5 w-auto text-center rounded-2xl " key={i}>
+                {item.name}
+              </p>
+            ))}{" "}
+          </div>
 
           <div>
             <Button className="w-full cursor-pointer mb-3" variant={"outline"}>

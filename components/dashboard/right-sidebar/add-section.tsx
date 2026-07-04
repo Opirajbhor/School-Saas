@@ -27,7 +27,7 @@ export default function AddClassSection({
 }: {
   classData: classesTypeWithId;
 }) {
-  const { name, id, sessionId } = classData;
+  const { name, id } = classData;
   const [load, setLoad] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function AddClassSection({
     defaultValues: {
       instituteId: "",
       userId: "",
-      sessionId: sessionId,
+      sessionId: "",
       classId: id,
       name: "",
     },

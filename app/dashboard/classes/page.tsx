@@ -49,27 +49,7 @@ export default function Classes() {
     }
     getlist();
   }, []);
-  // ----------------------------------
 
-  // get all active sessions
-  const [sessions, setSessions] = useState<sessionList[]>([]);
-  const activeSession = sessions.filter((item) => item.isActive === true);
-  //   get academic sessions info
-  useEffect(() => {
-    async function getlist() {
-      try {
-        const info = await getAcademicSession();
-        if (info.success === false) {
-          setSessions([]);
-          return;
-        }
-        setSessions(info.data as sessionList[]);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    getlist();
-  }, []);
   // ------------------------------------
   const [open, setOpen] = useState<boolean>(false);
   const form = useForm<classesType>({
@@ -81,7 +61,6 @@ export default function Classes() {
     },
   });
   const { isSubmitting } = form.formState;
-
   // add class button
   const addBtn = async (data: classesType) => {
     const res = await postClasses(data);
@@ -145,35 +124,6 @@ export default function Classes() {
                   placeholder="e.g. Class 6"
                 />
               </Field>
-
-              {/* Session */}
-              <FormField
-                control={form.control}
-                name="sessionId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Session</FormLabel>
-
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Session" />
-                        </SelectTrigger>
-                      </FormControl>
-
-                      <SelectContent>
-                        {activeSession.map((item, i) => (
-                          <SelectItem key={i} value={item.id}>
-                            {item.year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="flex justify-end">
                 <Button

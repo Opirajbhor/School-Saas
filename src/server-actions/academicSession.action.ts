@@ -6,7 +6,7 @@ import {
   academicSessionZod,
 } from "../validation/academicSessions.zod";
 import { academicSessions } from "../db/schema/academic-session.drizzle";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 // post
 export async function acadecmicSession(data: academicSessionType) {
@@ -37,12 +37,22 @@ export async function acadecmicSession(data: academicSessionType) {
         ...validatedFields.data,
         instituteId: profile.id,
         userId: profile.userId,
+        isActive: true,
       })
       .returning();
-
+    // deactivate others
+    await db
+      .update(academicSessions)
+      .set({ isActive: false })
+      .where(
+        and(
+          eq(academicSessions.instituteId, profile.id),
+          ne(academicSessions.id, newSession.id),
+        ),
+      );
     return {
       success: true,
-      data: JSON.parse(JSON.stringify(newSession)),
+      data: newSession,
     };
   } catch (error) {
     console.error("Database error during academic session creation:", error);
@@ -79,4 +89,21 @@ export async function getAcademicSession() {
     console.error("Database error in Academic Session list:", error);
     throw new Error("Failed to fetch Academic Session list.");
   }
+}
+
+// get active session id
+export async function getActiveSessionId(instituteId: string) {
+  const session = await db.query.academicSessions.findFirst({
+    where: and(
+      eq(academicSessions.instituteId, instituteId),
+      eq(academicSessions.isActive, true),
+    ),
+    columns: {
+      id: true,
+    },
+  });
+
+  if (!session) throw new Error("No active session found");
+
+  return session.id;
 }

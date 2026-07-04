@@ -19,4 +19,5 @@ export const teachers = pgTable("teachers", {
   gender: text("gender").notNull(),
   status: text("status").default("ACTIVE").notNull(),
   ...timestamps,
-});
+}
+);
