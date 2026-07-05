@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const addSubjectZod = z.object({
-  instituteId: z.uuid("Invalid institute id"),
-  sessionId: z.uuid("Invalid session id"),
+  instituteId: z.uuid("Invalid institute id").optional().or(z.literal("")),
+  sessionId: z.uuid("Invalid session id").optional().or(z.literal("")),
   name: z
     .string()
     .trim()
