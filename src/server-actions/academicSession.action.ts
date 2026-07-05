@@ -31,29 +31,32 @@ export async function acadecmicSession(data: academicSessionType) {
     };
   }
   try {
-    const [newSession] = await db
-      .insert(academicSessions)
-      .values({
-        ...validatedFields.data,
-        instituteId: profile.id,
-        userId: profile.userId,
-        isActive: true,
-      })
-      .returning();
-    // deactivate others
-    await db
-      .update(academicSessions)
-      .set({ isActive: false })
-      .where(
-        and(
-          eq(academicSessions.instituteId, profile.id),
-          ne(academicSessions.id, newSession.id),
-        ),
-      );
-    return {
-      success: true,
-      data: newSession,
-    };
+    return await db.transaction(async (tx) => {
+      const [newSession] = await tx
+        .insert(academicSessions)
+        .values({
+          ...validatedFields.data,
+          instituteId: profile.id,
+          userId: profile.userId,
+        })
+        .returning();
+      // deactivate others
+      if (newSession.isActive) {
+        await tx
+          .update(academicSessions)
+          .set({ isActive: false })
+          .where(
+            and(
+              eq(academicSessions.instituteId, profile.id),
+              ne(academicSessions.id, newSession.id),
+            ),
+          );
+      }
+      return {
+        success: true,
+        data: newSession,
+      };
+    });
   } catch (error) {
     console.error("Database error during academic session creation:", error);
     return {
