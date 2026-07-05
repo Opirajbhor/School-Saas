@@ -39,7 +39,7 @@ export async function addTeacher(data: addTeacherType) {
 
     return {
       success: true,
-      data: JSON.parse(JSON.stringify(newTeacher)),
+      data: newTeacher,
     };
   } catch (error) {
     console.error("Database error during teacher creation:", error);

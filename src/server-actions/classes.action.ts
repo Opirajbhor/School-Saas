@@ -74,12 +74,11 @@ export async function postClasses(data: classesType) {
         sessionId: sessionId,
       })
       .returning();
-    revalidatePath("/dashboard/*");
     revalidatePath("/dashboard/");
     revalidatePath("/dashboard/classes");
     return {
       success: true,
-      data: JSON.parse(JSON.stringify(newClass)),
+      data: newClass,
     };
   } catch (error) {
     console.error("Database error during Class creation:", error);
@@ -174,7 +173,7 @@ export async function postSection(data: sectionType) {
     revalidatePath("/dashboard");
     return {
       success: true,
-      data: JSON.parse(JSON.stringify(newSection)),
+      data: newSection,
     };
   } catch (error) {
     console.error("Database error during section creation:", error);
