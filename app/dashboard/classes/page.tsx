@@ -3,31 +3,14 @@ import { ClassDetails } from "@/components/dashboard/right-sidebar/class-details
 import Title from "@/components/Title";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { getAcademicSession } from "@/src/server-actions/academicSession.action";
 import { getClasses, postClasses } from "@/src/server-actions/classes.action";
-import { sessionList } from "@/src/validation/academicSessions.zod";
 import { classesType, classesZod } from "@/src/validation/classes.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Form, useForm } from "react-hook-form";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { toast } from "sonner";
 
@@ -78,8 +61,12 @@ export default function Classes() {
       return;
     }
     // Handle successful execution path
-    if (res.success === true) {
+    if (res.success || res.data) {
       toast.success("Class created successfully");
+      setClasses((prev) => {
+        const current = prev || [];
+        return [...current, res.data as classesType];
+      });
       form.reset();
     }
   };
@@ -98,48 +85,46 @@ export default function Classes() {
         </Button>
       </div>
       {open && (
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(addBtn)}
-            action=""
-            className="space-y-6 mx-10 border p-5 rounded-2xl"
-          >
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <h1 className="text-xl font-semibold">Create Class</h1>
-                <p className="text-sm text-muted-foreground">
-                  Create a new class for the selected academic session.
-                </p>
-              </div>
-
-              {/* Class Name */}
-              <Field className="gap-2">
-                <FieldLabel>
-                  Class Name <span className="text-red-500">*</span>
-                </FieldLabel>
-                <Input
-                  {...form.register("name")}
-                  type="text"
-                  required
-                  placeholder="e.g. Class 6"
-                />
-              </Field>
-
-              <div className="flex justify-end">
-                <Button
-                  disabled={isSubmitting}
-                  type="submit"
-                  className="gap-2"
-                  size="sm"
-                >
-                  {isSubmitting && <Spinner />}
-                  <Plus className="h-4 w-4" />
-                  Add Class
-                </Button>
-              </div>
+        <form
+          onSubmit={form.handleSubmit(addBtn)}
+          action=""
+          className="space-y-6 mx-10 border p-5 rounded-2xl"
+        >
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <h1 className="text-xl font-semibold">Create Class</h1>
+              <p className="text-sm text-muted-foreground">
+                Create a new class for the selected academic session.
+              </p>
             </div>
-          </form>
-        </Form>
+
+            {/* Class Name */}
+            <Field className="gap-2">
+              <FieldLabel>
+                Class Name <span className="text-red-500">*</span>
+              </FieldLabel>
+              <Input
+                {...form.register("name")}
+                type="text"
+                required
+                placeholder="e.g. Class 6"
+              />
+            </Field>
+
+            <div className="flex justify-end">
+              <Button
+                disabled={isSubmitting}
+                type="submit"
+                className="gap-2"
+                size="sm"
+              >
+                {isSubmitting && <Spinner />}
+                <Plus className="h-4 w-4" />
+                Add Class
+              </Button>
+            </div>
+          </div>
+        </form>
       )}
 
       <div className="flex flex-col items-center p-5">

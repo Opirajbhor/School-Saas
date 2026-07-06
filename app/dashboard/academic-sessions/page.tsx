@@ -61,8 +61,8 @@ export default function SessionPage() {
   const { isSubmitting } = form.formState;
   const addBtn = async (data: academicSessionType) => {
     const res = await acadecmicSession(data);
-    if (res.success === false) {
-      if (res.details) {
+    if (!res.success) {
+      if ("details" in res && res.details) {
         const firstErrorField = Object.keys(res.details)[0];
         const messages =
           res.details[firstErrorField as keyof typeof res.details];
@@ -71,13 +71,14 @@ export default function SessionPage() {
           return;
         }
       }
-      toast.error(res.error || "An unexpected error occurred.");
+      toast.error("An unexpected error occurred.");
       return;
     }
     // Handle successful execution path
-    if (res.success === true) {
+    if ("data" in res && res.data) {
       toast.success("Academic Session created successfully");
       form.reset();
+      setSessions((prev) => [...prev, res.data as sessionList]);
     }
   };
 
