@@ -1,4 +1,5 @@
 "use client";
+import TabbedUserProfile from "@/app/dashboard/profile/page";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,14 +15,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { deleteTeacher } from "@/src/server-actions/teacher.action";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { AlertTriangleIcon } from "lucide-react";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { toast } from "sonner";
 
 interface DeleteTeacherProps {
   user: Teacherlist;
+  setTeachers: Dispatch<SetStateAction<Teacherlist[] | null | undefined>>;
 }
-export default function DeleteTeacher({ user }: DeleteTeacherProps) {
+export default function DeleteTeacher({
+  user,
+  setTeachers,
+}: DeleteTeacherProps) {
   const [open, setOpen] = useState(false);
   const [load, setLoad] = useState(false);
 
@@ -30,6 +35,10 @@ export default function DeleteTeacher({ user }: DeleteTeacherProps) {
     const result = await deleteTeacher(user.id);
     if (result.success) {
       toast.success(result.message);
+      setTeachers((prev) => {
+        const current = prev || [];
+        return current.filter((teacher) => teacher.id !== user.id);
+      });
     } else {
       toast.error(result.error);
     }

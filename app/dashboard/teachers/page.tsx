@@ -28,6 +28,7 @@ import AddTeacher from "@/components/dashboard/teachers/add-teacher";
 import { getTeacher } from "@/src/server-actions/teacher.action";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
+import Title from "@/components/Title";
 
 export default function Teacherpage() {
   const [teachers, setTeachers] = useState<Teacherlist[] | null>();
@@ -87,6 +88,7 @@ export default function Teacherpage() {
   // delete item
   return (
     <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
+      <Title title="Teacher Management" />
       {/* Main Card */}
       <Card className="pb-0 gap-0">
         <CardHeader className="border-b border-border gap-0">
@@ -126,7 +128,7 @@ export default function Teacherpage() {
               </DropdownMenu>
               {/* add teacher------------------- */}
 
-              <AddTeacher />
+              <AddTeacher setTeachers={setTeachers} />
             </div>
           </div>
         </CardHeader>
@@ -239,7 +241,7 @@ export default function Teacherpage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <DeleteTeacher user={user} />
+                      <DeleteTeacher user={user} setTeachers={setTeachers} />
                     </td>
                   </tr>
                 ))}

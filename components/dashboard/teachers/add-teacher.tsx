@@ -1,6 +1,6 @@
 "use client";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +16,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getInstituteProfile } from "@/src/server-actions/getInstitituteProfile.action";
 import { ProfileType } from "@/src/validation/auth.zod";
-import { addTeacherType, addTeacherZod } from "@/src/validation/teacher.zod";
+import {
+  addTeacherType,
+  addTeacherZod,
+  Teacherlist,
+} from "@/src/validation/teacher.zod";
 import { FieldDescription } from "@/components/ui/field";
 
 import {
@@ -27,7 +31,11 @@ import { addTeacher } from "@/src/server-actions/teacher.action";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 
-export default function AddTeacher() {
+export default function AddTeacher({
+  setTeachers,
+}: {
+  setTeachers: Dispatch<SetStateAction<Teacherlist[] | null | undefined>>;
+}) {
   const [open, setOpen] = useState(false);
 
   // ------------------
@@ -49,7 +57,6 @@ export default function AddTeacher() {
   const addBtn = async (data: addTeacherType) => {
     const res = await addTeacher(data);
     if (res.success === false) {
-      // If backend Zod validation failed, grab the first specific error message
       if (res.details) {
         const firstErrorField = Object.keys(res.details)[0];
         const messages =
@@ -64,13 +71,15 @@ export default function AddTeacher() {
       toast.error(res.error || "An unexpected error occurred.");
       return;
     }
-    // Handle successful execution path
     if (res.success === true) {
       toast.success("Teacher added successfully");
-      form.reset(); // Wipes form states cleanly
+      setTeachers((prev) => {
+        const current = prev || [];
+        return [...current, res.data as Teacherlist];
+      });
+      form.reset();
+      setOpen(false);
     }
-    console.log("raw data-", data);
-    console.log("res data-", res.data);
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
