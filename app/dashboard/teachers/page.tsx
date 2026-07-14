@@ -25,10 +25,17 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";
-import { getTeacher } from "@/src/server-actions/teacher.action";
-import { Teacherlist } from "@/src/validation/teacher.zod";
+import {
+  getTeacher,
+  getTeacherStats,
+} from "@/src/server-actions/teacher.action";
+import {
+  Teacherlist,
+  TeacherStatsResponse,
+} from "@/src/validation/teacher.zod";
 import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
 import Title from "@/components/Title";
+import TeacherStats from "@/components/dashboard/teachers/teacher-card";
 
 export default function Teacherpage() {
   const [teachers, setTeachers] = useState<Teacherlist[] | null>();
@@ -36,20 +43,28 @@ export default function Teacherpage() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const itemsPerPage = 6;
   const totalPages = Math.ceil((teachers?.length ?? 0) / itemsPerPage);
+  const [statlist, setStatlist] = useState<TeacherStatsResponse>({
+    success: false,
+    error: "",
+  });
 
   useEffect(() => {
     async function getlist() {
       try {
         const info = await getTeacher();
-        if (info.success === false) {
+        const stats = await getTeacherStats();
+
+        if (!info.success || !stats.success) {
           setTeachers(null);
           return;
         }
+        setStatlist(stats);
         setTeachers(info.data as Teacherlist[]);
       } catch (error) {
         console.error(error);
       }
     }
+
     getlist();
   }, []);
   const currentUsers =
@@ -89,6 +104,10 @@ export default function Teacherpage() {
   return (
     <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
       <Title title="Teacher Management" />
+      <div>
+        <TeacherStats stats={statlist} />
+      </div>
+
       {/* Main Card */}
       <Card className="pb-0 gap-0">
         <CardHeader className="border-b border-border gap-0">

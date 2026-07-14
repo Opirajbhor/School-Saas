@@ -1,5 +1,5 @@
 "use client";
-import TabbedUserProfile from "@/app/dashboard/profile/page";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -61,7 +61,7 @@ export default function DeleteTeacher({
           <DialogHeader>
             <DialogTitle>Delete Teacher</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete your account? This action cannot
+              Are you sure you want to delete this account? This action cannot
               be undone.
             </DialogDescription>
           </DialogHeader>

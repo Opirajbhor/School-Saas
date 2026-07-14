@@ -35,3 +35,15 @@ export type Teacherlist = {
   gender: "MALE" | "FEMALE" | "OTHER";
   status: "ACTIVE" | "INACTIVE";
 };
+
+
+export type TeacherStatsResponse = {
+  success: boolean;
+  data?: {
+    totalTeachers: number;
+    activeTeachers: number;
+    maleTeachers: number;
+    femaleTeachers: number;
+  };
+  error?: string;
+};

@@ -1,6 +1,5 @@
 "use server";
 import { db } from "../db";
-
 import { verifyUser } from "./verifyUser.action";
 import { addTeacherType, addTeacherZod } from "../validation/teacher.zod";
 import { teachers } from "../db/schema/teacher.drizzle";
@@ -77,6 +76,56 @@ export async function getTeacher() {
   }
 }
 
+// get teacher stats
+export async function getTeacherStats() {
+  const verify = await verifyUser();
+  if (!verify || verify.success === false || !verify.profile) {
+    return {
+      success: false,
+      error:
+        verify?.success === false
+          ? verify.error
+          : "Failed to verify user profile.",
+    };
+  }
+  const info = verify.profile.id;
+  try {
+    const [totalTeachers, activeTeachers, maleTeachers, femaleTeachers] =
+      await Promise.all([
+        db.$count(teachers, eq(teachers.instituteId, info)),
+
+        db.$count(
+          teachers,
+          and(eq(teachers.instituteId, info), eq(teachers.status, "ACTIVE")),
+        ),
+        db.$count(
+          teachers,
+          and(eq(teachers.instituteId, info), eq(teachers.gender, "MALE")),
+        ),
+        db.$count(
+          teachers,
+          and(eq(teachers.instituteId, info), eq(teachers.gender, "FEMALE")),
+        ),
+      ]);
+
+    return {
+      success: true,
+      data: {
+        totalTeachers,
+        activeTeachers,
+        maleTeachers,
+        femaleTeachers,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: "Failed to fetch teacher stats",
+    };
+  }
+}
+
+// delete teacher
 export async function deleteTeacher(teacherId: string) {
   const verify = await verifyUser();
   if (!verify || verify.success === false || !verify.profile) {
