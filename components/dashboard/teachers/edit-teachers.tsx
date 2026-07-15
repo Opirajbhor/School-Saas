@@ -26,6 +26,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
+import { editTeacher } from "@/src/server-actions/teacher.action";
 
 export default function EditTeachers({
   user,
@@ -45,11 +46,27 @@ export default function EditTeachers({
       status: user.status,
     },
   });
+  const { isSubmitting } = form.formState;
 
   //   edit button
   const editBtn = async (data: editTeacherType) => {
-    toast.success("working");
-    console.log(data);
+    const res = await editTeacher(data);
+    if (res.success === false) {
+      return toast.error("Something went wrong!");
+    }
+    if (res.success) {
+      setTeachers((prev) => {
+        if (!prev) return prev;
+        return prev.map((teacher) =>
+          teacher.id === data.id
+            ? {
+                ...teacher,
+                ...data,
+              }
+            : teacher,
+        );
+      });
+    }
   };
   return (
     <Sheet>
@@ -173,7 +190,9 @@ export default function EditTeachers({
           </Card>
 
           <SheetFooter className="grid grid-cols-2 items-center justify-center">
-            <Button variant="default">Save Changes</Button>
+            <Button disabled={isSubmitting} variant="default">
+              {isSubmitting && <Spinner />} Save Changes
+            </Button>
             <SheetClose asChild>
               <Button variant="outline">Close</Button>
             </SheetClose>

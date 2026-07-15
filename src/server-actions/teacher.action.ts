@@ -1,7 +1,11 @@
 "use server";
 import { db } from "../db";
 import { verifyUser } from "./verifyUser.action";
-import { addTeacherType, addTeacherZod } from "../validation/teacher.zod";
+import {
+  addTeacherType,
+  addTeacherZod,
+  editTeacherType,
+} from "../validation/teacher.zod";
 import { teachers } from "../db/schema/teacher.drizzle";
 import { and, eq } from "drizzle-orm";
 
@@ -167,6 +171,56 @@ export async function deleteTeacher(teacherId: string) {
     return {
       success: false,
       error: "Failed to delete teacher.",
+    };
+  }
+}
+
+// edit teacher
+export async function editTeacher(data: editTeacherType) {
+  const verify = await verifyUser();
+  if (!verify || verify.success === false || !verify.profile) {
+    return {
+      success: false,
+      error:
+        verify?.success === false
+          ? verify.error
+          : "Failed to verify user profile.",
+    };
+  }
+  const instituteId = verify.profile.id;
+  try {
+    // find teacher
+    const teacher = await db.query.teachers.findFirst({
+      where: and(
+        eq(teachers.id, data.id),
+        eq(teachers.instituteId, instituteId),
+      ),
+    });
+    if (!teacher) {
+      return {
+        success: false,
+        error: "Teacher not found.",
+      };
+    }
+    const [updatedData] = await db
+      .update(teachers)
+      .set({
+        ...data,
+      })
+      .where(
+        and(eq(teachers.id, data.id), eq(teachers.instituteId, instituteId)),
+      )
+      .returning();
+    return {
+      success: true,
+      message: "Teacher updated successfully.",
+    };
+  } catch (error) {
+    console.error("edit teacher error:", error);
+
+    return {
+      success: false,
+      error: "Failed to edit teacher info.",
     };
   }
 }
