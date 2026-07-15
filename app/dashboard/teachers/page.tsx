@@ -36,6 +36,7 @@ import {
 import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
 import Title from "@/components/Title";
 import TeacherStats from "@/components/dashboard/teachers/teacher-card";
+import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
 
 export default function Teacherpage() {
   const [teachers, setTeachers] = useState<Teacherlist[] | null>();
@@ -261,6 +262,7 @@ export default function Teacherpage() {
                     </td>
                     <td className="p-4">
                       <DeleteTeacher user={user} setTeachers={setTeachers} />
+                      <EditTeachers user={user} setTeachers={setTeachers}/>
                     </td>
                   </tr>
                 ))}

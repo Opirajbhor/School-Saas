@@ -19,7 +19,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { toast } from "sonner";
 
-interface DeleteTeacherProps {
+export interface DeleteTeacherProps {
   user: Teacherlist;
   setTeachers: Dispatch<SetStateAction<Teacherlist[] | null | undefined>>;
 }

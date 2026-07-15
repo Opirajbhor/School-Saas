@@ -20,7 +20,24 @@ export const addTeacherZod = z.object({
   status: z.enum(["ACTIVE", "INACTIVE"]),
 });
 
+export const editTeacherZod = z.object({
+  id:z.string(),
+  nameBangla: z.string().trim().min(3, "Bangla name is required").max(100),
+  nameEnglish: z.string().trim().min(3, "English name is required").max(100),
+  designation: z.string().trim().min(3, "Designation is required").max(100),
+  mobile: z
+    .string()
+    .trim()
+    .min(11, "Invalid mobile number")
+    .max(11, "Invalid mobile number"),
+  email: z.string().email("Invalid email address"),
+  photoUrl: z.string().url("Invalid photo URL").optional().or(z.literal("")),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+  status: z.enum(["ACTIVE", "INACTIVE"]),
+});
+
 export type addTeacherType = z.infer<typeof addTeacherZod>;
+export type editTeacherType = z.infer<typeof editTeacherZod>;
 
 export type Teacherlist = {
   id: string;
@@ -35,7 +52,6 @@ export type Teacherlist = {
   gender: "MALE" | "FEMALE" | "OTHER";
   status: "ACTIVE" | "INACTIVE";
 };
-
 
 export type TeacherStatsResponse = {
   success: boolean;
