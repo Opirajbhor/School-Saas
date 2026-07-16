@@ -73,7 +73,6 @@ export default function TabbedUserProfile() {
         }
         const session = await currentUser();
         SetSessionUser(session?.user);
-        console.log(sessionUser);
         setProfile(info);
       } catch (error) {
         console.error(error);

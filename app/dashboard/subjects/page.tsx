@@ -35,7 +35,6 @@ export default function Page() {
     }
     getInfo();
   }, []);
-  console.log(subjects);
   const form = useForm<AddSubjectType>({
     resolver: zodResolver(addSubjectZod),
     defaultValues: {
@@ -68,9 +67,7 @@ export default function Page() {
         toast.success("Class created successfully");
         form.reset();
       }
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   // delete subject

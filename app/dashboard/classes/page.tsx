@@ -1,5 +1,5 @@
 "use client";
-import { ClassDetails } from "@/components/dashboard/right-sidebar/class-details";
+import { ClassDetails } from "@/components/dashboard/class-section/class-details";
 import Title from "@/components/Title";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
