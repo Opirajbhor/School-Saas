@@ -6,6 +6,7 @@ import {
   instituteProfile,
   sectionDrizzle,
 } from "../schema";
+import { student } from "../schema/student.drizzle";
 
 // Academic session relation-----------
 export const acadecmicSessionRelation = relations(
@@ -28,5 +29,13 @@ export const sectionRelations = relations(sectionDrizzle, ({ one }) => ({
   class: one(classesDrizzle, {
     fields: [sectionDrizzle.classId],
     references: [classesDrizzle.id],
+  }),
+}));
+
+// student relation
+export const studentRelations = relations(student, ({ one }) => ({
+  institute: one(instituteProfile, {
+    fields: [student.instituteId],
+    references: [instituteProfile.id],
   }),
 }));

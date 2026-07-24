@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  DeleteIcon,
   Download,
   Filter,
   Search,
@@ -18,19 +17,36 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar } from "@base-ui/react/avatar";
-import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { StatCards } from "@/components/dashboard/stat-cards";
+import { AddStudentType } from "@/src/validation/student.zod";
+import { toast } from "sonner";
+import { getStudents } from "@/src/server-actions/student.action";
+import Link from "next/link";
 
 export default function Page() {
-  const teachers = null;
+  const [students, setStudents] = useState<AddStudentType[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const itemsPerPage = 6;
-  const totalPages = Math.ceil((teachers?.length ?? 0) / itemsPerPage);
+  const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
+
+  // get Student data
+  useEffect(() => {
+    const serverCall = async () => {
+      const res = await getStudents();
+      if (res.success) {
+        setStudents(res.data);
+      }
+      if (!res.success) {
+        toast.error("error fetch student data");
+      }
+    };
+    serverCall();
+  }, []);
+  console.log(students);
+
   const toggleUserSelection = (userId: string) => {
     setSelectedUsers((prev) =>
       prev.includes(userId)
@@ -57,8 +73,15 @@ export default function Page() {
       .join("")
       .toUpperCase();
   };
+
+  // add student data
+
   return (
-    <div>
+    <div className="p-5">
+      <div className=" mb-5">
+        <StatCards />
+      </div>
+
       <Card className="pb-0 gap-0">
         <CardHeader className="border-b border-border gap-0">
           {/* tools */}
@@ -68,6 +91,7 @@ export default function Page() {
               <Input placeholder="Search user" className="pl-10" />
             </div>
             <div className="sm:ml-auto flex items-center gap-2 flex-wrap justify-center">
+              <Link href={"/dashboard/students/add-new"}>Add Student</Link>
               <Button
                 variant="outline"
                 size="sm"
@@ -133,12 +157,9 @@ export default function Page() {
                 </tr>
               </thead>
               <tbody>
-                {(teachers === null || teachers?.length === 0) && (
+                {(students === null || students?.length === 0) && (
                   <p className="text-center mx-auto p-5">No Students found.</p>
                 )}
-
-
-                
               </tbody>
             </table>
           </div>
@@ -147,8 +168,8 @@ export default function Page() {
           <div className="flex items-center justify-between p-4 border-t border-border">
             <div className="text-sm text-muted-foreground">
               Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, teachers?.length ?? 0)} of{" "}
-              {teachers?.length ?? 0} entries
+              {Math.min(currentPage * itemsPerPage, students?.length ?? 0)} of{" "}
+              {students?.length ?? 0} entries
             </div>
             <div className="flex items-center gap-2">
               <Button
