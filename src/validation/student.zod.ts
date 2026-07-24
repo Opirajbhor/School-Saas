@@ -14,6 +14,16 @@ export const addStudentZod = z.object({
     .trim()
     .min(1, "First name is required")
     .max(100, "First name is too long"),
+  fatherName: z
+    .string()
+    .trim()
+    .min(1, "First name is required")
+    .max(100, "First name is too long"),
+  motherName: z
+    .string()
+    .trim()
+    .min(1, "First name is required")
+    .max(100, "First name is too long"),
 
   banglaName: z.string().trim().max(200, "Bangla name is too long").optional(),
 
@@ -25,31 +35,18 @@ export const addStudentZod = z.object({
     error: "Invalid date of birth",
   }),
 
-  bloodGroup: z
-    .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
-    .optional(),
-
   religion: z.string().trim().max(50, "Religion is too long"),
 
-  nationality: z
-    .string()
-    .trim()
-    .max(50, "Nationality is too long")
-    .default("Bangladeshi"),
-
-  mobile: z
+  phone: z
     .string()
     .trim()
     .regex(/^(\+8801|01)[3-9]\d{8}$/, "Invalid mobile number"),
-  email: z.email("Invalid email address").optional().or(z.literal("")),
 
   photoUrl: z.string().url("Invalid photo URL").optional(),
 
   birthCertificateNo: z.string().trim().max(50).optional(),
 
-  presentAddress: z.string().trim().max(500),
-
-  permanentAddress: z.string().trim().max(500),
+  address: z.string().trim().max(500),
 
   status: z
     .enum(["ACTIVE", "INACTIVE", "TRANSFERRED", "LEFT"])

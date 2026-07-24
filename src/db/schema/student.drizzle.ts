@@ -58,8 +58,6 @@ export const student = pgTable(
       mode: "date",
     }).notNull(),
 
-    bloodGroup: studentBloodGroupEnum("blood_group"),
-
     religion: varchar("religion", { length: 50 }).notNull(),
 
     nationality: varchar("nationality", { length: 50 })
