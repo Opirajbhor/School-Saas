@@ -16,14 +16,16 @@ import { addStudent } from "@/src/server-actions/student.action";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import z from "zod";
+import Link from "next/link";
+const randomId = Math.floor(Math.random() * 100) + 1;
 
 export default function AddStudent() {
   // ------------------form
-  const form = useForm<AddStudentType>({
+  const form = useForm({
     resolver: zodResolver(addStudentZod),
     defaultValues: {
-      instituteId: "",
-      studentId: "",
+      studentId: `HAR-${randomId}`,
       englishName: "",
       banglaName: "",
       fatherName: "",
@@ -41,31 +43,15 @@ export default function AddStudent() {
   const { isSubmitting } = form.formState;
   const addBtn = async (data: AddStudentType) => {
     const res = await addStudent(data);
-    if (res.success === false) {
-      if (res.details) {
-        const firstErrorField = Object.keys(res.details)[0];
-        const messages =
-          res.details[firstErrorField as keyof typeof res.details];
-        if (messages && messages.length > 0) {
-          toast.error(messages[0]);
-          return;
-        }
-      }
-
-      // Fallback error fallback message
-      toast.error(res.error || "An unexpected error occurred.");
-      return;
-    }
-    if (res.success === true) {
-      toast.success("Student added successfully");
-      setStudents((prev) => {
-        const current = prev || [];
-        return [...current, res.data as Studentlist];
-      });
+    if (res.success) {
+      toast.success("student added successfully");
       form.reset();
-      setOpen(false);
+    }
+    if (!res.success) {
+      toast.error("student adding failed");
     }
   };
+
   return (
     <div className="w-full mx-auto p-6 space-y-6">
       <div>
@@ -74,7 +60,7 @@ export default function AddStudent() {
           Create a new student and enroll them into a class.
         </p>
       </div>
-      <form action="">
+      <form action="" onSubmit={form.handleSubmit(addBtn)}>
         {/* Academic Information */}
         <Card>
           <CardHeader>
@@ -135,6 +121,7 @@ export default function AddStudent() {
                 <Input
                   {...form.register("photoUrl")}
                   type="file"
+                  accept="image/*"
                   className="max-w-55"
                 />
               </div>
@@ -142,12 +129,16 @@ export default function AddStudent() {
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <Label>Student ID</Label>
-                  <Input value={'abc'} disabled />
+                  <Input value={"HAR"} disabled />
                 </div>
 
                 <div className="space-y-2">
                   <Label>English Name</Label>
-                  <Input {...form.register("englishName")} />
+                  <Input
+                    {...form.register("englishName", {
+                      setValueAs: (value) => value.toUpperCase(),
+                    })}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -157,12 +148,20 @@ export default function AddStudent() {
 
                 <div className="space-y-2">
                   <Label>Father Name</Label>
-                  <Input {...form.register("fatherName")} />
+                  <Input
+                    {...form.register("fatherName", {
+                      setValueAs: (value) => value.toUpperCase(),
+                    })}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Mother Name</Label>
-                  <Input {...form.register("motherName")} />
+                  <Input
+                    {...form.register("motherName", {
+                      setValueAs: (value) => value.toUpperCase(),
+                    })}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -172,20 +171,32 @@ export default function AddStudent() {
 
                 <div className="space-y-2">
                   <Label>Gender</Label>
-                  <NativeSelect {...form.register("gender")}>
-                    <NativeSelectOption>Male</NativeSelectOption>
-                    <NativeSelectOption>Female</NativeSelectOption>
-                    <NativeSelectOption>Other</NativeSelectOption>
+                  <NativeSelect
+                    {...form.register("gender", {
+                      setValueAs: (value) => value.toUpperCase(),
+                    })}
+                  >
+                    <NativeSelectOption value={"MALE"}>MALE</NativeSelectOption>
+                    <NativeSelectOption value={"FEMALE"}>
+                      FEMALE
+                    </NativeSelectOption>
+                    <NativeSelectOption value={"OTHERS"}>
+                      OTHERS
+                    </NativeSelectOption>
                   </NativeSelect>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Religion</Label>
-                  <NativeSelect {...form.register("religion")}>
-                    <NativeSelectOption>Islam</NativeSelectOption>
-                    <NativeSelectOption>Hindu</NativeSelectOption>
-                    <NativeSelectOption>Buddist</NativeSelectOption>
-                    <NativeSelectOption>Christian</NativeSelectOption>
+                  <NativeSelect
+                    {...form.register("religion", {
+                      setValueAs: (value) => value.toUpperCase(),
+                    })}
+                  >
+                    <NativeSelectOption>ISLAM</NativeSelectOption>
+                    <NativeSelectOption>HINDU</NativeSelectOption>
+                    <NativeSelectOption>BUDDHIST</NativeSelectOption>
+                    <NativeSelectOption>CRISTIAN</NativeSelectOption>
                   </NativeSelect>
                 </div>
 
@@ -196,12 +207,17 @@ export default function AddStudent() {
 
                 <div className="space-y-2">
                   <Label>Phone</Label>
-                  <Input {...form.register("phone")} />
+                  <Input min={11} maxLength={11} {...form.register("phone")} />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
                   <Label> Address</Label>
-                  <Textarea rows={3} />
+                  <Textarea
+                    rows={3}
+                    {...form.register("address", {
+                      setValueAs: (value) => value.toUpperCase(),
+                    })}
+                  />
                 </div>
               </div>
             </div>
@@ -210,8 +226,13 @@ export default function AddStudent() {
 
         {/* {submit} */}
         <div className="flex justify-end gap-3">
-          <Button variant="outline">Cancel</Button>
-          <Button>Save Student</Button>
+          <Button variant="outline">
+            <Link href={"/dashboard/students"}>Cancel</Link>
+          </Button>
+          <Button disabled={isSubmitting} type="submit">
+            {isSubmitting && <Spinner />}
+            Save Student
+          </Button>
         </div>
       </form>
     </div>

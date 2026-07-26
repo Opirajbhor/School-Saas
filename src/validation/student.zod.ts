@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const addStudentZod = z.object({
-  instituteId: z.uuid("Invalid institute id"),
+  // instituteId: z.uuid("Invalid institute id").optional(),
 
   studentId: z
     .string()
@@ -42,7 +42,7 @@ export const addStudentZod = z.object({
     .trim()
     .regex(/^(\+8801|01)[3-9]\d{8}$/, "Invalid mobile number"),
 
-  photoUrl: z.string().url("Invalid photo URL").optional(),
+  photoUrl: z.union([z.url("Invalid photo URL"), z.literal("")]).optional(),
 
   birthCertificateNo: z.string().trim().max(50).optional(),
 

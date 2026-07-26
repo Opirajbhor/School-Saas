@@ -7,8 +7,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Eye,
   Filter,
+  Pen,
   Search,
+  Trash,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,7 +29,7 @@ import { getStudents } from "@/src/server-actions/student.action";
 import Link from "next/link";
 
 export default function Page() {
-  const [students, setStudents] = useState<AddStudentType[]>([]);
+  const [students, setStudents] = useState<AddStudentType[]>();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const itemsPerPage = 6;
@@ -91,7 +94,9 @@ export default function Page() {
               <Input placeholder="Search user" className="pl-10" />
             </div>
             <div className="sm:ml-auto flex items-center gap-2 flex-wrap justify-center">
-              <Link href={"/dashboard/students/add-new"}>Add Student</Link>
+              <Link href={"/dashboard/students/add-new"}>
+                <Button variant={"default"}>Add Student</Button>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"
@@ -130,27 +135,32 @@ export default function Page() {
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="text-left p-4 font-medium text-sm text-muted-foreground">
-                    Student ID <br />
-                    Roll
+                    Student ID
                   </th>
+
                   <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
                     Student Name <br />
                     Father Name <br />
                     Mother Name
                   </th>
+
                   <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
                     Religion <br />
                     GENDER <br />
                     DOB
                   </th>
+
                   <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Class <br /> Section
+                    Class <br />
+                    Section <br />
+                    Roll
                   </th>
 
                   <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Father PHONE <br />
-                    Mother Phone
+                    PHONE <br />
+                    Address
                   </th>
+
                   <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
@@ -160,6 +170,62 @@ export default function Page() {
                 {(students === null || students?.length === 0) && (
                   <p className="text-center mx-auto p-5">No Students found.</p>
                 )}
+
+                {students?.map((student, i) => (
+                  <tr
+                    key={student.studentId}
+                    className="border-b hover:bg-muted/50"
+                  >
+                    <td className="p-4 font-medium">{student.studentId}</td>
+
+                    <td className="p-4">
+                      <div>{student.englishName}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {student.fatherName}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {student.motherName}
+                      </div>
+                    </td>
+
+                    <td className="p-4">
+                      <div>{student.religion}</div>
+                      <div>{student.gender}</div>
+                      <div>
+                        {student.dateOfBirth.toLocaleDateString("en-GB")}
+                      </div>
+                    </td>
+
+                    <td className="p-4">
+                      <div>{student.className}</div>
+                      <div>{student.section}</div>
+                      <div>{student.roll}</div>
+                    </td>
+
+                    <td className="p-4">
+                      <div>{student.phone}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {student.address}
+                      </div>
+                    </td>
+
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye />
+                        </Button>
+
+                        <Button size="sm">
+                          <Pen />
+                        </Button>
+
+                        <Button size="sm" variant="destructive">
+                          <Trash />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

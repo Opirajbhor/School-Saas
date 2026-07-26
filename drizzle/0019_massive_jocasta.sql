@@ -1,0 +1,1 @@
+ALTER TABLE "students" ALTER COLUMN "religion" SET DATA TYPE varchar(20);

@@ -34,52 +34,36 @@ export const studentStatusEnum = pgEnum("student_status", [
   "TRANSFERRED",
   "LEFT",
 ]);
-
 export const student = pgTable(
   "students",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-
     instituteId: uuid("institute_id")
       .notNull()
       .references(() => instituteProfile.id, {
         onDelete: "cascade",
       }),
-
     studentId: varchar("student_id", { length: 30 }).notNull(),
-
     englishName: varchar("english_name", { length: 100 }).notNull(),
-
     banglaName: varchar("bangla_name", { length: 200 }),
-
+    fatherName: varchar("father_name", { length: 100 }).notNull(),
+    motherName: varchar("mother_name", { length: 100 }).notNull(),
     gender: studentGenderEnum("gender").notNull(),
-
     dateOfBirth: date("date_of_birth", {
       mode: "date",
     }).notNull(),
-
-    religion: varchar("religion", { length: 50 }).notNull(),
-
+    religion: varchar("religion", { length: 20 }).notNull(),
     nationality: varchar("nationality", { length: 50 })
       .notNull()
       .default("Bangladeshi"),
-
-    mobile: varchar("mobile", { length: 11 }).notNull(),
-
+    phone: varchar("mobile", { length: 11 }).notNull(),
     email: varchar("email", { length: 255 }),
-
     photoUrl: text("photo_url"),
-
     birthCertificateNo: varchar("birth_certificate_no", {
       length: 50,
     }),
-
-    presentAddress: text("present_address").notNull(),
-
-    permanentAddress: text("permanent_address").notNull(),
-
+    address: text("address").notNull(),
     status: studentStatusEnum("status").notNull().default("ACTIVE"),
-
     ...timestamps,
   },
   (table) => [
