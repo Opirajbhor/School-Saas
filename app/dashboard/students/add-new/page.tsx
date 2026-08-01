@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,15 +12,58 @@ import {
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { AddStudentType, addStudentZod } from "@/src/validation/student.zod";
-import { addStudent } from "@/src/server-actions/student.action";
+import {
+  addStudent,
+  getAcademicInfo,
+} from "@/src/server-actions/student.action";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import z from "zod";
 import Link from "next/link";
+import { classData } from "@/src/data/class-data/class-data";
+import { SpinnerCustom } from "@/components/Spinner";
+
 const randomId = Math.floor(Math.random() * 100) + 1;
 
+export interface AcademicInfoType {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string | null;
+  instituteId: string;
+  year: string;
+  isActive: boolean;
+  classes: Array<{
+    id: string;
+    name: string;
+    createdAt: Date;
+    sections: Array<{
+      id: string;
+      name: string;
+      classId: string;
+      createdAt: Date;
+      updatedAt: Date;
+      instituteId?: string;
+      userId?: string | null;
+      isActive?: boolean;
+    }>;
+  }>;
+}
 export default function AddStudent() {
+  const [activeSession, setActiveSession] = useState<
+    AcademicInfoType | null | undefined
+  >(null); // -----------------------
+  useEffect(() => {
+    const res = async () => {
+      const info = await getAcademicInfo();
+      if (info.success) {
+        // Coalesce undefined to null if needed, or pass directly
+        setActiveSession(info.data ?? null);
+      }
+    };
+    res();
+  }, []);
   // ------------------form
   const form = useForm({
     resolver: zodResolver(addStudentZod),
@@ -38,9 +81,11 @@ export default function AddStudent() {
       birthCertificateNo: "",
       address: "",
       status: "ACTIVE",
+      session: activeSession?.id,
     },
   });
   const { isSubmitting } = form.formState;
+
   const addBtn = async (data: AddStudentType) => {
     const res = await addStudent(data);
     if (res.success) {
@@ -52,6 +97,10 @@ export default function AddStudent() {
     }
   };
 
+
+  if (activeSession === null || undefined) {
+    return <SpinnerCustom />;
+  }
   return (
     <div className="w-full mx-auto p-6 space-y-6">
       <div>
@@ -70,28 +119,36 @@ export default function AddStudent() {
           <CardContent className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             <div className="space-y-2">
               <Label>Session</Label>
-              <NativeSelect>
-                <NativeSelectOption>Select Session</NativeSelectOption>
+              <NativeSelect {...form.register("session")}>
+                <NativeSelectOption value={activeSession?.id}>
+                  {activeSession?.year}
+                </NativeSelectOption>
               </NativeSelect>
             </div>
 
             <div className="space-y-2">
               <Label>Class</Label>
-              <NativeSelect>
-                <NativeSelectOption>Select Class</NativeSelectOption>
+              <NativeSelect {...form.register("className")}>
+                {classData &&
+                  classData.map((item, i) => (
+                    <NativeSelectOption key={i} value={item}>
+                      {item}
+                    </NativeSelectOption>
+                  ))}
               </NativeSelect>
             </div>
 
             <div className="space-y-2">
               <Label>Section</Label>
-              <NativeSelect>
-                <NativeSelectOption>Select Section</NativeSelectOption>
+              <NativeSelect {...form.register("section")}>
+                <NativeSelectOption>A</NativeSelectOption>
+                <NativeSelectOption>B</NativeSelectOption>
               </NativeSelect>
             </div>
 
             <div className="space-y-2">
               <Label>Roll</Label>
-              <Input placeholder="Enter Roll" />
+              <Input placeholder="Enter Roll" {...form.register("roll")} />
             </div>
 
             <div className="space-y-2">

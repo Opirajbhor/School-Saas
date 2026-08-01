@@ -25,7 +25,9 @@ export const addStudentZod = z.object({
     .min(1, "First name is required")
     .max(100, "First name is too long"),
 
-  banglaName: z.string().trim().max(200, "Bangla name is too long").optional(),
+  banglaName: z
+    .union([z.string().trim().max(200, "Bangla name is too long"), z.null()])
+    .optional(),
 
   gender: z.enum(["MALE", "FEMALE", "OTHER"], {
     error: "Please select a gender",
@@ -42,11 +44,21 @@ export const addStudentZod = z.object({
     .trim()
     .regex(/^(\+8801|01)[3-9]\d{8}$/, "Invalid mobile number"),
 
-  photoUrl: z.union([z.url("Invalid photo URL"), z.literal("")]).optional(),
+  photoUrl: z
+    .union([
+      z.string().trim().url("Invalid photo URL"),
+      z.literal(""),
+      z.null(),
+    ])
+    .optional(),
 
-  birthCertificateNo: z.string().trim().max(50).optional(),
+  birthCertificateNo: z.union([z.string().trim().max(50), z.null()]).optional(),
 
   address: z.string().trim().max(500),
+  session: z.string().trim().max(500),
+  className: z.string().trim().max(500),
+  section: z.string().trim().max(500),
+  roll: z.string().trim().max(500),
 
   status: z
     .enum(["ACTIVE", "INACTIVE", "TRANSFERRED", "LEFT"])

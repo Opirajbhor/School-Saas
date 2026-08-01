@@ -27,11 +27,11 @@ import { AddStudentType } from "@/src/validation/student.zod";
 import { toast } from "sonner";
 import { getStudents } from "@/src/server-actions/student.action";
 import Link from "next/link";
+import { SpinnerCustom } from "@/components/Spinner";
 
 export default function Page() {
-  const [students, setStudents] = useState<AddStudentType[]>();
+  const [students, setStudents] = useState<AddStudentType[] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const itemsPerPage = 6;
   const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
 
@@ -39,7 +39,7 @@ export default function Page() {
   useEffect(() => {
     const serverCall = async () => {
       const res = await getStudents();
-      if (res.success) {
+      if (res.success && res.data) {
         setStudents(res.data);
       }
       if (!res.success) {
@@ -48,34 +48,10 @@ export default function Page() {
     };
     serverCall();
   }, []);
-  console.log(students);
 
-  const toggleUserSelection = (userId: string) => {
-    setSelectedUsers((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId],
-    );
-  };
-
-  const toggleAllUsers = () => {
-    if (
-      selectedUsers.length === currentUsers.length &&
-      currentUsers.length > 0
-    ) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers(currentUsers.map((user) => user.id));
-    }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
+  if (students === null || undefined) {
+    return <SpinnerCustom />;
+  }
 
   // add student data
 
@@ -179,34 +155,32 @@ export default function Page() {
                     <td className="p-4 font-medium">{student.studentId}</td>
 
                     <td className="p-4">
-                      <div>{student.englishName}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <p>{student.englishName}</p>
+                      <p className="text-sm text-muted-foreground">
                         {student.fatherName}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
+                      </p>
+                      <p className="text-sm text-muted-foreground">
                         {student.motherName}
-                      </div>
+                      </p>
                     </td>
 
                     <td className="p-4">
-                      <div>{student.religion}</div>
-                      <div>{student.gender}</div>
-                      <div>
-                        {student.dateOfBirth.toLocaleDateString("en-GB")}
-                      </div>
+                      <p>{student.religion}</p>
+                      <p>{student.gender}</p>
+                      <p>{student.dateOfBirth.toLocaleDateString("en-GB")}</p>
                     </td>
 
                     <td className="p-4">
-                      <div>{student.className}</div>
-                      <div>{student.section}</div>
-                      <div>{student.roll}</div>
+                      {/* <p>{student.className}</p> */}
+                      {/* <p>{student.section}</p> */}
+                      {/* <p>{student.roll}</p> */}
                     </td>
 
                     <td className="p-4">
-                      <div>{student.phone}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <p>{student.phone}</p>
+                      <p className="text-sm text-muted-foreground">
                         {student.address}
-                      </div>
+                      </p>
                     </td>
 
                     <td className="p-4">

@@ -202,7 +202,7 @@ export async function editTeacher(data: editTeacherType) {
         error: "Teacher not found.",
       };
     }
-    const [updatedData] = await db
+    await db
       .update(teachers)
       .set({
         ...data,
