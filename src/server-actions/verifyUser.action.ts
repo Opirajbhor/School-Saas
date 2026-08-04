@@ -5,7 +5,17 @@ import { db } from "../db";
 import { instituteProfile } from "../db/schema";
 import { currentUser } from "./currentUser.action";
 
-export const verifyUser = cache(async () => {
+type VerifyUserResult =
+  | {
+      success: true;
+      profile: typeof instituteProfile.$inferSelect;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+export const verifyUser = cache(async (): Promise<VerifyUserResult> => {
   const session = await currentUser();
   const userId = session?.user?.id;
   if (!userId) {
@@ -24,10 +34,9 @@ export const verifyUser = cache(async () => {
     }
     return {
       success: true,
-      profile: profile,
+      profile,
     };
-  } catch (error) {
-    console.error("Database error in verifyUser:", error);
+  } catch {
     return { success: false, error: "Server Database Failure" };
   }
 });

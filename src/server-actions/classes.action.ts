@@ -11,23 +11,14 @@ import {
 import { classesDrizzle, sectionDrizzle } from "../db/schema/classes.drizzle";
 import { revalidatePath } from "next/cache";
 import { getActiveSessionId } from "./academicSession.action";
+import { requireInstitute } from "./get-institute-profile";
 
 // get classes and sections
 export async function getClasses() {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const info = verify.profile.id;
+  const { id } = await requireInstitute();
   try {
     const data = await db.query.classesDrizzle.findMany({
-      where: eq(classesDrizzle.instituteId, info),
+      where: eq(classesDrizzle.instituteId, id),
       with: {
         sections: true,
       },
@@ -37,22 +28,14 @@ export async function getClasses() {
       success: true,
       data: data || [],
     };
-  } catch (error) {
-    console.error("Database error to Class and Section list:", error);
+  } catch {
     throw new Error("Failed to fetch Class and Section list.");
   }
 }
 
 // post class
 export async function postClasses(data: classesType) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error: verify?.success === false ? verify.error : "Unauthorized",
-    };
-  }
-  const profile = verify.profile;
+  const profile = await requireInstitute();
   const validatedFields = classesZod.safeParse(data);
   if (!validatedFields.success) {
     const errorMessages = validatedFields.error.flatten().fieldErrors;
@@ -91,25 +74,12 @@ export async function postClasses(data: classesType) {
 
 // delete class
 export async function deleteClass(classId: string) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const instituteId = verify.profile.id;
+  const { id } = await requireInstitute();
   try {
     const result = await db
       .delete(classesDrizzle)
       .where(
-        and(
-          eq(classesDrizzle.id, classId),
-          eq(classesDrizzle.instituteId, instituteId),
-        ),
+        and(eq(classesDrizzle.id, classId), eq(classesDrizzle.instituteId, id)),
       )
       .returning({
         id: classesDrizzle.id,
@@ -140,14 +110,9 @@ export async function deleteClass(classId: string) {
 
 // post section
 export async function postSection(data: sectionType) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error: verify?.success === false ? verify.error : "Unauthorized",
-    };
-  }
-  const profile = verify.profile;
+  const profile = await requireInstitute();
+  const sessionId = await getActiveSessionId(profile?.id);
+
   const validatedFields = sectionZod.safeParse(data);
   if (!validatedFields.success) {
     const errorMessages = validatedFields.error.flatten().fieldErrors;
@@ -157,7 +122,6 @@ export async function postSection(data: sectionType) {
       details: errorMessages,
     };
   }
-  const sessionId = await getActiveSessionId(profile?.id);
 
   try {
     const [newSection] = await db

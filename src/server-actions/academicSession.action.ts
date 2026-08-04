@@ -1,26 +1,16 @@
 "use server";
 import { db } from "../db";
-import { verifyUser } from "./verifyUser.action";
 import {
   academicSessionType,
   academicSessionZod,
 } from "../validation/academicSessions.zod";
 import { academicSessions } from "../db/schema/academic-session.drizzle";
 import { and, eq, ne } from "drizzle-orm";
+import { requireInstitute } from "./get-institute-profile";
 
 // post
 export async function acadecmicSession(data: academicSessionType) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const profile = verify.profile;
+  const profile = await requireInstitute();
   const validatedFields = academicSessionZod.safeParse(data);
   if (!validatedFields.success) {
     const errorMessages = validatedFields.error.flatten().fieldErrors;
@@ -36,8 +26,8 @@ export async function acadecmicSession(data: academicSessionType) {
         .insert(academicSessions)
         .values({
           ...validatedFields.data,
-          instituteId: profile.id,
-          userId: profile.userId,
+          instituteId: profile?.id,
+          userId: profile?.userId,
         })
         .returning();
       // deactivate others
@@ -68,17 +58,8 @@ export async function acadecmicSession(data: academicSessionType) {
 
 // get
 export async function getAcademicSession() {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const info = verify.profile.id;
+  const profile = await requireInstitute();
+  const info = profile?.id;
   try {
     const data = await db.query.academicSessions.findMany({
       where: eq(academicSessions.instituteId, info),

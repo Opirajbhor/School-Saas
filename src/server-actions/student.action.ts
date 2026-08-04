@@ -6,23 +6,15 @@ import { student } from "../db/schema/student.drizzle";
 import { AddStudentType, addStudentZod } from "../validation/student.zod";
 import { academicSessions } from "../db/schema";
 import { enrollments } from "../db/schema/enrollments.drizzle";
+import { requireInstitute } from "./get-institute-profile";
 
 // get student
 export async function getStudents() {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const info = verify.profile.id;
+  const { id } = await requireInstitute();
+
   try {
     const res = await db.query.student.findMany({
-      where: eq(student.instituteId, info),
+      where: eq(student.instituteId, id),
     });
 
     return {
@@ -40,20 +32,10 @@ export async function getStudents() {
 }
 
 export async function getAcademicInfo() {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const info = verify.profile.id;
+  const { id } = await requireInstitute();
   try {
     const academicInfo = await db.query.academicSessions.findMany({
-      where: eq(academicSessions.instituteId, info),
+      where: eq(academicSessions.instituteId, id),
       with: {
         classes: {
           with: {
@@ -77,17 +59,8 @@ export async function getAcademicInfo() {
 
 // add student
 export async function addStudent(data: AddStudentType) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const profile = verify.profile;
+  const profile = await requireInstitute();
+
   const validatedFields = addStudentZod.safeParse(data);
   if (!validatedFields.success) {
     const errorMessages = validatedFields.error.flatten().fieldErrors;

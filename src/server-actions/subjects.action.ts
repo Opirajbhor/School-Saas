@@ -6,19 +6,13 @@ import { subjectDbSchema } from "../db/schema/subjects.drizzle";
 import { getActiveSessionId } from "./academicSession.action";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { requireInstitute } from "./get-institute-profile";
 
+// add subject
 export async function addSubjects(data: AddSubjectType) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const profile = verify.profile;
+  const profile = await requireInstitute();
+
+  const sessionId = await getActiveSessionId(profile?.id);
   const validatedFields = addSubjectZod.safeParse(data);
   if (!validatedFields.success) {
     const errorMessages = validatedFields.error.flatten().fieldErrors;
@@ -28,7 +22,6 @@ export async function addSubjects(data: AddSubjectType) {
       details: errorMessages,
     };
   }
-  const sessionId = await getActiveSessionId(profile?.id);
 
   try {
     const [newSubject] = await db
@@ -55,20 +48,11 @@ export async function addSubjects(data: AddSubjectType) {
 
 // get Subjects list
 export async function getSubjects() {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const info = verify.profile.id;
+  const { id } = await requireInstitute();
+
   try {
     const data = await db.query.subjectDbSchema.findMany({
-      where: eq(subjectDbSchema.instituteId, info),
+      where: eq(subjectDbSchema.instituteId, id),
     });
 
     return {
@@ -83,24 +67,15 @@ export async function getSubjects() {
 
 // delete SUBJECT
 export async function deleteSubject(id: string) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const instituteId = verify.profile.id;
+  const info = await requireInstitute();
+
   try {
     const result = await db
       .delete(subjectDbSchema)
       .where(
         and(
           eq(subjectDbSchema.id, id),
-          eq(subjectDbSchema.instituteId, instituteId),
+          eq(subjectDbSchema.instituteId, info.id),
         ),
       )
       .returning({

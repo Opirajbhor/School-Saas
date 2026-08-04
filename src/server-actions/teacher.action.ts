@@ -8,19 +8,10 @@ import {
 } from "../validation/teacher.zod";
 import { teachers } from "../db/schema/teacher.drizzle";
 import { and, eq } from "drizzle-orm";
+import { requireInstitute } from "./get-institute-profile";
 
 export async function addTeacher(data: addTeacherType) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const profile = verify.profile;
+  const profile = await requireInstitute();
   const validatedFields = addTeacherZod.safeParse(data);
   if (!validatedFields.success) {
     const errorMessages = validatedFields.error.flatten().fieldErrors;
@@ -54,20 +45,11 @@ export async function addTeacher(data: addTeacherType) {
 }
 // getTeacher
 export async function getTeacher() {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const info = verify.profile.id;
+  const { id } = await requireInstitute();
+
   try {
     const data = await db.query.teachers.findMany({
-      where: eq(teachers.instituteId, info),
+      where: eq(teachers.instituteId, id),
     });
 
     return {
@@ -82,33 +64,24 @@ export async function getTeacher() {
 
 // get teacher stats
 export async function getTeacherStats() {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const info = verify.profile.id;
+  const { id } = await requireInstitute();
+
   try {
     const [totalTeachers, activeTeachers, maleTeachers, femaleTeachers] =
       await Promise.all([
-        db.$count(teachers, eq(teachers.instituteId, info)),
+        db.$count(teachers, eq(teachers.instituteId, id)),
 
         db.$count(
           teachers,
-          and(eq(teachers.instituteId, info), eq(teachers.status, "ACTIVE")),
+          and(eq(teachers.instituteId, id), eq(teachers.status, "ACTIVE")),
         ),
         db.$count(
           teachers,
-          and(eq(teachers.instituteId, info), eq(teachers.gender, "MALE")),
+          and(eq(teachers.instituteId, id), eq(teachers.gender, "MALE")),
         ),
         db.$count(
           teachers,
-          and(eq(teachers.instituteId, info), eq(teachers.gender, "FEMALE")),
+          and(eq(teachers.instituteId, id), eq(teachers.gender, "FEMALE")),
         ),
       ]);
 
@@ -131,24 +104,12 @@ export async function getTeacherStats() {
 
 // delete teacher
 export async function deleteTeacher(teacherId: string) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const instituteId = verify.profile.id;
+  const { id } = await requireInstitute();
+
   try {
     // find teacher
     const teacher = await db.query.teachers.findFirst({
-      where: and(
-        eq(teachers.id, teacherId),
-        eq(teachers.instituteId, instituteId),
-      ),
+      where: and(eq(teachers.id, teacherId), eq(teachers.instituteId, id)),
     });
     if (!teacher) {
       return {
@@ -158,9 +119,7 @@ export async function deleteTeacher(teacherId: string) {
     }
     await db
       .delete(teachers)
-      .where(
-        and(eq(teachers.id, teacherId), eq(teachers.instituteId, instituteId)),
-      );
+      .where(and(eq(teachers.id, teacherId), eq(teachers.instituteId, id)));
     return {
       success: true,
       message: "Teacher deleted successfully.",
@@ -177,24 +136,12 @@ export async function deleteTeacher(teacherId: string) {
 
 // edit teacher
 export async function editTeacher(data: editTeacherType) {
-  const verify = await verifyUser();
-  if (!verify || verify.success === false || !verify.profile) {
-    return {
-      success: false,
-      error:
-        verify?.success === false
-          ? verify.error
-          : "Failed to verify user profile.",
-    };
-  }
-  const instituteId = verify.profile.id;
+  const { id } = await requireInstitute();
+
   try {
     // find teacher
     const teacher = await db.query.teachers.findFirst({
-      where: and(
-        eq(teachers.id, data.id),
-        eq(teachers.instituteId, instituteId),
-      ),
+      where: and(eq(teachers.id, data.id), eq(teachers.instituteId, id)),
     });
     if (!teacher) {
       return {
@@ -207,9 +154,7 @@ export async function editTeacher(data: editTeacherType) {
       .set({
         ...data,
       })
-      .where(
-        and(eq(teachers.id, data.id), eq(teachers.instituteId, instituteId)),
-      )
+      .where(and(eq(teachers.id, data.id), eq(teachers.instituteId, id)))
       .returning();
     return {
       success: true,

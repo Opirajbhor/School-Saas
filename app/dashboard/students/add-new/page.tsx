@@ -51,20 +51,29 @@ export interface AcademicInfoType {
   }>;
 }
 export default function AddStudent() {
+  // active session-----------------
   const [activeSession, setActiveSession] = useState<
     AcademicInfoType | null | undefined
   >(null); // -----------------------
   useEffect(() => {
-    const res = async () => {
+    const sessionRes = async () => {
       const info = await getAcademicInfo();
       if (info.success) {
         // Coalesce undefined to null if needed, or pass directly
         setActiveSession(info.data ?? null);
       }
     };
-    res();
+
+    // const classRes = async()=>{
+    //   const res = await 
+    // }
+
+
+
+    sessionRes();
   }, []);
-  // ------------------form
+  //xxxx active session------------------
+  // ------------------form------------
   const form = useForm({
     resolver: zodResolver(addStudentZod),
     defaultValues: {
@@ -85,8 +94,11 @@ export default function AddStudent() {
     },
   });
   const { isSubmitting } = form.formState;
-
   const addBtn = async (data: AddStudentType) => {
+    console.log(data);
+  };
+
+  const addBtns = async (data: AddStudentType) => {
     const res = await addStudent(data);
     if (res.success) {
       toast.success("student added successfully");
@@ -96,8 +108,7 @@ export default function AddStudent() {
       toast.error("student adding failed");
     }
   };
-
-
+  //xxxxxxx form---------------------
   if (activeSession === null || undefined) {
     return <SpinnerCustom />;
   }
