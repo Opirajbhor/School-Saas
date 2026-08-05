@@ -9,18 +9,16 @@ import {
 import { teachers } from "../db/schema/teacher.drizzle";
 import { and, eq } from "drizzle-orm";
 import { requireInstitute } from "./get-institute-profile";
+import { parseWithZod } from "../validation/validator.zod";
 
+// add teacher
 export async function addTeacher(data: addTeacherType) {
   const profile = await requireInstitute();
-  const validatedFields = addTeacherZod.safeParse(data);
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.flatten().fieldErrors;
-    return {
-      success: false,
-      error: "Validation failed",
-      details: errorMessages,
-    };
-  }
+  // parse with zod-----------------
+  const validatedFields = parseWithZod(addTeacherZod, data);
+  if (!validatedFields.success) return validatedFields;
+  // parse with zod-----------------
+
   try {
     const [newTeacher] = await db
       .insert(teachers)

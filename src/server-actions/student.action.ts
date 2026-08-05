@@ -7,6 +7,7 @@ import { AddStudentType, addStudentZod } from "../validation/student.zod";
 import { academicSessions } from "../db/schema";
 import { enrollments } from "../db/schema/enrollments.drizzle";
 import { requireInstitute } from "./get-institute-profile";
+import { parseWithZod } from "../validation/validator.zod";
 
 // get student
 export async function getStudents() {
@@ -31,6 +32,7 @@ export async function getStudents() {
   }
 }
 
+// get academicInfo
 export async function getAcademicInfo() {
   const { id } = await requireInstitute();
   try {
@@ -61,15 +63,11 @@ export async function getAcademicInfo() {
 export async function addStudent(data: AddStudentType) {
   const profile = await requireInstitute();
 
-  const validatedFields = addStudentZod.safeParse(data);
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.flatten().fieldErrors;
-    return {
-      success: false,
-      error: "Validation failed",
-      details: errorMessages,
-    };
-  }
+  // parse with zod-----------------
+  const validatedFields = parseWithZod(addStudentZod, data);
+  if (!validatedFields.success) return validatedFields;
+  // parse with zod-----------------
+
   const { session, className, roll, section, ...studentInfo } = data;
   try {
     const [newStudent] = await db

@@ -12,6 +12,7 @@ import { classesDrizzle, sectionDrizzle } from "../db/schema/classes.drizzle";
 import { revalidatePath } from "next/cache";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
+import { parseWithZod } from "../validation/validator.zod";
 
 // get classes and sections
 export async function getClasses() {
@@ -36,15 +37,11 @@ export async function getClasses() {
 // post class
 export async function postClasses(data: classesType) {
   const profile = await requireInstitute();
-  const validatedFields = classesZod.safeParse(data);
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.flatten().fieldErrors;
-    return {
-      success: false,
-      error: "Validation failed",
-      details: errorMessages,
-    };
-  }
+  // parse with zod-----------------
+  const validatedFields = parseWithZod(classesZod, data);
+  if (!validatedFields.success) return validatedFields;
+  // parse with zod-----------------
+
   // active session id
   const sessionId = await getActiveSessionId(profile?.id);
   try {
@@ -113,15 +110,10 @@ export async function postSection(data: sectionType) {
   const profile = await requireInstitute();
   const sessionId = await getActiveSessionId(profile?.id);
 
-  const validatedFields = sectionZod.safeParse(data);
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.flatten().fieldErrors;
-    return {
-      success: false,
-      error: "Validation failed",
-      details: errorMessages,
-    };
-  }
+  // parse with zod-----------------
+  const validatedFields = parseWithZod(sectionZod, data);
+  if (!validatedFields.success) return validatedFields;
+  // parse with zod-----------------
 
   try {
     const [newSection] = await db

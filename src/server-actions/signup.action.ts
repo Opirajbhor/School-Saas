@@ -3,16 +3,14 @@ import { auth } from "../../auth";
 import { SignUpType, signUpZod } from "../validation/auth.zod";
 import { instituteProfile } from "../db/schema/institute-profile-schema.drizzle";
 import { db } from "../db";
+import { parseWithZod } from "../validation/validator.zod";
 
 export async function signUpAction(data: SignUpType) {
-  // zod validation----------
-  const parsed = signUpZod.safeParse(data);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: "Invalid input data. Please check your fields.",
-    };
-  }
+  // parse with zod-----------------
+  const parsed = parseWithZod(signUpZod, data);
+  if (!parsed.success) return parsed;
+  // parse with zod-----------------
+
   // better auth user creation--------
   try {
     const authUser = await auth.api.signUpEmail({

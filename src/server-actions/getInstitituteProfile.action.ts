@@ -4,7 +4,9 @@ import { db } from "../db";
 import { instituteProfile } from "../db/schema";
 import { currentUser } from "./currentUser.action";
 import { ProfileUpdateType, profileUpdateZod } from "../validation/profile.zod";
+import { parseWithZod } from "../validation/validator.zod";
 
+// get login institute profile
 export async function getInstituteProfile() {
   const session = await currentUser();
   const userId = await session?.user.id;
@@ -32,15 +34,12 @@ export async function instituteProfileUpdate(data: ProfileUpdateType) {
     console.warn(" No active session found.");
     return null;
   }
-  const result = profileUpdateZod.safeParse(data);
-  if (!result.success) {
-    console.error("Server-side validation failed:", result.error.format());
-    return {
-      success: false,
-      error: "Invalid input data format.",
-      details: result.error.flatten().fieldErrors,
-    };
-  }
+
+  // parse with zod-----------------
+  const result = parseWithZod(profileUpdateZod, data);
+  if (!result.success) return result;
+  // parse with zod-----------------
+
   try {
     const [updatedProfile] = await db
       .update(instituteProfile)

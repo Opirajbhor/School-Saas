@@ -7,21 +7,17 @@ import { getActiveSessionId } from "./academicSession.action";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireInstitute } from "./get-institute-profile";
+import { parseWithZod } from "../validation/validator.zod";
 
 // add subject
 export async function addSubjects(data: AddSubjectType) {
   const profile = await requireInstitute();
 
   const sessionId = await getActiveSessionId(profile?.id);
-  const validatedFields = addSubjectZod.safeParse(data);
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.flatten().fieldErrors;
-    return {
-      success: false,
-      error: "Validation failed",
-      details: errorMessages,
-    };
-  }
+  // parse with zod-----------------
+  const validatedFields = parseWithZod(addSubjectZod, data);
+  if (!validatedFields.success) return validatedFields;
+  // parse with zod-----------------
 
   try {
     const [newSubject] = await db

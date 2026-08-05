@@ -2,17 +2,15 @@
 import { redirect } from "next/navigation";
 import { LogInType, logInZod } from "../validation/auth.zod";
 import { auth } from "@/auth";
+import { parseWithZod } from "../validation/validator.zod";
 
 export async function loginAction(data: LogInType) {
   let isSuccesfull: boolean = false;
-  // -----zod validation----------
-  const parsed = logInZod.safeParse(data);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: "Invalid data",
-    };
-  }
+  // parse with zod-----------------
+  const parsed = parseWithZod(logInZod, data);
+  if (!parsed.success) return parsed;
+  // parse with zod-----------------
+
   try {
     const currentUser = await auth.api.signInEmail({
       body: {
