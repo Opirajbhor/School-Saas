@@ -30,14 +30,15 @@ export async function addTeacher(data: addTeacherType) {
       .returning();
 
     return {
-      success: true,
+      success: true as const,
       data: newTeacher,
     };
   } catch (error) {
     console.error("Database error during teacher creation:", error);
     return {
-      success: false,
+      success: false as const,
       error: "Failed to create teacher account due to a database failure.",
+      details: {},
     };
   }
 }

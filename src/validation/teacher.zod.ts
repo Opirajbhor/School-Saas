@@ -5,7 +5,7 @@ export const addTeacherZod = z.object({
     .uuid("Invalid institute ID")
     .optional()
     .or(z.literal("")),
-  userId: z.string().optional(),
+  userId: z.string().nullable().optional(),
   nameBangla: z.string().trim().min(3, "Bangla name is required").max(100),
   nameEnglish: z.string().trim().min(3, "English name is required").max(100),
   designation: z.string().trim().min(3, "Designation is required").max(100),
@@ -21,7 +21,7 @@ export const addTeacherZod = z.object({
 });
 
 export const editTeacherZod = z.object({
-  id:z.string(),
+  id: z.string(),
   nameBangla: z.string().trim().min(3, "Bangla name is required").max(100),
   nameEnglish: z.string().trim().min(3, "English name is required").max(100),
   designation: z.string().trim().min(3, "Designation is required").max(100),
@@ -42,7 +42,7 @@ export type editTeacherType = z.infer<typeof editTeacherZod>;
 export type Teacherlist = {
   id: string;
   instituteId: string;
-  userId: string;
+  userId: string | null;
   nameBangla: string;
   nameEnglish: string;
   designation: string;

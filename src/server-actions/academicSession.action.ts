@@ -7,19 +7,17 @@ import {
 import { academicSessions } from "../db/schema/academic-session.drizzle";
 import { and, eq, ne } from "drizzle-orm";
 import { requireInstitute } from "./get-institute-profile";
+import { parseWithZod } from "../validation/validator.zod";
 
 // post
 export async function acadecmicSession(data: academicSessionType) {
   const profile = await requireInstitute();
-  const validatedFields = academicSessionZod.safeParse(data);
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.flatten().fieldErrors;
-    return {
-      success: false,
-      error: "Validation failed",
-      details: errorMessages,
-    };
-  }
+
+  // parse with zod-----------------
+  const validatedFields = parseWithZod(academicSessionZod, data);
+  if (!validatedFields.success) return validatedFields;
+  // parse with zod-----------------
+
   try {
     return await db.transaction(async (tx) => {
       const [newSession] = await tx
@@ -43,15 +41,16 @@ export async function acadecmicSession(data: academicSessionType) {
           );
       }
       return {
-        success: true,
+        success: true as const,
         data: newSession,
       };
     });
   } catch (error) {
     console.error("Database error during academic session creation:", error);
     return {
-      success: false,
+      success: false as const,
       error: "Failed to create academic session due to a database failure.",
+      details: {},
     };
   }
 }

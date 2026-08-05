@@ -30,14 +30,15 @@ export async function addSubjects(data: AddSubjectType) {
       .returning();
 
     return {
-      success: true,
+      success: true as const,
       data: newSubject,
     };
   } catch (error) {
     console.error("Database error during subject creation:", error);
     return {
-      success: false,
+      success: false as const,
       error: "Failed to create subject due to a database failure.",
+      details: {},
     };
   }
 }

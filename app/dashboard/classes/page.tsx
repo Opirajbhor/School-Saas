@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { handleCrudAction } from "@/src/lib/crud-funtions/handle-crud-action";
 import { getClasses, postClasses } from "@/src/server-actions/classes.action";
 import { classesType, classesZod } from "@/src/validation/classes.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Form, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import { toast } from "sonner";
 
 export default function Classes() {
   // get classes and sections
@@ -35,6 +35,7 @@ export default function Classes() {
 
   // ------------------------------------
   const [open, setOpen] = useState<boolean>(false);
+  // RHF
   const form = useForm<classesType>({
     resolver: zodResolver(classesZod),
     defaultValues: {
@@ -44,31 +45,16 @@ export default function Classes() {
     },
   });
   const { isSubmitting } = form.formState;
+
   // add class button
   const addBtn = async (data: classesType) => {
-    const res = await postClasses(data);
-    if (res.success === false) {
-      if (res.details) {
-        const firstErrorField = Object.keys(res.details)[0];
-        const messages =
-          res.details[firstErrorField as keyof typeof res.details];
-        if (messages && messages.length > 0) {
-          toast.error(messages[0]);
-          return;
-        }
-      }
-      toast.error(res.error || "An unexpected error occurred.");
-      return;
-    }
-    // Handle successful execution path
-    if (res.success || res.data) {
-      toast.success("Class created successfully");
-      setClasses((prev) => {
-        const current = prev || [];
-        return [...current, res.data as classesType];
-      });
-      form.reset();
-    }
+    await handleCrudAction(postClasses, data, {
+      successMessage: "Class created successfully",
+      onSuccess: (newClass) => {
+        setClasses((prev) => [...(prev || []), newClass]);
+        form.reset();
+      },
+    });
   };
 
   return (

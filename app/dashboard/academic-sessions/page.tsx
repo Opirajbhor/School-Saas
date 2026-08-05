@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { session } from "@/src/db/schema";
+import { handleCrudAction } from "@/src/lib/crud-funtions/handle-crud-action";
 import {
   acadecmicSession,
   getAcademicSession,
@@ -49,6 +50,7 @@ export default function SessionPage() {
     getlist();
   }, []);
 
+  // RHF
   const form = useForm<academicSessionType>({
     resolver: zodResolver(academicSessionZod),
     defaultValues: {
@@ -59,27 +61,16 @@ export default function SessionPage() {
     },
   });
   const { isSubmitting } = form.formState;
+
+  // add class button
   const addBtn = async (data: academicSessionType) => {
-    const res = await acadecmicSession(data);
-    if (!res.success) {
-      if ("details" in res && res.details) {
-        const firstErrorField = Object.keys(res.details)[0];
-        const messages =
-          res.details[firstErrorField as keyof typeof res.details];
-        if (messages && messages.length > 0) {
-          toast.error(messages[0]);
-          return;
-        }
-      }
-      toast.error("An unexpected error occurred.");
-      return;
-    }
-    // Handle successful execution path
-    if ("data" in res && res.data) {
-      toast.success("Academic Session created successfully");
-      form.reset();
-      setSessions((prev) => [...prev, res.data as sessionList]);
-    }
+    await handleCrudAction(acadecmicSession, data, {
+      successMessage: "Session Created Successfully",
+      onSuccess: (item) => {
+        setSessions((prev) => [...(prev || []), item]);
+        form.reset();
+      },
+    });
   };
 
   return (

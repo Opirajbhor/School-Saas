@@ -49,6 +49,7 @@ export default function EditTeachers({
   const { isSubmitting } = form.formState;
 
   //   edit button
+
   const editBtn = async (data: editTeacherType) => {
     const res = await editTeacher(data);
     if (res.success === false) {
@@ -67,6 +68,8 @@ export default function EditTeachers({
         );
       });
     }
+    toast.success("Teacher updated successfully");
+    // SheetClose;
   };
   return (
     <Sheet>
@@ -82,7 +85,8 @@ export default function EditTeachers({
             Make changes to Teacher. Click save when you&apos;re done.
           </SheetDescription>
         </SheetHeader>
-        <form action="" onSubmit={form.handleSubmit(editBtn)}>
+
+        <form onSubmit={form.handleSubmit(editBtn)}>
           <Card className="overflow-hidden ">
             <CardContent className="p-0 h-full flex flex-col">
               <div className="border-b p-6 flex flex-col items-center">
@@ -97,9 +101,7 @@ export default function EditTeachers({
                   </AvatarFallback>
                 </Avatar>
 
-                <Button variant="outline" size="sm">
-                  Change Photo
-                </Button>
+                <h2>Change Photo</h2>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-5">
@@ -190,7 +192,7 @@ export default function EditTeachers({
           </Card>
 
           <SheetFooter className="grid grid-cols-2 items-center justify-center">
-            <Button disabled={isSubmitting} variant="default">
+            <Button type="button" disabled={isSubmitting} variant="default">
               {isSubmitting && <Spinner />} Save Changes
             </Button>
             <SheetClose asChild>

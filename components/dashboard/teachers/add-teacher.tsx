@@ -30,6 +30,7 @@ import {
 import { addTeacher } from "@/src/server-actions/teacher.action";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { handleCrudAction } from "@/src/lib/crud-funtions/handle-crud-action";
 
 export default function AddTeacher({
   setTeachers,
@@ -54,33 +55,18 @@ export default function AddTeacher({
     },
   });
   const { isSubmitting } = form.formState;
-  const addBtn = async (data: addTeacherType) => {
-    const res = await addTeacher(data);
-    if (res.success === false) {
-      if (res.details) {
-        const firstErrorField = Object.keys(res.details)[0];
-        const messages =
-          res.details[firstErrorField as keyof typeof res.details];
-        if (messages && messages.length > 0) {
-          toast.error(messages[0]);
-          return;
-        }
-      }
 
-      // Fallback error fallback message
-      toast.error(res.error || "An unexpected error occurred.");
-      return;
-    }
-    if (res.success === true) {
-      toast.success("Teacher added successfully");
-      setTeachers((prev) => {
-        const current = prev || [];
-        return [...current, res.data as Teacherlist];
-      });
-      form.reset();
-      setOpen(false);
-    }
+  // add button
+  const addBtn = async (data: addTeacherType) => {
+    await handleCrudAction(addTeacher, data, {
+      successMessage: "Session Created Successfully",
+      onSuccess: (item) => {
+        setTeachers((prev) => [...(prev || []), item as Teacherlist]);
+        form.reset();
+      },
+    });
   };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

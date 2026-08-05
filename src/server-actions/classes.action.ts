@@ -50,21 +50,22 @@ export async function postClasses(data: classesType) {
       .values({
         ...validatedFields.data,
         instituteId: profile?.id,
-        userId: profile?.userId,
+        userId: profile.userId,
         sessionId: sessionId,
       })
       .returning();
     revalidatePath("/dashboard/");
     revalidatePath("/dashboard/classes");
     return {
-      success: true,
+      success: true as const,
       data: newClass,
     };
   } catch (error) {
     console.error("Database error during Class creation:", error);
     return {
-      success: false,
+      success: false as const,
       error: "Failed to create class due to a database failure.",
+      details: {},
     };
   }
 }

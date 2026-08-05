@@ -28,17 +28,11 @@ import {
   currentUser,
   sessionUserType,
 } from "@/src/server-actions/currentUser.action";
-import { getSession } from "better-auth/api";
-import { authClient } from "@/src/better-auth/auth-client";
-
-type userType = {
-  user: sessionUserType;
-};
+import { handleCrudAction } from "@/src/lib/crud-funtions/handle-crud-action";
 
 export default function TabbedUserProfile() {
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [lock, setLock] = useState<boolean>(true);
-  const [btnSpin, setBtnSpin] = useState<boolean>(false);
   const [sessionUser, SetSessionUser] = useState<sessionUserType>();
   // update data of profile
   const form = useForm<ProfileUpdateType>({
@@ -50,18 +44,13 @@ export default function TabbedUserProfile() {
       adminPhone: profile?.adminPhone,
     },
   });
-  const onSubmit = async (data: ProfileUpdateType) => {
-    setBtnSpin(true);
-    const res = await instituteProfileUpdate(data);
+  const { isSubmitting } = form.formState;
 
-    if (res?.success) {
-      toast.success("successfully updated");
-      setLock(true);
-    }
-    if (!res?.success) {
-      toast.error("error in updating");
-    }
-    setBtnSpin(false);
+  //  update button
+  const onSubmit = async (data: ProfileUpdateType) => {
+    await handleCrudAction(instituteProfileUpdate, data, {
+      successMessage: "Updated Successfully",
+    });
   };
 
   useEffect(() => {
@@ -192,7 +181,7 @@ export default function TabbedUserProfile() {
 
                   <div className="mt-6 flex justify-end">
                     <Button type="submit" disabled={lock}>
-                      {btnSpin && <Spinner />} Save Changes
+                      {isSubmitting && <Spinner />} Save Changes
                     </Button>
                   </div>
                 </form>
