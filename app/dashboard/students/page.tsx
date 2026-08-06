@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { getStudents } from "@/src/server-actions/student.action";
 import Link from "next/link";
 import { SpinnerCustom } from "@/components/Spinner";
+import Title from "@/components/Title";
 
 export default function Page() {
   const [students, setStudents] = useState<AddStudentType[] | null>(null);
@@ -56,7 +57,11 @@ export default function Page() {
   // add student data
 
   return (
-    <div className="p-5">
+    <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
+      <Title title="Student Management" />
+      <p className="text-muted-foreground ">
+        Manage enrolled students across all classes and sections.
+      </p>
       <div className=" mb-5">
         <StatCards />
       </div>

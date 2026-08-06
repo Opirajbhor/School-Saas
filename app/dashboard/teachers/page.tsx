@@ -105,6 +105,9 @@ export default function Teacherpage() {
   return (
     <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
       <Title title="Teacher Management" />
+      <p className="text-muted-foreground ">
+        Manage teaching staff, assignments, and contact details.
+      </p>
       <div>
         <TeacherStats stats={statlist} />
       </div>
@@ -262,7 +265,7 @@ export default function Teacherpage() {
                     </td>
                     <td className="p-4">
                       <DeleteTeacher user={user} setTeachers={setTeachers} />
-                      <EditTeachers user={user} setTeachers={setTeachers}/>
+                      <EditTeachers user={user} setTeachers={setTeachers} />
                     </td>
                   </tr>
                 ))}
