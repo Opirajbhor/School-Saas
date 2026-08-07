@@ -30,7 +30,7 @@ import {
 import { addTeacher } from "@/src/server-actions/teacher.action";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/lib/crud-funtions/handle-crud-action";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-crud-action";
 
 export default function AddTeacher({
   setTeachers,

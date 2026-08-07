@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/lib/crud-funtions/handle-crud-action";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-crud-action";
 import {
   addSubjects,
   deleteSubject,

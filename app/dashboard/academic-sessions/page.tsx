@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -18,9 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/lib/crud-funtions/handle-crud-action";
 import {
-  acadecmicSession,
+  createSession,
+  deleteSessions,
   getAcademicSession,
 } from "@/src/server-actions/academicSession.action";
 import {
@@ -30,19 +29,12 @@ import {
 } from "@/src/validation/academicSessions.zod";
 import { Input } from "@base-ui/react/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Plus,
-  Filter,
-  Edit,
-  Lock,
-  Trash2,
-  Eye,
-  Calendar,
-  BarChart3,
-} from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calendar, BarChart3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-crud-action";
+import DeleteModal from "@/components/modal/delete-modal";
 
 export default function SessionPage() {
   const [sessions, setSessions] = useState<sessionList[]>([]);
@@ -78,12 +70,13 @@ export default function SessionPage() {
   });
   const { isSubmitting } = form.formState;
 
-  // add class button
+  // add button
   const addBtn = async (data: academicSessionType) => {
-    await handleCrudAction(acadecmicSession, data, {
+    await handleCrudAction(createSession, data, {
       successMessage: "Session Created Successfully",
-      onSuccess: (item) => {
-        setSessions((prev) => [...(prev || []), item]);
+      onSuccess: (items) => {
+        // Assuming 'items' is the newly created session
+        setSessions((prev) => [...prev, items as sessionList]);
         form.reset();
       },
     });
@@ -93,95 +86,6 @@ export default function SessionPage() {
   const totalStudents = 1000;
   const activeClasses = 27;
   const totalTerms = 5;
-
-  // Prepare session history data
-  const sessionHistory = sessions.slice(0, 4).map((s, index) => ({
-    id: s.id || index,
-    name: `${s.year} Academic Year`,
-    subtitle: s.isActive
-      ? "Current Year"
-      : index === 0
-        ? "Current Year"
-        : "Archived",
-    duration: `Jan 1, ${s.year} - Dec 31, ${s.year}`,
-    status: s.isActive ? "Active" : "Completed",
-    enrolled: "--",
-    isActive: s.isActive,
-    isCurrent: s.isActive && index === 0,
-  }));
-
-  // If no real data, use mock data
-  const displayHistory =
-    sessionHistory.length > 0
-      ? sessionHistory
-      : [
-          {
-            id: 1,
-            name: "2024-2025 Academic Year",
-            subtitle: "Draft Phase",
-            duration: "Jan 1, 2024 - Dec 31, 2024",
-            status: "Upcoming",
-            enrolled: "--",
-            isActive: false,
-            isCurrent: false,
-          },
-          {
-            id: 2,
-            name: "2023-2024 Academic Year",
-            subtitle: "Current Year",
-            duration: "Jan 1, 2023 - Dec 31, 2023",
-            status: "Active",
-            enrolled: totalStudents > 0 ? totalStudents.toString() : "1,245",
-            isActive: true,
-            isCurrent: true,
-          },
-          {
-            id: 3,
-            name: "2022-2023 Academic Year",
-            subtitle: "Archived",
-            duration: "Jan 1, 2022 - Dec 31, 2022",
-            status: "Completed",
-            enrolled: "1,180",
-            isActive: false,
-            isCurrent: false,
-          },
-          {
-            id: 4,
-            name: "2021-2022 Academic Year",
-            subtitle: "Archived",
-            duration: "Jan 1, 2021 - Dec 31, 2021",
-            status: "Completed",
-            enrolled: "1,105",
-            isActive: false,
-            isCurrent: false,
-          },
-        ];
-
-  const getStatusStyles = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-50 text-green-700 border-green-200";
-      case "Upcoming":
-        return "bg-yellow-50 text-yellow-700 border-yellow-200";
-      case "Completed":
-        return "bg-gray-100 text-foreground border-gray-200";
-      default:
-        return "bg-gray-100 text-foreground border-gray-200";
-    }
-  };
-
-  const getStatusDotColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-500";
-      case "Upcoming":
-        return "bg-yellow-500";
-      case "Completed":
-        return "bg-gray-400";
-      default:
-        return "bg-gray-400";
-    }
-  };
 
   return (
     <div className="max-w-7xl lg:w-full mx-auto p-6">
@@ -194,30 +98,6 @@ export default function SessionPage() {
           <p className="text-lg text-muted-foreground">
             Manage school years, terms, and active sessions.
           </p>
-        </div>
-        {/* add session form */}
-        <div className="flex items-center gap-3">
-          <form
-            onSubmit={form.handleSubmit(addBtn)}
-            className="flex items-center gap-3"
-          >
-            <Input
-              className="w-40 h-9 p-2 border-2 rounded-md"
-              type="text"
-              placeholder="Year (e.g. 2024)"
-              {...form.register("year")}
-              required
-            />
-            <Button
-              disabled={isSubmitting}
-              type="submit"
-              className="gap-2"
-              size="default"
-            >
-              {isSubmitting ? <Spinner /> : <Plus className="h-4 w-4" />}
-              New Session
-            </Button>
-          </form>
         </div>
       </div>
 
@@ -293,37 +173,42 @@ export default function SessionPage() {
             </div>
           </div>
         </div>
+        {/* <!--  Add session Form --> */}
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
+            Add Session
+          </h3>
 
-        {/* Quick Actions / Upcoming Context Card */}
-        <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Upcoming Transition
-            </h4>
-            <div className="p-4 bg-muted/50 rounded-lg border border-border mb-4">
-              <p className="text-xs font-medium text-muted-foreground mb-1">
-                Next Session Draft
-              </p>
-              <p className="text-base font-medium text-foreground mb-2">
-                {sessions.length > 0
-                  ? `${Math.max(...sessions.map((s) => parseInt(s.year))) + 1}-${Math.max(...sessions.map((s) => parseInt(s.year))) + 2} Academic Year`
-                  : "2024-2025 Academic Year"}
-              </p>
-              <div className="w-full bg-muted rounded-full h-1.5 mb-1">
-                <div
-                  className="bg-primary h-1.5 rounded-full"
-                  style={{ width: "45%" }}
-                ></div>
-              </div>
-              <p className="text-xs text-muted-foreground text-right">
-                Setup 45% Complete
-              </p>
+          {/* add session form */}
+          <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
+            <div>
+              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                Academic Session Name
+              </Label>
+              <Input
+                {...form.register("year", {
+                  required: "Session name is required",
+                })}
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="e.g., 2026"
+              />
+              {form.formState.errors.year && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.year.message}
+                </p>
+              )}
             </div>
-          </div>
-          <Button variant="outline" className="w-full">
-            Continue Setup
-          </Button>
+
+            <Button disabled={isSubmitting} variant="default" type="submit">
+              {isSubmitting ? (
+                <Spinner className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}{" "}
+              Add Session
+            </Button>
+          </form>
         </div>
       </div>
 
@@ -332,7 +217,7 @@ export default function SessionPage() {
         {/* Table Header/Toolbar */}
         <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-muted/30">
           <h3 className="text-lg font-semibold text-foreground">
-            Session History
+            Academic Session ({sessions.length})
           </h3>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Sort by:</span>
@@ -351,7 +236,7 @@ export default function SessionPage() {
         </div>
 
         {/* Responsive Table Wrapper */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto p-5">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -373,11 +258,11 @@ export default function SessionPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayHistory.map((item) => (
+              {sessions.map((item) => (
                 <TableRow
                   key={item.id}
                   className={`${
-                    item.isCurrent
+                    item.isActive
                       ? "bg-primary/5 hover:bg-primary/10"
                       : "hover:bg-muted/50"
                   } transition-colors group`}
@@ -385,123 +270,60 @@ export default function SessionPage() {
                   <TableCell className="py-3">
                     <div
                       className={`font-medium ${
-                        item.isCurrent ? "text-primary" : "text-foreground"
+                        item.isActive ? "text-primary" : "text-foreground"
                       }`}
                     >
-                      {item.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {item.subtitle}
+                      {item.year}
                     </div>
                   </TableCell>
                   <TableCell className="text-foreground py-3">
-                    {item.duration}
+                    {`01 Jan, ${item.year}-31 Dec, ${item.year}`}
                   </TableCell>
+
                   <TableCell className="py-3">
-                    <Badge className={`${getStatusStyles(item.status)} border`}>
+                    <Badge
+                      className={`${item.isActive ? "bg-green-600" : "bg-gray-400"} border`}
+                    >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(item.status)} mr-1.5 inline-block`}
-                      ></span>
-                      {item.status}
+                        className={`w-1.5 h-1.5 rounded-full bg-primary/5 hover:bg-primary/10 mr-1.5 inline-block`}
+                      >
+                        *
+                      </span>
+                      {item.isActive ? "Active" : "Completed"}
                     </Badge>
                   </TableCell>
+
                   <TableCell className="font-medium text-foreground py-3">
-                    {item.enrolled}
+                    {"300"}
                   </TableCell>
                   <TableCell className="text-right py-3">
                     <div
-                      className={`flex items-center justify-end gap-1 ${
-                        !item.isCurrent
-                          ? "opacity-0 group-hover:opacity-100"
-                          : ""
-                      } transition-opacity`}
+                      className={`flex items-center justify-end gap-1 transition-opacity`}
                     >
-                      {item.isCurrent ? (
+                      {
                         <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-accent"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent"
-                          >
-                            <Lock className="h-4 w-4" />
-                          </Button>
+                          {/* <EditSession
+                            sessions={sessions}
+                            setSessions={setSessions}
+                          /> */}
+                          <DeleteModal
+                            id={item.id}
+                            onDelete={deleteSessions}
+                            onSuccess={() => {
+                              form.reset();
+                              setSessions((prev) =>
+                                prev.filter((c) => c.id !== item.id),
+                              );
+                            }}
+                          />
                         </>
-                      ) : item.status === "Upcoming" ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-accent"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-accent"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      )}
+                      }
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </div>
-
-        {/* Pagination */}
-        <div className="p-4 border-t border-border flex items-center justify-between text-sm text-muted-foreground bg-muted/30">
-          <span>
-            Showing 1 to {Math.min(4, displayHistory.length)} of{" "}
-            {Math.max(12, displayHistory.length)} sessions
-          </span>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
-              <span className="text-sm">←</span>
-            </Button>
-            <Button variant="default" size="sm" className="h-8 w-8">
-              1
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 hover:bg-accent"
-            >
-              2
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 hover:bg-accent"
-            >
-              3
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-accent"
-            >
-              <span className="text-sm">→</span>
-            </Button>
-          </div>
         </div>
       </div>
     </div>

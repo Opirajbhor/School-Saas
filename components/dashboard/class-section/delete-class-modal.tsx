@@ -12,19 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { deleteClass } from "@/src/server-actions/classes.action";
-import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { AlertTriangleIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function ClassDeleteModal({ classId }: { classId: string }) {
+export default function ClassDeleteModal({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const [load, setLoad] = useState(false);
 
   const handleclick = async () => {
     setLoad(true);
     try {
-      const res = await deleteClass(classId);
+      const res = await deleteClass(id);
       if (res.success) {
         toast.success("Class Deleted Succesfully");
       }

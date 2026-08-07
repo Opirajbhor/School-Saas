@@ -5,56 +5,23 @@ import {
   academicSessionZod,
 } from "../validation/academicSessions.zod";
 import { academicSessions } from "../db/schema/academic-session.drizzle";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { requireInstitute } from "./get-institute-profile";
-import { parseWithZod } from "../validation/validator.zod";
+import { revalidatePath } from "next/cache";
+import { createRecord } from "../lib/crud-funtions/server-create-crud";
+import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
 
 // post
-export async function acadecmicSession(data: academicSessionType) {
-  const profile = await requireInstitute();
-
-  // parse with zod-----------------
-  const validatedFields = parseWithZod(academicSessionZod, data);
-  if (!validatedFields.success) return validatedFields;
-  // parse with zod-----------------
-
-  try {
-    return await db.transaction(async (tx) => {
-      const [newSession] = await tx
-        .insert(academicSessions)
-        .values({
-          ...validatedFields.data,
-          instituteId: profile?.id,
-          userId: profile?.userId,
-        })
-        .returning();
-      // deactivate others
-      if (newSession.isActive) {
-        await tx
-          .update(academicSessions)
-          .set({ isActive: false })
-          .where(
-            and(
-              eq(academicSessions.instituteId, profile.id),
-              ne(academicSessions.id, newSession.id),
-            ),
-          );
-      }
-      return {
-        success: true as const,
-        data: newSession,
-      };
-    });
-  } catch (error) {
-    console.error("Database error during academic session creation:", error);
-    return {
-      success: false as const,
-      error: "Failed to create academic session due to a database failure.",
-      details: {},
-    };
-  }
+export async function createSession(data: academicSessionType) {
+  return createRecord(
+    {
+      zodSchema: academicSessionZod,
+      drizzleSchema: academicSessions,
+      additionFields: { isActive: false },
+    },
+    data,
+  );
 }
-
 // get
 export async function getAcademicSession() {
   const profile = await requireInstitute();
@@ -73,7 +40,6 @@ export async function getAcademicSession() {
     throw new Error("Failed to fetch Academic Session list.");
   }
 }
-
 // get active session id
 export async function getActiveSessionId(instituteId: string) {
   const session = await db.query.academicSessions.findFirst({
@@ -89,4 +55,52 @@ export async function getActiveSessionId(instituteId: string) {
   if (!session) throw new Error("No active session found");
 
   return session.id;
+}
+// delete session
+export async function deleteSession(classId: string) {
+  const { id } = await requireInstitute();
+  try {
+    const result = await db
+      .delete(academicSessions)
+      .where(
+        and(
+          eq(academicSessions.id, classId),
+          eq(academicSessions.instituteId, id),
+        ),
+      )
+      .returning({
+        id: academicSessions.id,
+      });
+
+    if (result.length === 0) {
+      return {
+        success: false,
+        error: "Class not found.",
+      };
+    }
+    revalidatePath("/dashboard/*");
+    revalidatePath("/dashboard/");
+    revalidatePath("/dashboard/classes");
+    return {
+      success: true,
+      message: "Session deleted successfully.",
+    };
+  } catch (error) {
+    console.error("Delete Session error:", error);
+
+    return {
+      success: false,
+      error: "Failed to delete Session.",
+    };
+  }
+}
+
+// --
+export async function deleteSessions(id: string) {
+  return deleteRecord(
+    {
+      drizzleSchema: academicSessions,
+    },
+    id,
+  );
 }
