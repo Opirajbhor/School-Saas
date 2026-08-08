@@ -1,13 +1,34 @@
 "use client";
 import { ClassDetails } from "@/components/dashboard/class-section/class-details";
+import DeleteModal from "@/components/modal/delete-modal";
+import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { getClasses, postClasses } from "@/src/server-actions/classes.action";
-import { classesType, classesZod } from "@/src/validation/classes.zod";
+import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+import {
+  deleteClass,
+  getClasses,
+  postClasses,
+} from "@/src/server-actions/classes.action";
+import {
+  classesType,
+  classesTypeWithId,
+  classesZod,
+} from "@/src/validation/classes.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -15,26 +36,18 @@ import { useForm } from "react-hook-form";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 export default function Classes() {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [classes, setClasses] = useState<classesTypeWithId[]>();
   // get classes and sections
-  const [classes, setClasses] = useState<classesType[]>();
   useEffect(() => {
     async function getlist() {
-      try {
-        const info = await getClasses();
-        if (info.success === false) {
-          setClasses([]);
-          return;
-        }
-        setClasses(info.data as classesType[]);
-      } catch (error) {
-        console.error(error);
-      }
+      await clientReadAction(getClasses, {
+        onSuccess: (data) => setClasses(data as classesTypeWithId[]),
+        onLoading: setLoading,
+      });
     }
     getlist();
   }, []);
-
-  // ------------------------------------
-  const [open, setOpen] = useState<boolean>(false);
   // RHF
   const form = useForm<classesType>({
     resolver: zodResolver(classesZod),
@@ -45,7 +58,6 @@ export default function Classes() {
     },
   });
   const { isSubmitting } = form.formState;
-
   // add class button
   const addBtn = async (data: classesType) => {
     await handleCrudAction(postClasses, data, {
@@ -57,74 +69,153 @@ export default function Classes() {
     });
   };
 
+  if (loading) {
+    return <SpinnerCustom />;
+  }
   return (
-    <div>
-      <div className="flex items-center gap-5 mx-10 my-5">
-        <Title title="Classes" />
-        <Button
-          onClick={() => setOpen(!open)}
-          className="gap-1.5 bg-primary cursor-pointer"
-          size="sm"
-          variant={"outline"}
-        >
-          {open ? <IoIosArrowUp /> : <IoIosArrowDown />} Add Classes
-        </Button>
+    <div className="max-w-7xl lg:w-full mx-auto p-6">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground mb-1">
+            Classes & Sections Management
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Manage academic classes, sections.
+          </p>
+        </div>
       </div>
-      {open && (
-        <form
-          onSubmit={form.handleSubmit(addBtn)}
-          action=""
-          className="space-y-6 mx-10 border p-5 rounded-2xl"
-        >
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <h1 className="text-xl font-semibold">Create Class</h1>
-              <p className="text-sm text-muted-foreground">
-                Create a new class for the selected academic session.
-              </p>
-            </div>
 
-            {/* Class Name */}
-            <Field className="gap-2">
-              <FieldLabel>
-                Class Name <span className="text-red-500">*</span>
-              </FieldLabel>
-              <Input
-                {...form.register("name")}
-                type="text"
-                required
-                placeholder="e.g. Class 6"
-              />
-            </Field>
-
-            <div className="flex justify-end">
-              <Button
-                disabled={isSubmitting}
-                type="submit"
-                className="gap-2"
-                size="sm"
-              >
-                {isSubmitting && <Spinner />}
-                <Plus className="h-4 w-4" />
-                Add Class
-              </Button>
+      {/* ....... */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        {/* Data Table Section */}
+        <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
+          {/* Table Header/Toolbar */}
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-muted/30">
+            <div className="text-lg font-semibold text-foreground flex items-center gap-5">
+              Academic Classes
+              <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                {classes?.length} Classes
+              </Badge>
             </div>
           </div>
-        </form>
-      )}
 
-      <div className="flex flex-col items-center p-5">
-        <p className="text-x ">Total Clsses : {classes?.length}</p>
-        <p className="text-x ">Active Clsses :</p>
-        <p className="text-x ">Sections :</p>
-      </div>
-      <div className="grid grid-cols-4 gap-10 mx-10 my-5">
-        {classes?.map((item, i) => (
-          <ClassDetails key={i} classData={item} />
-        ))}
-      </div>
+          {/* Responsive Table Wrapper */}
+          <div className="overflow-x-auto p-5">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
+                    Class Name
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
+                    Status
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
+                    Sections
+                  </TableHead>
 
-      <div></div>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {classes?.map((item, i) => (
+                  <TableRow
+                    key={i}
+                    className={`${
+                      item.isActive
+                        ? "bg-primary/5 hover:bg-primary/10"
+                        : "hover:bg-muted/50"
+                    } transition-colors group`}
+                  >
+                    {/* name */}
+                    <TableCell className="py-3">
+                      <div className={`font-medium $`}>{item.name}</div>
+                    </TableCell>
+                    {/* status */}
+                    <TableCell className="py-3">
+                      <Badge
+                        className={`${item.isActive ? "bg-green-600" : "bg-gray-400"} border`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full bg-primary/5 hover:bg-primary/10 mr-1.5 inline-block`}
+                        >
+                          *
+                        </span>
+                        {item.isActive ? "Active" : "Completed"}
+                      </Badge>
+                    </TableCell>
+                    {/* total sections */}
+                    <TableCell className="font-medium text-foreground py-3">
+                      {item.sections?.length}
+                    </TableCell>
+                    {/* actions */}
+                    <TableCell className="text-right py-3">
+                      <div
+                        className={`flex items-center justify-end gap-1 transition-opacity`}
+                      >
+                        <>
+                          <ClassDetails classData={item} />
+
+                          <DeleteModal
+                            id={item.id!}
+                            onDelete={deleteClass}
+                            onSuccess={() => {
+                              form.reset();
+                              setClasses((prev) =>
+                                prev?.filter((c) => c?.id !== item?.id),
+                              );
+                            }}
+                          />
+                        </>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+        {/* <!--  Add session Form --> */}
+        <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
+            Add Class
+          </h3>
+
+          {/* add session form */}
+          <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
+            <div>
+              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                Create Class
+              </Label>
+              <Input
+                {...form.register("name", {
+                  required: "Class name is required",
+                })}
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="e.g., 2026"
+              />
+              {form.formState.errors.name && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
+            </div>
+
+            <Button disabled={isSubmitting} variant="default" type="submit">
+              {isSubmitting ? (
+                <Spinner className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}{" "}
+              Add Class
+            </Button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

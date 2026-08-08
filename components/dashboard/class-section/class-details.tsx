@@ -15,14 +15,15 @@ import { classesTypeWithId } from "@/src/validation/classes.zod";
 import AddClassSection from "./add-section";
 import DeleteModal from "@/components/modal/delete-modal";
 import { deleteClass } from "@/src/server-actions/classes.action";
+import { Eye } from "lucide-react";
 
 export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
   const { name, isActive, sessionId, id, sections } = classData;
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button className="cursor-pointer h-25 text-xl" variant="outline">
-          {name}
+        <Button className="cursor-pointer text-xl" variant="outline">
+          <Eye />
         </Button>
       </SheetTrigger>
       <SheetContent>

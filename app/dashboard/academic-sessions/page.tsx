@@ -41,7 +41,7 @@ import EditSession from "./edit-session";
 
 export default function SessionPage() {
   const [sessions, setSessions] = useState<sessionList[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [sortBy, setSortBy] = useState("Most Recent");
   const activeSession = sessions.find((item) => item.isActive === true);
 
@@ -105,7 +105,6 @@ export default function SessionPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Active Session Highlight Card */}
         <div className="lg:col-span-2 rounded-xl border bg-card text-card-foreground p-6 relative overflow-hidden shadow-sm">
-          <div className="absolute -right-16 -top-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -216,9 +215,12 @@ export default function SessionPage() {
       <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
         {/* Table Header/Toolbar */}
         <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-muted/30">
-          <h3 className="text-lg font-semibold text-foreground">
-            Academic Session ({sessions.length})
-          </h3>
+          <div className="text-lg font-semibold text-foreground flex items-center gap-5">
+            Academic Session
+            <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+              {sessions.length} Sessions
+            </Badge>
+          </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Sort by:</span>
             <Select value={sortBy}>
