@@ -49,10 +49,9 @@ export default function EditTeachers({
   const { isSubmitting } = form.formState;
 
   //   edit button
-
   const editBtn = async (data: editTeacherType) => {
-    const res = await editTeacher(data);
-    if (res.success === false) {
+    const res = await editTeacher(data.id, data);
+    if (!res.success) {
       return toast.error("Something went wrong!");
     }
     if (res.success) {
@@ -192,7 +191,7 @@ export default function EditTeachers({
           </Card>
 
           <SheetFooter className="grid grid-cols-2 items-center justify-center">
-            <Button type="button" disabled={isSubmitting} variant="default">
+            <Button type="submit" disabled={isSubmitting} variant="default">
               {isSubmitting && <Spinner />} Save Changes
             </Button>
             <SheetClose asChild>

@@ -10,6 +10,7 @@ import { teachers } from "../db/schema/teacher.drizzle";
 import { and, eq } from "drizzle-orm";
 import { requireInstitute } from "./get-institute-profile";
 import { parseWithZod } from "../validation/validator.zod";
+import { updateRecord } from "../lib/crud-funtions/server-update-crud";
 
 // add teacher
 export async function addTeacher(data: addTeacherType) {
@@ -133,8 +134,20 @@ export async function deleteTeacher(teacherId: string) {
   }
 }
 
+// update Sessions
+export async function editTeacher(id: string, data: editTeacherType) {
+  return updateRecord(
+    {
+      drizzleSchema: teachers,
+      zodSchema: addTeacherZod,
+    },
+    id,
+    data,
+  );
+}
+
 // edit teacher
-export async function editTeacher(data: editTeacherType) {
+export async function editTeachers(data: editTeacherType) {
   const { id } = await requireInstitute();
 
   try {

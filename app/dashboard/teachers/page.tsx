@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,6 @@ import {
   Search,
   Filter,
   Download,
-  Plus,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -37,9 +35,13 @@ import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
 import Title from "@/components/Title";
 import TeacherStats from "@/components/dashboard/teachers/teacher-card";
 import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
+import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+import { SpinnerCustom } from "@/components/Spinner";
+import { useSearch } from "@/src/lib/useSearch";
 
 export default function Teacherpage() {
   const [teachers, setTeachers] = useState<Teacherlist[] | null>();
+  const [loading, setLoading] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const itemsPerPage = 6;
@@ -52,15 +54,16 @@ export default function Teacherpage() {
   useEffect(() => {
     async function getlist() {
       try {
-        const info = await getTeacher();
+        await clientReadAction(getTeacher, {
+          onSuccess: (data) => setTeachers(data as Teacherlist[]),
+          onLoading: setLoading,
+        });
         const stats = await getTeacherStats();
-
-        if (!info.success || !stats.success) {
+        if (!stats.success) {
           setTeachers(null);
           return;
         }
         setStatlist(stats);
-        setTeachers(info.data as Teacherlist[]);
       } catch (error) {
         console.error(error);
       }
@@ -68,6 +71,7 @@ export default function Teacherpage() {
 
     getlist();
   }, []);
+
   const currentUsers =
     teachers?.slice(
       (currentPage - 1) * itemsPerPage,
@@ -100,8 +104,15 @@ export default function Teacherpage() {
       .join("")
       .toUpperCase();
   };
+  // search functions
+  const { searchTerm, setSearchTerm, filteredItems } = useSearch(teachers, [
+    "nameEnglish",
+    "mobile",
+  ]);
 
-  // delete item
+  if (loading) {
+    return <SpinnerCustom />;
+  }
   return (
     <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
       <Title title="Teacher Management" />
@@ -111,14 +122,19 @@ export default function Teacherpage() {
       <div>
         <TeacherStats stats={statlist} />
       </div>
-
       {/* Main Card */}
       <Card className="pb-0 gap-0">
         <CardHeader className="border-b border-border gap-0">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input placeholder="Search user" className="pl-10" />
+
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search..."
+                className="pl-10"
+              />
             </div>
             <div className="sm:ml-auto flex items-center gap-2 flex-wrap justify-center">
               <Button
@@ -198,7 +214,7 @@ export default function Teacherpage() {
                   <p>No teachers found.</p>
                 )}
                 {/* ----------------- */}
-                {teachers?.map((user, i) => (
+                {filteredItems?.map((user, i) => (
                   <tr
                     key={i}
                     className="border-b border-border hover:bg-muted/30 transition-colors"
