@@ -52,6 +52,7 @@ export async function deleteRecord<T extends InstituteTable>(
   }
 }
 
+// use case
 // export async function deleteSession(id: string) {
 //   return deleteRecord(
 //     {

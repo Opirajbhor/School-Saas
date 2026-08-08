@@ -20,7 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   createSession,
   deleteSessions,
-  getAcademicSession,
+  getSessions,
 } from "@/src/server-actions/academicSession.action";
 import {
   academicSessionType,
@@ -29,31 +29,29 @@ import {
 } from "@/src/validation/academicSessions.zod";
 import { Input } from "@base-ui/react/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Edit, Trash2, Eye, Calendar, BarChart3 } from "lucide-react";
+import { Plus, Edit, Calendar, BarChart3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-crud-action";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import DeleteModal from "@/components/modal/delete-modal";
+import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+import { SpinnerCustom } from "@/components/Spinner";
+import EditSession from "./edit-session";
 
 export default function SessionPage() {
   const [sessions, setSessions] = useState<sessionList[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState("Most Recent");
   const activeSession = sessions.find((item) => item.isActive === true);
 
   // get academic sessions info
   useEffect(() => {
     async function getlist() {
-      try {
-        const info = await getAcademicSession();
-        if (info.success === false) {
-          setSessions([]);
-          return;
-        }
-        setSessions(info.data as sessionList[]);
-      } catch (error) {
-        console.error(error);
-      }
+      await clientReadAction(getSessions, {
+        onSuccess: (data) => setSessions(data as sessionList[]),
+        onLoading: setLoading,
+      });
     }
     getlist();
   }, []);
@@ -86,7 +84,9 @@ export default function SessionPage() {
   const totalStudents = 1000;
   const activeClasses = 27;
   const totalTerms = 5;
-
+  if (loading) {
+    return <SpinnerCustom />;
+  }
   return (
     <div className="max-w-7xl lg:w-full mx-auto p-6">
       {/* Page Header */}
@@ -302,10 +302,10 @@ export default function SessionPage() {
                     >
                       {
                         <>
-                          {/* <EditSession
-                            sessions={sessions}
+                          <EditSession
+                            session={item}
                             setSessions={setSessions}
-                          /> */}
+                          />
                           <DeleteModal
                             id={item.id}
                             onDelete={deleteSessions}

@@ -28,6 +28,7 @@ interface DeleteModalProps {
   variant?: "destructive" | "default" | "outline";
   buttonText?: string;
   loadingText?: string;
+  className?: string;
 }
 
 export default function DeleteModal({
@@ -43,6 +44,7 @@ export default function DeleteModal({
   variant = "destructive",
   buttonText = "",
   loadingText = "Deleting...",
+  className = "",
 }: DeleteModalProps) {
   const [open, setOpen] = useState(false);
   const [load, setLoad] = useState(false);
@@ -67,13 +69,13 @@ export default function DeleteModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant={variant}>
+          <Button className={`${className}`} variant={variant}>
             <Trash className="h-4 w-4" />
             {buttonText}
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className={`sm:max-w-lg `}>
         <div className="flex items-start space-x-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
             <AlertTriangleIcon className="h-6 w-6 text-red-600" />

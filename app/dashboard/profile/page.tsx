@@ -28,7 +28,7 @@ import {
   currentUser,
   sessionUserType,
 } from "@/src/server-actions/currentUser.action";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-crud-action";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 
 export default function TabbedUserProfile() {
   const [profile, setProfile] = useState<ProfileType | null>(null);

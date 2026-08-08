@@ -29,32 +29,36 @@ import { getStudents } from "@/src/server-actions/student.action";
 import Link from "next/link";
 import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
+import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+
+type RequiredFields = AddStudentType & {
+  session: string;
+  className: string;
+  section: string;
+  roll: string;
+};
 
 export default function Page() {
-  const [students, setStudents] = useState<AddStudentType[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [students, setStudents] = useState<RequiredFields[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
 
   // get Student data
   useEffect(() => {
-    const serverCall = async () => {
-      const res = await getStudents();
-      if (res.success && res.data) {
-        setStudents(res.data);
-      }
-      if (!res.success) {
-        toast.error("error fetch student data");
-      }
-    };
-    serverCall();
+    async function getlist() {
+      await clientReadAction(getStudents, {
+        onSuccess: (data) => setStudents(data as RequiredFields[]),
+        onLoading: setLoading,
+      });
+    }
+    getlist();
   }, []);
-
-  if (students === null || undefined) {
+  if (loading) {
     return <SpinnerCustom />;
   }
-
-  // add student data
 
   return (
     <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">

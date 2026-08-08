@@ -11,9 +11,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import ClassDeleteModal from "./delete-class-modal";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import AddClassSection from "./add-section";
+import DeleteModal from "@/components/modal/delete-modal";
+import { deleteClass } from "@/src/server-actions/classes.action";
 
 export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
   const { name, isActive, sessionId, id, sections } = classData;
@@ -70,7 +71,13 @@ export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
             </Button>
             <AddClassSection classData={classData} />
 
-            <ClassDeleteModal classId={id!} />
+            <DeleteModal
+              className="w-full"
+              buttonText="Delete Class Data"
+              id={id!}
+              onDelete={deleteClass}
+              onSuccess={() => {}}
+            />
           </div>
         </div>
 

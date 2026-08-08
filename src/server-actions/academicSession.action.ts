@@ -6,10 +6,10 @@ import {
 } from "../validation/academicSessions.zod";
 import { academicSessions } from "../db/schema/academic-session.drizzle";
 import { and, eq } from "drizzle-orm";
-import { requireInstitute } from "./get-institute-profile";
-import { revalidatePath } from "next/cache";
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
+import { readRecord } from "../lib/crud-funtions/server-read-crud";
+import { updateRecord } from "../lib/crud-funtions/server-update-crud";
 
 // post
 export async function createSession(data: academicSessionType) {
@@ -22,24 +22,7 @@ export async function createSession(data: academicSessionType) {
     data,
   );
 }
-// get
-export async function getAcademicSession() {
-  const profile = await requireInstitute();
-  const info = profile?.id;
-  try {
-    const data = await db.query.academicSessions.findMany({
-      where: eq(academicSessions.instituteId, info),
-    });
 
-    return {
-      success: true,
-      data: data || [],
-    };
-  } catch (error) {
-    console.error("Database error in Academic Session list:", error);
-    throw new Error("Failed to fetch Academic Session list.");
-  }
-}
 // get active session id
 export async function getActiveSessionId(instituteId: string) {
   const session = await db.query.academicSessions.findFirst({
@@ -56,51 +39,29 @@ export async function getActiveSessionId(instituteId: string) {
 
   return session.id;
 }
-// delete session
-export async function deleteSession(classId: string) {
-  const { id } = await requireInstitute();
-  try {
-    const result = await db
-      .delete(academicSessions)
-      .where(
-        and(
-          eq(academicSessions.id, classId),
-          eq(academicSessions.instituteId, id),
-        ),
-      )
-      .returning({
-        id: academicSessions.id,
-      });
 
-    if (result.length === 0) {
-      return {
-        success: false,
-        error: "Class not found.",
-      };
-    }
-    revalidatePath("/dashboard/*");
-    revalidatePath("/dashboard/");
-    revalidatePath("/dashboard/classes");
-    return {
-      success: true,
-      message: "Session deleted successfully.",
-    };
-  } catch (error) {
-    console.error("Delete Session error:", error);
-
-    return {
-      success: false,
-      error: "Failed to delete Session.",
-    };
-  }
+// get
+export async function getSessions() {
+  return readRecord({ drizzleSchema: academicSessions });
 }
-
-// --
+// delete session
 export async function deleteSessions(id: string) {
   return deleteRecord(
     {
       drizzleSchema: academicSessions,
     },
     id,
+  );
+}
+
+// update Sessions
+export async function updateSessions(id: string, data: academicSessionType) {
+  return updateRecord(
+    {
+      drizzleSchema: academicSessions,
+      zodSchema: academicSessionZod,
+    },
+    id,
+    data,
   );
 }
