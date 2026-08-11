@@ -2,12 +2,11 @@
 import { ClassDetails } from "@/components/dashboard/class-section/class-details";
 import DeleteModal from "@/components/modal/delete-modal";
 import { SpinnerCustom } from "@/components/Spinner";
-import Title from "@/components/Title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
@@ -33,11 +32,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 export default function Classes() {
   const [loading, setLoading] = useState<boolean>(true);
   const [classes, setClasses] = useState<classesTypeWithId[]>();
+  const allSections = classes?.flatMap((cls) => cls.sections || []) ?? [];
+
   // get classes and sections
   useEffect(() => {
     async function getlist() {
@@ -85,7 +85,22 @@ export default function Classes() {
           </p>
         </div>
       </div>
-
+      <div className="grid grid-cols-2 gap-5 mb-5 items-center justify-center w-full">
+        {/* class  stats*/}
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-sm text-muted-foreground">Total Classes</p>
+            <h2 className="mt-2 text-3xl font-bold">{classes?.length}</h2>
+          </CardContent>
+        </Card>
+        {/* sections stats*/}
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-sm text-muted-foreground">Total Sections</p>
+            <h2 className="mt-2 text-3xl font-bold">{allSections?.length}</h2>
+          </CardContent>
+        </Card>
+      </div>
       {/* ....... */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         {/* Data Table Section */}
@@ -148,8 +163,15 @@ export default function Classes() {
                       </Badge>
                     </TableCell>
                     {/* total sections */}
-                    <TableCell className="font-medium text-foreground py-3">
-                      {item.sections?.length}
+                    <TableCell className="font-medium flex items-center gap-2 text-foreground py-3">
+                      <Badge variant="secondary">{item.sections?.length}</Badge>
+                      <Badge variant="outline">
+                        {item.sections
+                          ?.slice()
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((s) => s.name)
+                          .join(", ")}
+                      </Badge>
                     </TableCell>
                     {/* actions */}
                     <TableCell className="text-right py-3">
@@ -157,7 +179,10 @@ export default function Classes() {
                         className={`flex items-center justify-end gap-1 transition-opacity`}
                       >
                         <>
-                          <ClassDetails classData={item} />
+                          <ClassDetails
+                            classData={item}
+                            setClasses={setClasses}
+                          />
 
                           <DeleteModal
                             id={item.id!}

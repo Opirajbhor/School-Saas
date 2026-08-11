@@ -1,3 +1,4 @@
+"use client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +15,21 @@ import {
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import AddClassSection from "./add-section";
 import DeleteModal from "@/components/modal/delete-modal";
-import { deleteClass } from "@/src/server-actions/classes.action";
+import {
+  deleteClass,
+  deleteSection,
+} from "@/src/server-actions/classes.action";
 import { Eye } from "lucide-react";
 
-export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
+export function ClassDetails({
+  classData,
+  setClasses,
+}: {
+  classData: classesTypeWithId;
+  setClasses: React.Dispatch<
+    React.SetStateAction<classesTypeWithId[] | undefined>
+  >;
+}) {
   const { name, isActive, sessionId, id, sections } = classData;
   return (
     <Sheet>
@@ -58,26 +70,53 @@ export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
           <h2 className="text-xl text-primary-foreground">
             Sections : {sections?.length}
           </h2>
-          <div className="grid grid-cols-3">
-            {sections?.map((item, i) => (
-              <p className="border p-5 w-auto text-center rounded-2xl " key={i}>
-                {item.name}
-              </p>
-            ))}{" "}
+          <div className="grid grid-cols-3  gap-3">
+            {sections
+              ?.sort((a, b) => a.name.localeCompare(b.name))
+              .map((item, i) => (
+                <div
+                  className="border p-5 w-auto text-center rounded-2xl "
+                  key={i}
+                >
+                  {item.name}
+                  <DeleteModal
+                    className="w-full"
+                    buttonText=""
+                    id={item.id!}
+                    onDelete={deleteSection}
+                    onSuccess={() => {
+                      setClasses((prev) =>
+                        prev?.map((cls) =>
+                          cls.id === id
+                            ? {
+                                ...cls,
+                                sections: cls.sections?.filter(
+                                  (s) => s.id !== item.id,
+                                ),
+                              }
+                            : cls,
+                        ),
+                      );
+                    }}
+                  />
+                </div>
+              ))}
           </div>
 
           <div>
             <Button className="w-full cursor-pointer mb-3" variant={"outline"}>
               Edit
             </Button>
-            <AddClassSection classData={classData} />
+            <AddClassSection classData={classData} setClasses={setClasses} />
 
             <DeleteModal
               className="w-full"
               buttonText="Delete Class Data"
               id={id!}
               onDelete={deleteClass}
-              onSuccess={() => {}}
+              onSuccess={() => {
+                setClasses((prev) => prev?.filter((cls) => cls.id !== id));
+              }}
             />
           </div>
         </div>

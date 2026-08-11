@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
 import { parseWithZod } from "../validation/validator.zod";
+import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
 
 // get classes and sections
 export async function getClasses() {
@@ -139,4 +140,14 @@ export async function postSection(data: sectionType) {
       error: "Failed to create section due to a database failure.",
     };
   }
+}
+
+// delete section
+export async function deleteSection(id: string) {
+  return deleteRecord(
+    {
+      drizzleSchema: sectionDrizzle,
+    },
+    id,
+  );
 }

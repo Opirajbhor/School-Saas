@@ -39,4 +39,8 @@ export const sectionZod = z.object({
   }),
 });
 
-export type sectionType = z.infer<typeof sectionZod>;
+export type sectionTypeWithId = z.infer<typeof sectionZod>;
+
+export type sectionType = sectionTypeWithId & {
+  id?: string;
+};

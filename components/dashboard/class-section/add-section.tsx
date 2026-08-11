@@ -24,8 +24,12 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 export default function AddClassSection({
   classData,
+  setClasses,
 }: {
   classData: classesTypeWithId;
+  setClasses: React.Dispatch<
+    React.SetStateAction<classesTypeWithId[] | undefined>
+  >;
 }) {
   const { name, id } = classData;
   const [load, setLoad] = useState(false);
@@ -47,6 +51,13 @@ export default function AddClassSection({
       const res = await postSection(data);
       if (res.success) {
         toast.success("Section Created Succesfully");
+        setClasses((prev) =>
+          prev?.map((cls) =>
+            cls.id === classData.id
+              ? { ...cls, sections: [...(cls.sections || []), data] }
+              : cls,
+          ),
+        );
       }
     } catch (error) {
       toast.error("Error Creating Section");
