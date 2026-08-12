@@ -1,6 +1,6 @@
 import { index, pgTable, text, unique, uuid } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
-import { timestamps } from "../Enums/enums";
+import { timestamps } from "./enums-drizzle";
 import { user } from "./auth-schema.drizzle";
 
 export const teachers = pgTable(

@@ -1,101 +1,33 @@
 "use server";
-import { db } from "../db";
-import { verifyUser } from "./verifyUser.action";
-import { AddSubjectType, addSubjectZod } from "../validation/subjects.zod";
 import { subjectDbSchema } from "../db/schema/subjects.drizzle";
-import { getActiveSessionId } from "./academicSession.action";
-import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-import { requireInstitute } from "./get-institute-profile";
-import { parseWithZod } from "../validation/validator.zod";
+import { createRecord } from "../lib/crud-funtions/server-create-crud";
+import { inputSubjectType, inputSubjectZod } from "../validation/subjects.zod";
+import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
+import { readRecord } from "../lib/crud-funtions/server-read-crud";
 
-// add subject
-export async function addSubjects(data: AddSubjectType) {
-  const profile = await requireInstitute();
-
-  const sessionId = await getActiveSessionId(profile?.id);
-  // parse with zod-----------------
-  const validatedFields = parseWithZod(addSubjectZod, data);
-  if (!validatedFields.success) return validatedFields;
-  // parse with zod-----------------
-
-  try {
-    const [newSubject] = await db
-      .insert(subjectDbSchema)
-      .values({
-        ...validatedFields.data,
-        instituteId: profile.id,
-        sessionId: sessionId,
-      })
-      .returning();
-
-    return {
-      success: true as const,
-      data: newSubject,
-    };
-  } catch (error) {
-    console.error("Database error during subject creation:", error);
-    return {
-      success: false as const,
-      error: "Failed to create subject due to a database failure.",
-      details: {},
-    };
-  }
+// add
+export async function addSubjects(data: inputSubjectType) {
+  return createRecord(
+    {
+      zodSchema: inputSubjectZod,
+      drizzleSchema: subjectDbSchema,
+      additionFields: { status: "ACTIVE", isReligion: false, religion: null },
+    },
+    data,
+  );
 }
 
-// get Subjects list
+// get
 export async function getSubjects() {
-  const { id } = await requireInstitute();
-
-  try {
-    const data = await db.query.subjectDbSchema.findMany({
-      where: eq(subjectDbSchema.instituteId, id),
-    });
-
-    return {
-      success: true,
-      data: data || [],
-    };
-  } catch (error) {
-    console.error("Database error in Subject list:", error);
-    throw new Error("Failed to fetch Subject list.");
-  }
+  return readRecord({ drizzleSchema: subjectDbSchema });
 }
 
-// delete SUBJECT
+// delete
 export async function deleteSubject(id: string) {
-  const info = await requireInstitute();
-
-  try {
-    const result = await db
-      .delete(subjectDbSchema)
-      .where(
-        and(
-          eq(subjectDbSchema.id, id),
-          eq(subjectDbSchema.instituteId, info.id),
-        ),
-      )
-      .returning({
-        id: subjectDbSchema.id,
-      });
-
-    if (result.length === 0) {
-      return {
-        success: false,
-        error: "Class not found.",
-      };
-    }
-    revalidatePath("/dashboard/");
-    return {
-      success: true,
-      message: "subject deleted successfully.",
-    };
-  } catch (error) {
-    console.error("Delete subject error:", error);
-
-    return {
-      success: false,
-      error: "Failed to delete subject.",
-    };
-  }
+  return deleteRecord(
+    {
+      drizzleSchema: subjectDbSchema,
+    },
+    id,
+  );
 }

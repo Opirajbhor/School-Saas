@@ -1,7 +1,7 @@
 import { pgTable, uuid, boolean, text, index } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { academicSessions } from "./academic-session.drizzle";
-import { timestamps } from "../Enums/enums";
+import { timestamps } from "./enums-drizzle";
 import { user } from "./auth-schema.drizzle";
 import { unique } from "drizzle-orm/pg-core";
 export const classesDrizzle = pgTable(

@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { unique } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
-import { timestamps } from "../Enums/enums";
+import { timestamps } from "./enums-drizzle";
 
 export const academicSessions = pgTable(
   "academic_sessions",

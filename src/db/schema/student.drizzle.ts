@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { instituteProfile } from "./institute-profile-schema.drizzle";
-import { timestamps } from "../Enums/enums";
+import { timestamps } from "./enums-drizzle";
 
 export const studentGenderEnum = pgEnum("student_gender", [
   "MALE",

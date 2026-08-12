@@ -1,163 +1,280 @@
 "use client";
-import Title from "@/components/Title";
+import { SpinnerCustom } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import {
   addSubjects,
   deleteSubject,
   getSubjects,
 } from "@/src/server-actions/subjects.action";
-import { AddSubjectType, addSubjectZod } from "@/src/validation/subjects.zod";
+import {
+  inputSubjectType,
+  inputSubjectZod,
+  outputSubjectType,
+} from "@/src/validation/subjects.zod";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import { toast } from "sonner";
-
-type SublistType = AddSubjectType & {
-  id: string;
-};
+import DeleteModal from "@/components/modal/delete-modal";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   const [open, setOpen] = useState<boolean>(false);
-  const [subjects, setSubjects] = useState<SublistType[] | undefined>(
+  const [loading, setLoading] = useState<boolean>(true);
+  const [subjects, setSubjects] = useState<outputSubjectType[] | undefined>(
     undefined,
   );
   useEffect(() => {
-    async function getInfo() {
-      const res = await getSubjects();
-      if (res.success) {
-        setSubjects(res.data);
-      }
+    async function getlist() {
+      await clientReadAction(getSubjects, {
+        onSuccess: (data) => setSubjects(data as outputSubjectType[]),
+        onLoading: setLoading,
+      });
     }
-    getInfo();
+    getlist();
   }, []);
-  const form = useForm<AddSubjectType>({
-    resolver: zodResolver(addSubjectZod),
+  const activeSubjects = subjects?.filter((item) => item.status === "ACTIVE");
+  const form = useForm<inputSubjectType>({
+    resolver: zodResolver(inputSubjectZod),
     defaultValues: {
-      name: "",
-      isActive: true,
-      code: "",
+      status: "ACTIVE",
+      isReligion: false,
+      religion: null,
     },
   });
   const { isSubmitting } = form.formState;
 
   // add button
-  const addBtn = async (data: AddSubjectType) => {
+  const addBtn = async (data: inputSubjectType) => {
+    console.log("Form errors:", form.formState.errors);
     await handleCrudAction(addSubjects, data, {
-      successMessage: "Session Created Successfully",
+      successMessage: "Subject Created Successfully",
       onSuccess: (item) => {
-        setSubjects((prev) => [...(prev || []), item]);
+        setSubjects((prev) => [...(prev || []), item as outputSubjectType]);
         form.reset();
       },
     });
   };
 
-  // delete subject
-  const deleteBtn = async (id: string) => {
-    try {
-      const res = await deleteSubject(id);
-      if (res.success) {
-        return toast.success(res.message);
-      }
-      if (!res.success) {
-        return toast.error(res.message);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  if (loading) {
+    return <SpinnerCustom />;
+  }
   return (
-    <div>
-      <div className="flex items-center gap-5 mx-10 my-5">
+    <div className="max-w-7xl lg:w-full mx-auto p-6">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
-          <Title title="Subjects" />
-          <p>Manage all subjects in your institution</p>
+          <h2 className="text-3xl font-bold text-foreground mb-1">
+            Subjects Management
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Manage academic Subjects.
+          </p>
         </div>
-        <Button
-          onClick={() => setOpen(!open)}
-          className="gap-1.5 bg-primary cursor-pointer"
-          size="sm"
-          variant={"outline"}
-        >
-          {open ? <IoIosArrowUp /> : <IoIosArrowDown />} Add Subjects
-        </Button>
-        {open && (
-          <form
-            onSubmit={form.handleSubmit(addBtn)}
-            className="space-y-6 mx-10 border p-5 rounded-2xl"
-          >
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <h1 className="text-xl font-semibold">Create Subject</h1>
-                <p className="text-sm text-muted-foreground">
-                  Create a new subject for the selected academic session.
-                </p>
-              </div>
-
-              {/* Subject Name */}
-              <Field className="gap-2">
-                <FieldLabel>
-                  Subject Name <span className="text-red-500">*</span>
-                </FieldLabel>
-                <Input
-                  {...form.register("name")}
-                  type="text"
-                  required
-                  placeholder="e.g. Bangla 1st Paper"
-                />
-              </Field>
-              {/* Subject code */}
-              <Field className="gap-2">
-                <FieldLabel>
-                  Subject Code <span className="text-red-500">*</span>
-                </FieldLabel>
-                <Input
-                  {...form.register("code")}
-                  type="text"
-                  required
-                  placeholder="e.g. 101,102"
-                />
-              </Field>
-
-              <div className="flex justify-end">
-                <Button
-                  disabled={isSubmitting}
-                  type="submit"
-                  className="gap-2"
-                  size="sm"
-                >
-                  {isSubmitting && <Spinner />}
-                  <Plus className="h-4 w-4" />
-                  Add Subject
-                </Button>
-              </div>
+      </div>
+      <div className="grid grid-cols-2 gap-5 mb-5 items-center justify-center w-full">
+        {/* class  stats*/}
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-sm text-muted-foreground">Total Subjects</p>
+            <h2 className="mt-2 text-3xl font-bold">{subjects?.length}</h2>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-sm text-muted-foreground">
+              Total Active Subjects
+            </p>
+            <h2 className="mt-2 text-3xl font-bold">
+              {activeSubjects?.length}
+            </h2>
+          </CardContent>
+        </Card>
+      </div>
+      {/* ....... */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        {/* Data Table Section */}
+        <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
+          {/* Table Header/Toolbar */}
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-muted/30">
+            <div className="text-lg font-semibold text-foreground flex items-center gap-5">
+              Academic Subjects
+              <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                {subjects?.length} Subjects
+              </Badge>
             </div>
-          </form>
-        )}
-      </div>
-      <div className="flex flex-col items-center p-5">
-        <p className="text-x ">Total subject : {subjects?.length}</p>
-      </div>
-      <div className="grid grid-cols-3  mx-10 ">
-        {subjects?.map((item, i) => (
-          <div
-            key={i}
-            className=" flex justify-between border-2 p-10 text-2xl "
-          >
-            <h3>
-              {item.name} <br />
-              <span> {item.code}</span>
-            </h3>
-            <Button variant={"destructive"} onClick={() => deleteBtn(item.id)}>
-              <Trash />
-            </Button>
           </div>
-        ))}
+
+          {/* Responsive Table Wrapper */}
+          <div className="overflow-x-auto p-5">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
+                    Subject Name
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
+                    Code
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
+                    ShortForm
+                  </TableHead>
+
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
+                    Status
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subjects?.map((item, i) => (
+                  <TableRow
+                    key={i}
+                    className={`${
+                      item.status === "ACTIVE"
+                        ? "bg-primary/5 hover:bg-primary/10"
+                        : "hover:bg-muted/50"
+                    } transition-colors group`}
+                  >
+                    {/* name */}
+                    <TableCell className="py-3">
+                      <p className={`font-medium $`}>{item.name}</p>
+                    </TableCell>
+
+                    {/* code */}
+                    <TableCell className="font-medium  text-foreground py-3">
+                      <p className={`font-medium $`}>{item.code}</p>
+                    </TableCell>
+                    {/* shortform */}
+                    <TableCell className="font-medium  text-foreground py-3">
+                      {item.shortName}
+                    </TableCell>
+                    {/* status */}
+                    <TableCell className="text-right py-3">
+                      <Badge
+                        className={`${item.status === "ACTIVE" && "bg-green-50 text-green-700 dark:bg-green-950 dark"} border`}
+                      >
+                        {item.status}
+                      </Badge>
+                    </TableCell>
+                    {/* actions */}
+                    <TableCell className="text-right py-3">
+                      <div
+                        className={`flex items-center justify-end gap-1 transition-opacity`}
+                      >
+                        <>
+                          <DeleteModal
+                            id={item.id}
+                            onDelete={deleteSubject}
+                            onSuccess={() => {
+                              form.reset();
+                              setSubjects((prev) =>
+                                prev?.filter((c) => c?.id !== item?.id),
+                              );
+                            }}
+                          />
+                        </>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+        {/* <!--  Add subject Form --> */}
+        <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
+            Add subject
+          </h3>
+
+          {/* add subject form */}
+          <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
+            {/* name */}
+            <div>
+              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                Subject Name
+              </Label>
+              <Input
+                {...form.register("name", {
+                  required: "Subject name is required",
+                })}
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="e.g., Bangla 1st Paper"
+              />
+              {form.formState.errors.name && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
+            </div>
+            {/* shortName */}
+            <div>
+              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                Subject Short Name
+              </Label>
+              <Input
+                {...form.register("shortName", {
+                  required: "Subject short name is required",
+                })}
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="e.g., Bng, Eng"
+              />
+              {form.formState.errors.shortName && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.shortName.message}
+                </p>
+              )}
+            </div>
+            {/* code */}
+            <div>
+              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                Subject Code
+              </Label>
+              <Input
+                {...form.register("code", {
+                  required: "Subject code is required",
+                })}
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="e.g., 101, 102"
+              />
+              {form.formState.errors.code && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.code.message}
+                </p>
+              )}
+            </div>
+
+            <Button disabled={isSubmitting} variant="default" type="submit">
+              {isSubmitting ? (
+                <Spinner className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}{" "}
+              Add Subject
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

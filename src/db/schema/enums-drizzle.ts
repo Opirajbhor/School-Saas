@@ -1,6 +1,6 @@
 import { pgEnum, timestamp } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["INSTITUTE_ADMIN", "TEACHER"]);
+// driggle enums
 
 export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
 
