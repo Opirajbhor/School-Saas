@@ -11,7 +11,7 @@ export async function addSubjects(data: inputSubjectType) {
     {
       zodSchema: inputSubjectZod,
       drizzleSchema: subjectDbSchema,
-      additionFields: { status: "ACTIVE", isReligion: false, religion: null },
+      additionFields: { status: "ACTIVE" },
     },
     data,
   );

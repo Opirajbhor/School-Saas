@@ -3,7 +3,6 @@ import { SpinnerCustom } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
@@ -32,6 +31,13 @@ import { useForm } from "react-hook-form";
 import DeleteModal from "@/components/modal/delete-modal";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { Toggle } from "@/components/ui/toggle";
+import { MdCheckBox, MdOutlineRadioButtonUnchecked } from "react-icons/md";
+import { IoMdCheckmarkCircle } from "react-icons/io";
 
 export default function Page() {
   const [open, setOpen] = useState<boolean>(false);
@@ -49,24 +55,29 @@ export default function Page() {
     getlist();
   }, []);
   const activeSubjects = subjects?.filter((item) => item.status === "ACTIVE");
+  const [isReligion, setIsReligion] = useState<boolean>(false);
   const form = useForm<inputSubjectType>({
     resolver: zodResolver(inputSubjectZod),
     defaultValues: {
       status: "ACTIVE",
-      isReligion: false,
+      isReligion: isReligion,
       religion: null,
     },
   });
   const { isSubmitting } = form.formState;
-
   // add button
   const addBtn = async (data: inputSubjectType) => {
-    console.log("Form errors:", form.formState.errors);
-    await handleCrudAction(addSubjects, data, {
+    const payload = {
+      ...data,
+      isReligion: isReligion,
+      religion: isReligion ? data.religion : null,
+    };
+    await handleCrudAction(addSubjects, payload, {
       successMessage: "Subject Created Successfully",
       onSuccess: (item) => {
         setSubjects((prev) => [...(prev || []), item as outputSubjectType]);
         form.reset();
+        setIsReligion(false);
       },
     });
   };
@@ -88,7 +99,7 @@ export default function Page() {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-5 mb-5 items-center justify-center w-full">
-        {/* class  stats*/}
+        {/* subjects  stats*/}
         <Card>
           <CardContent className="p-6">
             <p className="text-sm text-muted-foreground">Total Subjects</p>
@@ -134,6 +145,9 @@ export default function Page() {
                   <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
                     ShortForm
                   </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
+                    Religion
+                  </TableHead>
 
                   <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
                     Status
@@ -165,6 +179,9 @@ export default function Page() {
                     {/* shortform */}
                     <TableCell className="font-medium  text-foreground py-3">
                       {item.shortName}
+                    </TableCell>
+                    <TableCell className="font-medium  text-foreground py-3">
+                      {item?.isReligion ? item.religion : "-"}
                     </TableCell>
                     {/* status */}
                     <TableCell className="text-right py-3">
@@ -264,7 +281,40 @@ export default function Page() {
                 </p>
               )}
             </div>
-
+            {/* toggle */}
+            <div>
+              <Toggle
+                onClick={() => setIsReligion(!isReligion)}
+                aria-label="Toggle bookmark"
+                size="sm"
+                variant="outline"
+                className="cursor-pointer"
+              >
+                {isReligion ? (
+                  <IoMdCheckmarkCircle className="group-aria-pressed/toggle:fill-foreground" />
+                ) : (
+                  <MdOutlineRadioButtonUnchecked className="group-aria-pressed/toggle:fill-foreground" />
+                )}
+                Religion Subject
+              </Toggle>
+            </div>
+            {/* religion list */}
+            <NativeSelect
+              {...form.register("religion")}
+              className="w-full text-xs h-9 cursor-pointer"
+              disabled={!isReligion}
+            >
+              <NativeSelectOption disabled value="">
+                Select Religion
+              </NativeSelectOption>
+              <NativeSelectOption value="ISLAM">ISLAM</NativeSelectOption>
+              <NativeSelectOption value="HINDUISM">HINDUISM</NativeSelectOption>
+              <NativeSelectOption value="CHRISTIANITY">
+                CHRISTIANITY
+              </NativeSelectOption>
+              <NativeSelectOption value="BUDDHISM">BUDDHISM</NativeSelectOption>
+              <NativeSelectOption value="OTHER">OTHER</NativeSelectOption>
+            </NativeSelect>
             <Button disabled={isSubmitting} variant="default" type="submit">
               {isSubmitting ? (
                 <Spinner className="mr-2 h-4 w-4 animate-spin" />
