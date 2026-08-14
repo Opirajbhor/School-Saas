@@ -5,6 +5,7 @@ export * from "./schema/academic-session.drizzle";
 export * from "./schema/classes.drizzle";
 export * from "./schema/subjects.drizzle";
 export * from "./schema/student.drizzle";
+export * from "./schema/groups.drizzle";
 export * from "./schema/enums-drizzle";
 
 export * from "../db/relations/drizzleRelation";

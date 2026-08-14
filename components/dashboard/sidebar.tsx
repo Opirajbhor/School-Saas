@@ -34,6 +34,11 @@ const nav = [
       { name: "Sessions", link: "/dashboard/academic-sessions", icon: School },
       { name: "Classes", link: "/dashboard/classes", icon: School },
       { name: "Subjects", link: "/dashboard/subjects", icon: Library },
+      {
+        name: "Groups",
+        link: "/dashboard/groups",
+        icon: Library,
+      },
     ],
   },
   {

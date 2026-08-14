@@ -40,7 +40,6 @@ import { MdCheckBox, MdOutlineRadioButtonUnchecked } from "react-icons/md";
 import { IoMdCheckmarkCircle } from "react-icons/io";
 
 export default function Page() {
-  const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [subjects, setSubjects] = useState<outputSubjectType[] | undefined>(
     undefined,
