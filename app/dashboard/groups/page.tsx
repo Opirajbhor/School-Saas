@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
+import { ArrowBigRight, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import DeleteModal from "@/components/modal/delete-modal";
@@ -41,10 +41,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AssignGroups from "./assign-groups";
 
 export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
-  const [classes, setClasses] = useState<classesTypeWithId[]>();
 
   const [groups, setGroups] = useState<outputGroupType[] | undefined>(
     undefined,
@@ -55,14 +55,9 @@ export default function Page() {
         onSuccess: (data) => setGroups(data as outputGroupType[]),
         onLoading: setLoading,
       });
-      await clientReadAction(getClasses, {
-        onSuccess: (data) => setClasses(data as classesTypeWithId[]),
-        onLoading: setLoading,
-      });
     }
     getlist();
   }, []);
-  console.log(groups);
   const activegroups = groups?.filter((item) => item.status === true);
   const form = useForm<inputGroupType>({
     resolver: zodResolver(addGroupZod),
@@ -128,18 +123,20 @@ export default function Page() {
           </div>
 
           {/* Responsive Table Wrapper */}
-          <div className="overflow-x-auto p-5">
+          <div className="overflow-x-auto p-2">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
                   <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
                     Group Name
                   </TableHead>
-
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-center">
                     Status
                   </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-center">
+                    Assigned Classes
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -152,38 +149,37 @@ export default function Page() {
                       item?.status === true
                         ? "bg-primary/5 hover:bg-primary/10"
                         : "hover:bg-muted/50"
-                    } transition-colors group`}
+                    } transition-colors`}
                   >
-                    {/* name */}
-                    <TableCell className="py-3">
-                      <p className={`font-medium $`}>{item.name}</p>
+                    <TableCell className="py-3 font-medium">
+                      {item.name}
                     </TableCell>
-
-                    {/* status */}
-                    <TableCell className="text-right py-3">
+                    <TableCell className="py-3 text-center">
                       <Badge
-                        className={`${item.status === true && "bg-green-50 text-green-700 dark:bg-green-950 dark"} border`}
+                        variant={item.status ? "default" : "secondary"}
+                        className={
+                          item.status ? "bg-green-100 text-green-800" : ""
+                        }
                       >
-                        {item.status}
+                        {item.status ? "ACTIVE" : "INACTIVE"}
                       </Badge>
                     </TableCell>
-                    {/* actions */}
-                    <TableCell className="text-right py-3">
-                      <div
-                        className={`flex items-center justify-end gap-1 transition-opacity`}
-                      >
-                        <>
-                          <DeleteModal
-                            id={item.id}
-                            onDelete={deleteGroup}
-                            onSuccess={() => {
-                              form.reset();
-                              setGroups((prev) =>
-                                prev?.filter((c) => c?.id !== item?.id),
-                              );
-                            }}
-                          />
-                        </>
+                    <TableCell className="py-3 text-center font-medium">
+                      {item.name}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <AssignGroups group={item} />
+                        <DeleteModal
+                          id={item.id}
+                          onDelete={deleteGroup}
+                          onSuccess={() => {
+                            form.reset();
+                            setGroups((prev) =>
+                              prev?.filter((c) => c?.id !== item?.id),
+                            );
+                          }}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

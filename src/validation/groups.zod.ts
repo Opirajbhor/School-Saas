@@ -20,3 +20,15 @@ export type inputGroupType = z.infer<typeof addGroupZod>;
 export type outputGroupType = inputGroupType & {
   id: string;
 };
+
+// assign to class
+
+export const assignGroupClassZod = z.object({
+  groupId: z.uuid("Invalid group id"),
+
+  classIds: z
+    .array(z.uuid("Invalid class id"))
+    .min(1, "Select at least one class"),
+});
+
+export type AssignGroupClassType = z.infer<typeof assignGroupClassZod>;
