@@ -32,3 +32,20 @@ export const assignGroupClassZod = z.object({
 });
 
 export type AssignGroupClassType = z.infer<typeof assignGroupClassZod>;
+
+export type OutputGroupClassType = {
+  id: string;
+  instituteId: string;
+  name: string;
+  status: boolean;
+  groupClasses: {
+    id: string;
+    groupId: string;
+    classId: string;
+    instituteId: string;
+    class: {
+      id: string;
+      name: string;
+    };
+  }[];
+};

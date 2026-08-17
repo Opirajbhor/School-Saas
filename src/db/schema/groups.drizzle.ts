@@ -34,11 +34,12 @@ export const groups = pgTable(
   ],
 );
 
-export const groupsRelations = relations(groups, ({ one }) => ({
+export const groupsRelations = relations(groups, ({ one, many }) => ({
   institute: one(instituteProfile, {
     fields: [groups.instituteId],
     references: [instituteProfile.id],
   }),
+  groupClasses: many(groupClasses),
 }));
 
 // groups and classes

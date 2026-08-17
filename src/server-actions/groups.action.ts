@@ -1,10 +1,9 @@
 "use server";
-import { revalidatePath } from "next/cache";
 import { db } from "../db";
 import { groupClasses, groups } from "../db/schema/groups.drizzle";
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
-import { readRecord } from "../lib/crud-funtions/server-read-crud";
+import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
 import {
   addGroupZod,
   AssignGroupClassType,
@@ -106,4 +105,22 @@ export async function assignGroupClasses(data: AssignGroupClassType) {
     success: true as const,
     data: assigned,
   };
+}
+
+// // get group classes
+export async function getGroupClasses() {
+  return await readMany({
+    drizzleSchema: groups,
+    query: ({ db, instituteId }) =>
+      db.query.groups.findMany({
+        where: eq(groups.instituteId, instituteId),
+        with: {
+          groupClasses: {
+            with: {
+              class: true,
+            },
+          },
+        },
+      }),
+  });
 }

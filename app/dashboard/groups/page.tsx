@@ -9,7 +9,9 @@ import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 
 import {
   addGroupZod,
+  AssignGroupClassType,
   inputGroupType,
+  OutputGroupClassType,
   outputGroupType,
 } from "@/src/validation/groups.zod";
 import {
@@ -30,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   createGroup,
   deleteGroup,
+  getGroupClasses,
   getGroups,
 } from "@/src/server-actions/groups.action";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
@@ -49,15 +52,22 @@ export default function Page() {
   const [groups, setGroups] = useState<outputGroupType[] | undefined>(
     undefined,
   );
+  const [groupClasses, setGroupClasses] = useState<
+    OutputGroupClassType[] | undefined
+  >(undefined);
   useEffect(() => {
     async function getlist() {
       await clientReadAction(getGroups, {
         onSuccess: (data) => setGroups(data as outputGroupType[]),
         onLoading: setLoading,
       });
+      await clientReadAction(getGroupClasses, {
+        onSuccess: (data) => setGroupClasses(data),
+      });
     }
     getlist();
   }, []);
+  console.log(groupClasses);
   const activegroups = groups?.filter((item) => item.status === true);
   const form = useForm<inputGroupType>({
     resolver: zodResolver(addGroupZod),
@@ -142,7 +152,7 @@ export default function Page() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {groups?.map((item, i) => (
+                {groupClasses?.map((item, i) => (
                   <TableRow
                     key={i}
                     className={`${
@@ -165,7 +175,11 @@ export default function Page() {
                       </Badge>
                     </TableCell>
                     <TableCell className="py-3 text-center font-medium">
-                      {item.name}
+                      {item.groupClasses.length > 0
+                        ? item.groupClasses
+                            .map((gc) => gc.class.name)
+                            .join(", ")
+                        : "Not Assigned"}
                     </TableCell>
                     <TableCell className="py-3">
                       <div className="flex items-center justify-end gap-1">
