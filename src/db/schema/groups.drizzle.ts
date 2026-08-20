@@ -9,7 +9,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
-import { timestamps } from "./enums-drizzle";
+import { statusEnum, timestamps } from "./enums-drizzle";
 import { classesDrizzle } from "./classes.drizzle";
 
 // groups
@@ -66,6 +66,7 @@ export const groupClasses = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
+    status: statusEnum("status").notNull().default("ACTIVE"),
   },
   (table) => [
     unique("group_classes_group_class_unique").on(table.groupId, table.classId),

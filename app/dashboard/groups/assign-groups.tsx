@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -19,15 +18,19 @@ import { classesTypeWithId } from "@/src/validation/classes.zod";
 import {
   AssignGroupClassType,
   assignGroupClassZod,
-  outputGroupType,
+  OutputGroupClassType,
 } from "@/src/validation/groups.zod";
 import { assignGroupClasses } from "@/src/server-actions/groups.action";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 
-export default function AssignGroups({ group }: { group: outputGroupType }) {
+export default function AssignGroups({
+  group,
+}: {
+  group: OutputGroupClassType;
+}) {
   const [classes, setClasses] = useState<classesTypeWithId[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -38,9 +41,6 @@ export default function AssignGroups({ group }: { group: outputGroupType }) {
       classIds: [],
     },
   });
-
-  const { isSubmitting } = form.formState;
-  const selectedClasses = form.watch("classIds");
 
   useEffect(() => {
     async function getList() {
@@ -54,6 +54,11 @@ export default function AssignGroups({ group }: { group: outputGroupType }) {
     getList();
   }, []);
 
+  const { isSubmitting } = form.formState;
+  const selectedClasses = useWatch({
+    control: form.control,
+    name: "classIds",
+  });
   const handleToggleClass = (classId: string) => {
     const current = form.getValues("classIds");
 
@@ -84,15 +89,21 @@ export default function AssignGroups({ group }: { group: outputGroupType }) {
     });
   };
 
+  // modal
   const handleOpenChange = (value: boolean) => {
     setOpen(value);
-
-    if (!value) {
+    if (value) {
       form.reset({
         groupId: group.id,
-        classIds: [],
+        classIds: group.groupClasses.map((item) => item.classId),
       });
+
+      return;
     }
+    form.reset({
+      groupId: group.id,
+      classIds: [],
+    });
   };
 
   return (
@@ -122,7 +133,7 @@ export default function AssignGroups({ group }: { group: outputGroupType }) {
             <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
               {classes.length > 0 ? (
                 classes.map((classItem) => {
-                  const isSelected = selectedClasses.includes(classItem.id);
+                  const isSelected = selectedClasses.includes(classItem.id!);
 
                   return (
                     <div
@@ -133,17 +144,17 @@ export default function AssignGroups({ group }: { group: outputGroupType }) {
                         "flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors",
                         isSelected && "bg-muted border-primary",
                       )}
-                      onClick={() => handleToggleClass(classItem.id)}
+                      onClick={() => handleToggleClass(classItem.id!)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          handleToggleClass(classItem.id);
+                          handleToggleClass(classItem.id!);
                         }
                       }}
                     >
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={() => handleToggleClass(classItem.id)}
+                        onCheckedChange={() => handleToggleClass(classItem.id!)}
                         onClick={(e) => e.stopPropagation()}
                       />
 

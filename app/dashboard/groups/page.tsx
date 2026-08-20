@@ -9,7 +9,6 @@ import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 
 import {
   addGroupZod,
-  AssignGroupClassType,
   inputGroupType,
   OutputGroupClassType,
   outputGroupType,
@@ -23,9 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowBigRight, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import DeleteModal from "@/components/modal/delete-modal";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -34,40 +32,28 @@ import {
   deleteGroup,
   getGroupClasses,
   getGroups,
+  toggleGroup,
 } from "@/src/server-actions/groups.action";
-import { classesTypeWithId } from "@/src/validation/classes.zod";
-import { getClasses } from "@/src/server-actions/classes.action";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import AssignGroups from "./assign-groups";
+import { Plus } from "lucide-react";
+import StatusModal from "@/components/modal/status-toggle-modal";
 
 export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
-
-  const [groups, setGroups] = useState<outputGroupType[] | undefined>(
+  const [groups, setGroups] = useState<OutputGroupClassType[] | undefined>(
     undefined,
   );
-  const [groupClasses, setGroupClasses] = useState<
-    OutputGroupClassType[] | undefined
-  >(undefined);
+
   useEffect(() => {
     async function getlist() {
-      await clientReadAction(getGroups, {
-        onSuccess: (data) => setGroups(data as outputGroupType[]),
-        onLoading: setLoading,
-      });
       await clientReadAction(getGroupClasses, {
-        onSuccess: (data) => setGroupClasses(data),
+        onSuccess: (data) => setGroups(data as OutputGroupClassType[]),
       });
+      setLoading(false);
     }
     getlist();
   }, []);
-  console.log(groupClasses);
   const activegroups = groups?.filter((item) => item.status === true);
   const form = useForm<inputGroupType>({
     resolver: zodResolver(addGroupZod),
@@ -81,7 +67,7 @@ export default function Page() {
     await handleCrudAction(createGroup, data, {
       successMessage: "Group Created Successfully",
       onSuccess: (items) => {
-        setGroups((prev) => [...(prev || []), items as outputGroupType]);
+        setGroups((prev) => [...(prev || []), items as OutputGroupClassType]);
         form.reset();
       },
     });
@@ -152,7 +138,7 @@ export default function Page() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {groupClasses?.map((item, i) => (
+                {groups?.map((item, i) => (
                   <TableRow
                     key={i}
                     className={`${
@@ -184,13 +170,22 @@ export default function Page() {
                     <TableCell className="py-3">
                       <div className="flex items-center justify-end gap-1">
                         <AssignGroups group={item} />
-                        <DeleteModal
+                        <StatusModal
                           id={item.id}
-                          onDelete={deleteGroup}
-                          onSuccess={() => {
+                          onStatus={toggleGroup}
+                          onSuccess={(result) => {
                             form.reset();
-                            setGroups((prev) =>
-                              prev?.filter((c) => c?.id !== item?.id),
+                            const updated = (
+                              result as { data?: OutputGroupClassType }
+                            )?.data;
+                            if (!updated) return;
+                            setGroups(
+                              (prev) =>
+                                prev?.map((group) =>
+                                  group.id === item.id
+                                    ? { ...group, ...updated }
+                                    : group,
+                                ) || [],
                             );
                           }}
                         />
@@ -235,7 +230,7 @@ export default function Page() {
                 <Spinner className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Plus className="mr-2 h-4 w-4" />
-              )}{" "}
+              )}
               Add Group
             </Button>
           </form>
@@ -243,41 +238,4 @@ export default function Page() {
       </div>
     </div>
   );
-}
-
-// select groups
-{
-  {
-    /* class list */
-  }
-  // <Controller
-  //   name="classList"
-  //   control={form.control}
-  //   render={({ field }) => (
-  //     <Select
-  //       multiple
-  //       value={field.value || []}
-  //       onValueChange={field.onChange}
-  //     >
-  //       <SelectTrigger className="w-full">
-  //         <SelectValue placeholder="Select classes">
-  //           {/* Show names instead of IDs */}
-  //           {field.value?.length > 0
-  //             ? classes
-  //                 ?.filter((c) => field.value.includes(c.id!))
-  //                 .map((c) => c.name)
-  //                 .join(", ")
-  //             : "Select classes"}
-  //         </SelectValue>
-  //       </SelectTrigger>
-  //       <SelectContent>
-  //         {classes?.map((item) => (
-  //           <SelectItem key={item.id} value={item.id}>
-  //             {item.name}
-  //           </SelectItem>
-  //         ))}
-  //       </SelectContent>
-  //     </Select>
-  //   )}
-  // />
 }

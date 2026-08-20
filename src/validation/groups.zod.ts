@@ -46,6 +46,7 @@ export type OutputGroupClassType = {
     class: {
       id: string;
       name: string;
+      status: string;
     };
   }[];
 };

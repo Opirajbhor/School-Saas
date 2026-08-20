@@ -1,6 +1,6 @@
 import { db } from "@/src/db";
 import { requireInstitute } from "@/src/server-actions/get-institute-profile";
-import { and, eq, SQL, type Column, type Table } from "drizzle-orm";
+import { eq, SQL, type Column, type Table } from "drizzle-orm";
 
 // 1. Define a generic constraint for tables that have 'id' and 'instituteId'
 export type TableWithInstitute = Table & {

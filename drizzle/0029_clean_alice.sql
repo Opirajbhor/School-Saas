@@ -1,0 +1,1 @@
+ALTER TABLE "group_classes" ADD COLUMN "status" "status" DEFAULT 'ACTIVE' NOT NULL;

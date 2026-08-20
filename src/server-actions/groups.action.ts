@@ -13,6 +13,7 @@ import {
 import { and, eq, inArray } from "drizzle-orm";
 import { classesDrizzle } from "../db/schema";
 import { requireInstitute } from "./get-institute-profile";
+import { toggleStatus } from "../lib/crud-funtions/server-status.action";
 
 // add
 export async function createGroup(data: inputGroupType) {
@@ -28,14 +29,11 @@ export async function createGroup(data: inputGroupType) {
 export async function getGroups() {
   return readRecord({ drizzleSchema: groups });
 }
-// delete
-export async function deleteGroup(id: string) {
-  return deleteRecord(
-    {
-      drizzleSchema: groups,
-    },
-    id,
-  );
+
+
+// toggle status
+export async function toggleGroup(id: string) {
+  return toggleStatus({ drizzleSchema: groups }, id);
 }
 
 // assign to class
@@ -109,7 +107,7 @@ export async function assignGroupClasses(data: AssignGroupClassType) {
 
 // // get group classes
 export async function getGroupClasses() {
-  return await readMany({
+  const result = await readMany({
     drizzleSchema: groups,
     query: ({ db, instituteId }) =>
       db.query.groups.findMany({
@@ -123,4 +121,8 @@ export async function getGroupClasses() {
         },
       }),
   });
+
+  console.log("SERVER RESULT:", result);
+
+  return result;
 }

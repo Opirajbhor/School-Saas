@@ -3,12 +3,12 @@ import { AnyColumn, and, eq } from "drizzle-orm";
 import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import { db } from "@/src/db";
 
-type InstituteTable = PgTable & {
+export type InstituteTable = PgTable & {
   id: AnyColumn;
   instituteId: AnyColumn;
 };
 
-type DeleteConfig<T extends InstituteTable> = {
+export type DeleteConfig<T extends InstituteTable> = {
   drizzleSchema: T;
 };
 
