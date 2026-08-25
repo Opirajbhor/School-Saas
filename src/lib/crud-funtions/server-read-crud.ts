@@ -83,10 +83,10 @@ export async function readMany<T extends TableWithInstitute>(
       success: true as const,
       data: records,
     };
-  } catch {
+  } catch (error) {
     return {
       success: false as const,
-      error: "Failed to fetch records",
+      error: error,
       details: {},
     };
   }
@@ -122,3 +122,5 @@ export async function readMany<T extends TableWithInstitute>(
 //     }),
 // });
 // Relational ussage------------
+
+//

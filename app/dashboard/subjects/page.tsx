@@ -36,8 +36,10 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Toggle } from "@/components/ui/toggle";
-import { MdCheckBox, MdOutlineRadioButtonUnchecked } from "react-icons/md";
+import { MdOutlineRadioButtonUnchecked } from "react-icons/md";
 import { IoMdCheckmarkCircle } from "react-icons/io";
+import { SubjectAssignTab } from "./subject-assign-tab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -117,214 +119,239 @@ export default function Page() {
         </Card>
       </div>
       {/* ....... */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        {/* Data Table Section */}
-        <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
-          {/* Table Header/Toolbar */}
-          <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-muted/30">
-            <div className="text-lg font-semibold text-foreground flex items-center gap-5">
-              Academic Subjects
-              <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                {subjects?.length} Subjects
-              </Badge>
-            </div>
-          </div>
+      {/* <SubjectAssignTab /> */}
+      <Tabs defaultValue="subject">
+        <TabsList>
+          <TabsTrigger value="subject" className=" w-full cursor-pointer">
+            Subject Management
+          </TabsTrigger>
+          <TabsTrigger value="subject-assign" className="cursor-pointer">
+            Subject Assignments
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="subject">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+            {/* Data Table Section */}
+            <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
+              {/* Table Header/Toolbar */}
+              <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-muted/30">
+                <div className="text-lg font-semibold text-foreground flex items-center gap-5">
+                  Academic Subjects
+                  <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                    {subjects?.length} Subjects
+                  </Badge>
+                </div>
+              </div>
 
-          {/* Responsive Table Wrapper */}
-          <div className="overflow-x-auto p-5">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
+              {/* Responsive Table Wrapper */}
+              <div className="overflow-x-auto p-5">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
+                        Subject Name
+                      </TableHead>
+                      <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
+                        Code
+                      </TableHead>
+                      <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
+                        ShortForm
+                      </TableHead>
+                      <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
+                        Religion
+                      </TableHead>
+
+                      <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
+                        Status
+                      </TableHead>
+                      <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {subjects?.map((item, i) => (
+                      <TableRow
+                        key={i}
+                        className={`${
+                          item.status === "ACTIVE"
+                            ? "bg-primary/5 hover:bg-primary/10"
+                            : "hover:bg-muted/50"
+                        } transition-colors group`}
+                      >
+                        {/* name */}
+                        <TableCell className="py-3">
+                          <p className={`font-medium $`}>{item.name}</p>
+                        </TableCell>
+
+                        {/* code */}
+                        <TableCell className="font-medium  text-foreground py-3">
+                          <p className={`font-medium $`}>{item.code}</p>
+                        </TableCell>
+                        {/* shortform */}
+                        <TableCell className="font-medium  text-foreground py-3">
+                          {item.shortName}
+                        </TableCell>
+                        <TableCell className="font-medium  text-foreground py-3">
+                          {item?.isReligion ? item.religion : "-"}
+                        </TableCell>
+                        {/* status */}
+                        <TableCell className="text-right py-3">
+                          <Badge
+                            className={`${item.status === "ACTIVE" && "bg-green-50 text-green-700 dark:bg-green-950 dark"} border`}
+                          >
+                            {item.status}
+                          </Badge>
+                        </TableCell>
+                        {/* actions */}
+                        <TableCell className="text-right py-3">
+                          <div
+                            className={`flex items-center justify-end gap-1 transition-opacity`}
+                          >
+                            <>
+                              <DeleteModal
+                                id={item.id}
+                                onDelete={deleteSubject}
+                                onSuccess={() => {
+                                  form.reset();
+                                  setSubjects((prev) =>
+                                    prev?.filter((c) => c?.id !== item?.id),
+                                  );
+                                }}
+                              />
+                            </>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+            {/* <!--  Add subject Form --> */}
+            <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
+                Add subject
+              </h3>
+
+              {/* add subject form */}
+              <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
+                {/* name */}
+                <div>
+                  <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
                     Subject Name
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
-                    Code
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
-                    ShortForm
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
-                    Religion
-                  </TableHead>
+                  </Label>
+                  <Input
+                    {...form.register("name", {
+                      required: "Subject name is required",
+                    })}
+                    required
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="e.g., Bangla 1st Paper"
+                  />
+                  {form.formState.errors.name && (
+                    <p className="mt-1 text-sm text-destructive">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
+                {/* shortName */}
+                <div>
 
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
-                    Status
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subjects?.map((item, i) => (
-                  <TableRow
-                    key={i}
-                    className={`${
-                      item.status === "ACTIVE"
-                        ? "bg-primary/5 hover:bg-primary/10"
-                        : "hover:bg-muted/50"
-                    } transition-colors group`}
+                    
+
+                  <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                    Subject Short Name
+                  </Label>
+                  <Input
+                    {...form.register("shortName", {
+                      required: "Subject short name is required",
+                    })}
+                    required
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="e.g., Bng, Eng"
+                  />
+                  {form.formState.errors.shortName && (
+                    <p className="mt-1 text-sm text-destructive">
+                      {form.formState.errors.shortName.message}
+                    </p>
+                  )}
+                </div>
+                {/* code */}
+                <div>
+                  <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                    Subject Code
+                  </Label>
+                  <Input
+                    {...form.register("code", {
+                      required: "Subject code is required",
+                    })}
+                    required
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="e.g., 101, 102"
+                  />
+                  {form.formState.errors.code && (
+                    <p className="mt-1 text-sm text-destructive">
+                      {form.formState.errors.code.message}
+                    </p>
+                  )}
+                </div>
+                {/* toggle */}
+                <div>
+                  <Toggle
+                    onClick={() => setIsReligion(!isReligion)}
+                    aria-label="Toggle bookmark"
+                    size="sm"
+                    variant="outline"
+                    className="cursor-pointer"
                   >
-                    {/* name */}
-                    <TableCell className="py-3">
-                      <p className={`font-medium $`}>{item.name}</p>
-                    </TableCell>
+                    {isReligion ? (
+                      <IoMdCheckmarkCircle className="group-aria-pressed/toggle:fill-foreground" />
+                    ) : (
+                      <MdOutlineRadioButtonUnchecked className="group-aria-pressed/toggle:fill-foreground" />
+                    )}
+                    Religion Subject
+                  </Toggle>
+                </div>
+                {/* religion list */}
+                <NativeSelect
+                  {...form.register("religion")}
+                  className="w-full text-xs h-9 cursor-pointer"
+                  disabled={!isReligion}
+                >
+                  <NativeSelectOption disabled value="">
+                    Select Religion
+                  </NativeSelectOption>
+                  <NativeSelectOption value="ISLAM">ISLAM</NativeSelectOption>
+                  <NativeSelectOption value="HINDUISM">
+                    HINDUISM
+                  </NativeSelectOption>
+                  <NativeSelectOption value="CHRISTIANITY">
+                    CHRISTIANITY
+                  </NativeSelectOption>
+                  <NativeSelectOption value="BUDDHISM">
+                    BUDDHISM
+                  </NativeSelectOption>
+                  <NativeSelectOption value="OTHER">OTHER</NativeSelectOption>
+                </NativeSelect>
+                <Button disabled={isSubmitting} variant="default" type="submit">
+                  {isSubmitting ? (
+                    <Spinner className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="mr-2 h-4 w-4" />
+                  )}{" "}
+                  Add Subject
+                </Button>
+              </form>
 
-                    {/* code */}
-                    <TableCell className="font-medium  text-foreground py-3">
-                      <p className={`font-medium $`}>{item.code}</p>
-                    </TableCell>
-                    {/* shortform */}
-                    <TableCell className="font-medium  text-foreground py-3">
-                      {item.shortName}
-                    </TableCell>
-                    <TableCell className="font-medium  text-foreground py-3">
-                      {item?.isReligion ? item.religion : "-"}
-                    </TableCell>
-                    {/* status */}
-                    <TableCell className="text-right py-3">
-                      <Badge
-                        className={`${item.status === "ACTIVE" && "bg-green-50 text-green-700 dark:bg-green-950 dark"} border`}
-                      >
-                        {item.status}
-                      </Badge>
-                    </TableCell>
-                    {/* actions */}
-                    <TableCell className="text-right py-3">
-                      <div
-                        className={`flex items-center justify-end gap-1 transition-opacity`}
-                      >
-                        <>
-                          <DeleteModal
-                            id={item.id}
-                            onDelete={deleteSubject}
-                            onSuccess={() => {
-                              form.reset();
-                              setSubjects((prev) =>
-                                prev?.filter((c) => c?.id !== item?.id),
-                              );
-                            }}
-                          />
-                        </>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+              
+            </div>
           </div>
-        </div>
-        {/* <!--  Add subject Form --> */}
-        <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
-            Add subject
-          </h3>
-
-          {/* add subject form */}
-          <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
-            {/* name */}
-            <div>
-              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                Subject Name
-              </Label>
-              <Input
-                {...form.register("name", {
-                  required: "Subject name is required",
-                })}
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="e.g., Bangla 1st Paper"
-              />
-              {form.formState.errors.name && (
-                <p className="mt-1 text-sm text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
-            </div>
-            {/* shortName */}
-            <div>
-              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                Subject Short Name
-              </Label>
-              <Input
-                {...form.register("shortName", {
-                  required: "Subject short name is required",
-                })}
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="e.g., Bng, Eng"
-              />
-              {form.formState.errors.shortName && (
-                <p className="mt-1 text-sm text-destructive">
-                  {form.formState.errors.shortName.message}
-                </p>
-              )}
-            </div>
-            {/* code */}
-            <div>
-              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                Subject Code
-              </Label>
-              <Input
-                {...form.register("code", {
-                  required: "Subject code is required",
-                })}
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="e.g., 101, 102"
-              />
-              {form.formState.errors.code && (
-                <p className="mt-1 text-sm text-destructive">
-                  {form.formState.errors.code.message}
-                </p>
-              )}
-            </div>
-            {/* toggle */}
-            <div>
-              <Toggle
-                onClick={() => setIsReligion(!isReligion)}
-                aria-label="Toggle bookmark"
-                size="sm"
-                variant="outline"
-                className="cursor-pointer"
-              >
-                {isReligion ? (
-                  <IoMdCheckmarkCircle className="group-aria-pressed/toggle:fill-foreground" />
-                ) : (
-                  <MdOutlineRadioButtonUnchecked className="group-aria-pressed/toggle:fill-foreground" />
-                )}
-                Religion Subject
-              </Toggle>
-            </div>
-            {/* religion list */}
-            <NativeSelect
-              {...form.register("religion")}
-              className="w-full text-xs h-9 cursor-pointer"
-              disabled={!isReligion}
-            >
-              <NativeSelectOption disabled value="">
-                Select Religion
-              </NativeSelectOption>
-              <NativeSelectOption value="ISLAM">ISLAM</NativeSelectOption>
-              <NativeSelectOption value="HINDUISM">HINDUISM</NativeSelectOption>
-              <NativeSelectOption value="CHRISTIANITY">
-                CHRISTIANITY
-              </NativeSelectOption>
-              <NativeSelectOption value="BUDDHISM">BUDDHISM</NativeSelectOption>
-              <NativeSelectOption value="OTHER">OTHER</NativeSelectOption>
-            </NativeSelect>
-            <Button disabled={isSubmitting} variant="default" type="submit">
-              {isSubmitting ? (
-                <Spinner className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="mr-2 h-4 w-4" />
-              )}{" "}
-              Add Subject
-            </Button>
-          </form>
-        </div>
-      </div>
+        </TabsContent>
+        <TabsContent value="subject-assign">
+          <SubjectAssignTab/>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

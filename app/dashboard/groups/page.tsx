@@ -24,16 +24,9 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import DeleteModal from "@/components/modal/delete-modal";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  createGroup,
-  deleteGroup,
-  getGroupClasses,
-  getGroups,
-  toggleGroup,
-} from "@/src/server-actions/groups.action";
+import { createGroup, getGroupClasses, toggleGroup } from "@/src/server-actions/groups.action";
 
 import AssignGroups from "./assign-groups";
 import { Plus } from "lucide-react";

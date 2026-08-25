@@ -38,6 +38,7 @@ import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { SpinnerCustom } from "@/components/Spinner";
 import { useSearch } from "@/src/lib/useSearch";
+import { AppTable } from "@/components/table/data-table";
 
 export default function Teacherpage() {
   const [teachers, setTeachers] = useState<Teacherlist[] | null>();
@@ -72,31 +73,6 @@ export default function Teacherpage() {
     getlist();
   }, []);
 
-  const currentUsers =
-    teachers?.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage,
-    ) ?? [];
-
-  const toggleUserSelection = (userId: string) => {
-    setSelectedUsers((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId],
-    );
-  };
-
-  const toggleAllUsers = () => {
-    if (
-      selectedUsers.length === currentUsers.length &&
-      currentUsers.length > 0
-    ) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers(currentUsers.map((user) => user.id));
-    }
-  };
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -104,11 +80,6 @@ export default function Teacherpage() {
       .join("")
       .toUpperCase();
   };
-  // search functions
-  const { searchTerm, setSearchTerm, filteredItems } = useSearch(teachers, [
-    "nameEnglish",
-    "mobile",
-  ]);
 
   if (loading) {
     return <SpinnerCustom />;
@@ -124,219 +95,143 @@ export default function Teacherpage() {
       </div>
       {/* Main Card */}
       <Card className="pb-0 gap-0">
-        <CardHeader className="border-b border-border gap-0">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        {/* Table */}
 
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search..."
-                className="pl-10"
-              />
-            </div>
-            <div className="sm:ml-auto flex items-center gap-2 flex-wrap justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs cursor-pointer"
-              >
-                <Filter />
-                Filter
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="outline" />}>
-                  <Download data-icon="inline-start" />
-                  Export
-                  <ChevronDown data-icon="inline-end" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem className="cursor-pointer">
-                      Export as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      Export as Excel
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      Export as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* add teacher------------------- */}
-
+        <AppTable
+          data={teachers ?? []}
+          searchable
+          searchPlaceholder="Search teachers..."
+          searchKeys={[
+            "nameEnglish",
+            "nameBangla",
+            "email",
+            "mobile",
+            "designation",
+          ]}
+          selectable
+          selectedIds={selectedUsers}
+          onSelectionChange={setSelectedUsers}
+          toolbar={
+            <>
               <AddTeacher setTeachers={setTeachers} />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-4 font-medium text-sm text-muted-foreground">
-                    <Checkbox
-                      checked={
-                        selectedUsers.length === currentUsers.length &&
-                        currentUsers.length > 0
-                      }
-                      onCheckedChange={toggleAllUsers}
+            </>
+          }
+          columns={[
+            {
+              key: "nameEnglish",
+              label: "Teacher Name",
+              render: (teacher) => (
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-10">
+                    <AvatarImage
+                      src={teacher.photoUrl}
+                      alt={teacher.nameEnglish}
                     />
-                  </th>
-                  <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                    Teacher Name
-                  </th>
-                  <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                    Designation
-                  </th>
-                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    GENDER
-                  </th>
-                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    E-MAIL
-                  </th>
-                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    STATUS
-                  </th>
-                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    PHONE
-                  </th>
-                  <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {(teachers === null || teachers?.length === 0) && (
-                  <p>No teachers found.</p>
-                )}
-                {/* ----------------- */}
-                {filteredItems?.map((user, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-border hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="p-4 flex items-center justify-center gap-1">
-                      <Checkbox
-                        checked={selectedUsers.includes(user.id)}
-                        onCheckedChange={() => toggleUserSelection(user.id)}
-                      />
-                      {i + 1}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-10 bg-muted">
-                          <AvatarImage
-                            src={user.photoUrl}
-                            alt={user.nameEnglish}
-                          />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {getInitials(user.nameEnglish)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {user.nameBangla}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {user.nameEnglish}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-sm text-muted-foreground">
-                        {user.designation}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-sm font-medium text-foreground text-nowrap">
-                        {user.gender}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-sm font-medium text-foreground text-nowrap">
-                        {user.email}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center">
-                      {user.status === "ACTIVE" ? (
-                        <Badge
-                          variant="outline"
-                          className="px-2.5 py-0.5 font-semibold bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800"
-                        >
-                          Active
-                        </Badge>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <span className="text-sm text-muted-foreground text-nowrap">
-                        {user.mobile}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <DeleteTeacher user={user} setTeachers={setTeachers} />
-                      <EditTeachers user={user} setTeachers={setTeachers} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between p-4 border-t border-border">
-            <div className="text-sm text-muted-foreground">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, teachers?.length ?? 0)} of{" "}
-              {teachers?.length ?? 0} entries
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="h-9 w-9 cursor-pointer"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => setCurrentPage(page)}
-                    className={cn(
-                      "h-9 w-9",
-                      currentPage === page && "bg-primary",
-                      "cursor-pointer",
-                    )}
-                  >
-                    {page}
-                  </Button>
+                    <AvatarFallback>
+                      {getInitials(teacher.nameEnglish)}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div>
+                    <div className="font-medium">{teacher.nameBangla}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {teacher.nameEnglish}
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+
+            {
+              key: "designation",
+              label: "Designation",
+            },
+
+            {
+              key: "gender",
+              label: "Gender",
+            },
+
+            {
+              key: "email",
+              label: "Email",
+            },
+
+            {
+              key: "status",
+              label: "Status",
+              render: (teacher) =>
+                teacher.status === "ACTIVE" ? (
+                  <Badge variant="outline">Active</Badge>
+                ) : (
+                  <span className="text-muted-foreground">-</span>
                 ),
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, currentPage + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="h-9 w-9 cursor-pointer"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            },
+
+            {
+              key: "mobile",
+              label: "Phone",
+            },
+
+            {
+              key: "actions",
+              label: "Actions",
+              render: (teacher) => (
+                <div className="flex gap-2">
+                  <EditTeachers user={teacher} setTeachers={setTeachers} />
+                  <DeleteTeacher user={teacher} setTeachers={setTeachers} />
+                </div>
+              ),
+            },
+          ]}
+        />
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between p-4 border-t border-border">
+          <div className="text-sm text-muted-foreground">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, teachers?.length ?? 0)} of{" "}
+            {teachers?.length ?? 0} entries
           </div>
-        </CardContent>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="h-9 w-9 cursor-pointer"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="icon"
+                onClick={() => setCurrentPage(page)}
+                className={cn(
+                  "h-9 w-9",
+                  currentPage === page && "bg-primary",
+                  "cursor-pointer",
+                )}
+              >
+                {page}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
+              disabled={currentPage === totalPages}
+              className="h-9 w-9 cursor-pointer"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </Card>
     </div>
   );

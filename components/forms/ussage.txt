@@ -1,0 +1,44 @@
+const methods = useForm();
+
+
+
+
+<FormProvider {...methods}>
+<form
+            onSubmit={form.handleSubmit()}
+<FormInput
+  control={form.control}
+  name="nameEnglish"
+  label="English Name"
+  placeholder="Enter English name"
+/>
+
+<FormTextarea
+control={form.control}
+name="code"
+label="code"
+placeholder="Enter English name"
+/>
+
+<FormSelect
+  control={form.control}
+  name="gender"
+  label="Gender"
+  options={[
+    { label: "Male", value: "MALE" },
+    { label: "Female", value: "FEMALE" },
+  ]}
+/>
+
+<FormSelect
+  control={form.control}
+  name="status"
+  label="Status"
+  options={[
+    { label: "Active", value: "ACTIVE" },
+    { label: "Inactive", value: "INACTIVE" },
+  ]}
+/>
+          </form>
+
+</FormProvider>

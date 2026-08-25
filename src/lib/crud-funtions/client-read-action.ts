@@ -26,6 +26,7 @@ export async function clientReadAction<R>(
           res.error ??
           "An unexpected error occurred.",
       );
+      console.log(res.error);
       await options?.onError?.();
       return res;
     }

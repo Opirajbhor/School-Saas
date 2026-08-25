@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import {
   academicSessions,
   classesDrizzle,
+  groups,
   instituteProfile,
   sectionDrizzle,
 } from "../schema";
@@ -29,6 +30,7 @@ export const classesRelations = relations(classesDrizzle, ({ one, many }) => ({
   }),
 
   sections: many(sectionDrizzle),
+  groups: many(groups),
 }));
 // Section Relation-----------------
 export const sectionRelations = relations(sectionDrizzle, ({ one }) => ({

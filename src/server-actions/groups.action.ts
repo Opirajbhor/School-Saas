@@ -30,7 +30,6 @@ export async function getGroups() {
   return readRecord({ drizzleSchema: groups });
 }
 
-
 // toggle status
 export async function toggleGroup(id: string) {
   return toggleStatus({ drizzleSchema: groups }, id);
@@ -121,8 +120,6 @@ export async function getGroupClasses() {
         },
       }),
   });
-
-  console.log("SERVER RESULT:", result);
 
   return result;
 }

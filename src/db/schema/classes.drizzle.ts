@@ -60,3 +60,5 @@ export const sectionDrizzle = pgTable(
     index("sections_class_idx").on(table.classId),
   ],
 );
+
+

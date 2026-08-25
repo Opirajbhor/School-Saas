@@ -1,0 +1,95 @@
+ <AppTable
+            data={teachers ?? []}
+            searchable
+            searchPlaceholder="Search teachers..."
+            searchKeys={[
+              "nameEnglish",
+              "nameBangla",
+              "email",
+              "mobile",
+              "designation",
+            ]}
+            selectable
+            selectedIds={selectedUsers}
+            onSelectionChange={setSelectedUsers}
+            toolbar={
+    <>
+      <Button onClick={addTeacher}>
+        Add Teacher
+      </Button>
+
+      <Button variant="outline">
+        Export
+      </Button>
+    </>
+  }
+            columns={[
+              {
+                key: "nameEnglish",
+                label: "Teacher Name",
+                render: (teacher) => (
+                  <div className="flex items-center gap-3">
+                    <Avatar className="size-10">
+                      <AvatarImage
+                        src={teacher.photoUrl}
+                        alt={teacher.nameEnglish}
+                      />
+
+                      <AvatarFallback>
+                        {getInitials(teacher.nameEnglish)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div>
+                      <div className="font-medium">{teacher.nameBangla}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {teacher.nameEnglish}
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
+
+              {
+                key: "designation",
+                label: "Designation",
+              },
+
+              {
+                key: "gender",
+                label: "Gender",
+              },
+
+              {
+                key: "email",
+                label: "Email",
+              },
+
+              {
+                key: "status",
+                label: "Status",
+                render: (teacher) =>
+                  teacher.status === "ACTIVE" ? (
+                    <Badge variant="outline">Active</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  ),
+              },
+
+              {
+                key: "mobile",
+                label: "Phone",
+              },
+
+              {
+                key: "actions",
+                label: "Actions",
+                render: (teacher) => (
+                  <div className="flex gap-2">
+                    <EditTeachers user={teacher} setTeachers={setTeachers} />
+                    <DeleteTeacher user={teacher} setTeachers={setTeachers} />
+                  </div>
+                ),
+              },
+            ]}
+          />

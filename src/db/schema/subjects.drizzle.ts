@@ -1,7 +1,17 @@
 import { pgTable, uuid, boolean, text, unique } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
-import { religionEnum, statusEnum, timestamps } from "./enums-drizzle";
+import {
+  religionEnum,
+  statusEnum,
+  subjectTypeEnum,
+  timestamps,
+} from "./enums-drizzle";
+import { academicSessions } from "./academic-session.drizzle";
+import { classesDrizzle } from "./classes.drizzle";
+import { groups } from "./groups.drizzle";
+import { relations } from "drizzle-orm";
 
+// subject Schema
 export const subjectDbSchema = pgTable(
   "subjects",
   {
@@ -29,4 +39,65 @@ export const subjectDbSchema = pgTable(
       table.name,
     ),
   ],
+);
+
+// subject assign schema---
+export const subjectAssignSchema = pgTable(
+  "subject_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    instituteId: uuid("institute_id")
+      .notNull()
+      .references(() => instituteProfile.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => academicSessions.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classesDrizzle.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjectDbSchema.id, { onDelete: "cascade" }),
+    subjectType: subjectTypeEnum("subject_type")
+      .notNull()
+      .default("COMPULSORY"),
+
+    status: statusEnum("status").notNull().default("ACTIVE"),
+    ...timestamps,
+  },
+  (table) => [
+    unique("subject_assign_unique").on(
+      table.sessionId,
+      table.classId,
+      table.groupId,
+      table.subjectId,
+    ),
+  ],
+);
+
+// relations
+export const subjectAssignRelationOne = relations(
+  subjectAssignSchema,
+  ({ one }) => ({
+    group: one(groups, {
+      fields: [subjectAssignSchema.groupId],
+      references: [groups.id],
+    }),
+    session: one(academicSessions, {
+      fields: [subjectAssignSchema.sessionId],
+      references: [academicSessions.id],
+    }),
+    subject: one(subjectDbSchema, {
+      fields: [subjectAssignSchema.sessionId],
+      references: [subjectDbSchema.id],
+    }),
+
+    class: one(classesDrizzle, {
+      fields: [subjectAssignSchema.classId],
+      references: [classesDrizzle.id],
+    }),
+  }),
 );

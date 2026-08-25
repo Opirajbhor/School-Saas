@@ -9,6 +9,11 @@ export const religionEnumValues = [
 ] as const;
 
 export const statusEnumValues = ["ACTIVE", "INACTIVE"] as const;
+export const subjectTypeEnum = [
+  "COMPULSORY",
+  "GROUP_BASED",
+  "OPTIONAL",
+] as const;
 
 export const inputSubjectZod = z
   .object({
@@ -47,6 +52,24 @@ export const inputSubjectZod = z
 export type inputSubjectType = z.input<typeof inputSubjectZod>;
 
 export type outputSubjectType = inputSubjectType & {
+  id: string;
+  instituteId: string;
+};
+
+// subject assign zod validation
+export const subjectAssignmentZod = z.object({
+  classId: z.uuid("Invalid class id"),
+  groupId: z.uuid("Invalid group id"),
+  subjectIds: z
+    .array(z.uuid("Invalid subject id"))
+    .min(1, "Select at least one subject"),
+  subjectType: z.enum(subjectTypeEnum).default("COMPULSORY"),
+  status: z.enum(statusEnumValues).default("ACTIVE"),
+});
+
+export type inputSubAssignType = z.input<typeof subjectAssignmentZod>;
+
+export type outputSubAssignType = inputSubAssignType & {
   id: string;
   instituteId: string;
   sessionId: string;
