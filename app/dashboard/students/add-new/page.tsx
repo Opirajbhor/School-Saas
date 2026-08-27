@@ -3,13 +3,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
-import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { AddStudentType, addStudentZod } from "@/src/validation/student.zod";
 import {
@@ -18,11 +13,14 @@ import {
 } from "@/src/server-actions/student.action";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
-import z from "zod";
 import Link from "next/link";
 import { classData } from "@/src/data/class-data/class-data";
 import { SpinnerCustom } from "@/components/Spinner";
+import { FormSelect } from "@/components/forms/form-select";
+import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+import { FormInput } from "@/components/forms/form-input";
+import { FormTextarea } from "@/components/forms/form-textarea";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 
 const randomId = Math.floor(Math.random() * 100) + 1;
 
@@ -54,26 +52,23 @@ export default function AddStudent() {
   // active session-----------------
   const [activeSession, setActiveSession] = useState<
     AcademicInfoType | null | undefined
-  >(null); // -----------------------
+  >(null);
+  //xxxx active session------------------
+
   useEffect(() => {
     const sessionRes = async () => {
-      const info = await getAcademicInfo();
-      if (info.success) {
-        // Coalesce undefined to null if needed, or pass directly
-        setActiveSession(info.data ?? null);
-      }
+      await clientReadAction(getAcademicInfo, {
+        onSuccess: (data) => {
+          setActiveSession(data as classesTypeWithId[]);
+        },
+      });
     };
-
-    // const classRes = async()=>{
-    //   const res = await 
-    // }
-
-
-
     sessionRes();
   }, []);
-  //xxxx active session------------------
+
   // ------------------form------------
+  const methods = useForm();
+
   const form = useForm({
     resolver: zodResolver(addStudentZod),
     defaultValues: {
@@ -94,19 +89,15 @@ export default function AddStudent() {
     },
   });
   const { isSubmitting } = form.formState;
-  const addBtn = async (data: AddStudentType) => {
-    console.log(data);
-  };
 
-  const addBtns = async (data: AddStudentType) => {
-    const res = await addStudent(data);
-    if (res.success) {
-      toast.success("student added successfully");
-      form.reset();
-    }
-    if (!res.success) {
-      toast.error("student adding failed");
-    }
+  const addBtn = async (data: AddStudentType) => {
+    await handleCrudAction(addStudent, data, {
+      successMessage: "Student Created Successfully",
+      onSuccess: (data) => {
+        console.log(data);
+        form.reset();
+      },
+    });
   };
   //xxxxxxx form---------------------
   if (activeSession === null || undefined) {
@@ -120,189 +111,207 @@ export default function AddStudent() {
           Create a new student and enroll them into a class.
         </p>
       </div>
-      <form action="" onSubmit={form.handleSubmit(addBtn)}>
-        {/* Academic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Academic Information</CardTitle>
-          </CardHeader>
+      <FormProvider {...methods}>
+        <form action="" onSubmit={form.handleSubmit(addBtn)}>
+          {/* Academic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Academic Information</CardTitle>
+            </CardHeader>
 
-          <CardContent className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            <div className="space-y-2">
-              <Label>Session</Label>
-              <NativeSelect {...form.register("session")}>
-                <NativeSelectOption value={activeSession?.id}>
-                  {activeSession?.year}
-                </NativeSelectOption>
-              </NativeSelect>
-            </div>
+            <CardContent className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+              {/*------------SESSION----------- */}
+              <FormSelect
+                control={form.control}
+                name="session"
+                label="Session"
+                options={
+                  activeSession
+                    ? [{ label: activeSession.year, value: activeSession.year }]
+                    : []
+                }
+              />
 
-            <div className="space-y-2">
-              <Label>Class</Label>
-              <NativeSelect {...form.register("className")}>
-                {classData &&
-                  classData.map((item, i) => (
-                    <NativeSelectOption key={i} value={item}>
-                      {item}
-                    </NativeSelectOption>
-                  ))}
-              </NativeSelect>
-            </div>
+              {/*------------CLASS----------- */}
 
-            <div className="space-y-2">
-              <Label>Section</Label>
-              <NativeSelect {...form.register("section")}>
-                <NativeSelectOption>A</NativeSelectOption>
-                <NativeSelectOption>B</NativeSelectOption>
-              </NativeSelect>
-            </div>
+              <FormSelect
+                control={form.control}
+                name="className"
+                label="Class"
+                options={
+                  classData?.map((item) => ({
+                    label: item,
+                    value: item,
+                  })) ?? []
+                }
+              />
+              {/*------------SECTION----------- */}
 
-            <div className="space-y-2">
-              <Label>Roll</Label>
-              <Input placeholder="Enter Roll" {...form.register("roll")} />
-            </div>
+              <FormSelect
+                control={form.control}
+                name="section"
+                label="Section"
+                options={
+                  classData?.map((item) => ({
+                    label: item,
+                    value: item,
+                  })) ?? []
+                }
+              />
+              {/*------------ROLL----------- */}
 
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <NativeSelect {...form.register("status")}>
-                <NativeSelectOption>ACTIVE</NativeSelectOption>
-                <NativeSelectOption>INACTIVE</NativeSelectOption>
-              </NativeSelect>
-            </div>
-          </CardContent>
-        </Card>
+              <FormInput
+                control={form.control}
+                name="roll"
+                label="Roll No"
+                placeholder="Enter Roll "
+              />
+              {/*------------STATUS----------- */}
 
-        {/* Student Information */}
-        <Card className="my-5">
-          <CardHeader>
-            <CardTitle>Student Information</CardTitle>
-          </CardHeader>
+              <FormSelect
+                control={form.control}
+                name="status"
+                label="Status"
+                options={[
+                  { label: "ACTIVE", value: "ACTIVE" },
+                  { label: "INACTIVE", value: "INACTIVE" },
+                ]}
+              />
+            </CardContent>
+          </Card>
 
-          <CardContent className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="flex flex-col items-center gap-3">
-                <Avatar className="h-28 w-28">
-                  <AvatarImage />
-                  <AvatarFallback>Photo</AvatarFallback>
-                </Avatar>
+          {/* Student Information */}
+          <Card className="my-5">
+            <CardHeader>
+              <CardTitle>Student Information</CardTitle>
+            </CardHeader>
 
-                <Input
-                  {...form.register("photoUrl")}
-                  type="file"
-                  accept="image/*"
-                  className="max-w-55"
-                />
+            <CardContent className="space-y-6">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                {/*------------PHOTO----------- */}
+
+                <div className="flex flex-col items-center gap-3">
+                  <Avatar className="h-28 w-28">
+                    <AvatarImage />
+                    <AvatarFallback>Photo</AvatarFallback>
+                  </Avatar>
+
+                  <Input
+                    {...form.register("photoUrl")}
+                    type="file"
+                    accept="image/*"
+                    className="max-w-55"
+                  />
+                </div>
+                {/*------------STUDENT ID----------- */}
+
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label>Student ID</Label>
+                    <Input value={"HAR"} disabled />
+                  </div>
+                  {/*------------ENGLISH NAME----------- */}
+
+                  <FormInput
+                    control={form.control}
+                    name="englishName"
+                    label="English Name"
+                    placeholder="Enter Name "
+                  />
+                  {/*------------BANGLA NAME----------- */}
+
+                  <FormInput
+                    control={form.control}
+                    name="banglaName"
+                    label="Bangla Name"
+                    placeholder="Name "
+                  />
+                  {/*------------FATHER NAME----------- */}
+
+                  <FormInput
+                    control={form.control}
+                    name="fatherName"
+                    label="Father Name"
+                    placeholder="Father Name "
+                  />
+                  {/*------------MOHTER NAME----------- */}
+
+                  <FormInput
+                    control={form.control}
+                    name="motherName"
+                    label="Mother Name"
+                    placeholder="Mother Name "
+                  />
+
+                  {/*------------DOB----------- */}
+
+                  <div className="space-y-2">
+                    <Label>Date of Birth</Label>
+                    <Input type="date" {...form.register("dateOfBirth")} />
+                  </div>
+                  {/*------------GENDER----------- */}
+
+                  <FormSelect
+                    control={form.control}
+                    name="gender"
+                    label="Gender"
+                    options={[
+                      { label: "MALE", value: "MALE" },
+                      { label: "FEMALE", value: "FEMALE" },
+                      { label: "OTHERS", value: "OTHERS" },
+                    ]}
+                  />
+
+                  {/*------------RELIGION----------- */}
+                  <FormSelect
+                    control={form.control}
+                    name="religion"
+                    label="Religion"
+                    options={[
+                      { label: "ISLAM", value: "ISLAM" },
+                      { label: "HINDUISM", value: "HINDUISM" },
+                      { label: "BUDDHIST", value: "BUDDHIST" },
+                      { label: "CRISTIAN", value: "CRISTIAN" },
+                    ]}
+                  />
+                  {/*------------BIRTH NO----------- */}
+                  <FormInput
+                    control={form.control}
+                    name="birthCertificateNo"
+                    label="Birth Certificate No."
+                    placeholder="Birth Certificate No."
+                  />
+                  {/*------------PHONE----------- */}
+                  <FormInput
+                    control={form.control}
+                    name="phone"
+                    label="Phone"
+                    placeholder="Phone"
+                  />
+                  {/*------------ADDRESS----------- */}
+                  <FormTextarea
+                    control={form.control}
+                    name="address"
+                    label="Address"
+                    placeholder="Address"
+                  />
+                </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <Label>Student ID</Label>
-                  <Input value={"HAR"} disabled />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>English Name</Label>
-                  <Input
-                    {...form.register("englishName", {
-                      setValueAs: (value) => value.toUpperCase(),
-                    })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Bangla Name</Label>
-                  <Input {...form.register("banglaName")} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Father Name</Label>
-                  <Input
-                    {...form.register("fatherName", {
-                      setValueAs: (value) => value.toUpperCase(),
-                    })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Mother Name</Label>
-                  <Input
-                    {...form.register("motherName", {
-                      setValueAs: (value) => value.toUpperCase(),
-                    })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Date of Birth</Label>
-                  <Input type="date" {...form.register("dateOfBirth")} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Gender</Label>
-                  <NativeSelect
-                    {...form.register("gender", {
-                      setValueAs: (value) => value.toUpperCase(),
-                    })}
-                  >
-                    <NativeSelectOption value={"MALE"}>MALE</NativeSelectOption>
-                    <NativeSelectOption value={"FEMALE"}>
-                      FEMALE
-                    </NativeSelectOption>
-                    <NativeSelectOption value={"OTHERS"}>
-                      OTHERS
-                    </NativeSelectOption>
-                  </NativeSelect>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Religion</Label>
-                  <NativeSelect
-                    {...form.register("religion", {
-                      setValueAs: (value) => value.toUpperCase(),
-                    })}
-                  >
-                    <NativeSelectOption>ISLAM</NativeSelectOption>
-                    <NativeSelectOption>HINDU</NativeSelectOption>
-                    <NativeSelectOption>BUDDHIST</NativeSelectOption>
-                    <NativeSelectOption>CRISTIAN</NativeSelectOption>
-                  </NativeSelect>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Birth Certificate No.</Label>
-                  <Input {...form.register("birthCertificateNo")} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Phone</Label>
-                  <Input min={11} maxLength={11} {...form.register("phone")} />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label> Address</Label>
-                  <Textarea
-                    rows={3}
-                    {...form.register("address", {
-                      setValueAs: (value) => value.toUpperCase(),
-                    })}
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* {submit} */}
-        <div className="flex justify-end gap-3">
-          <Button variant="outline">
-            <Link href={"/dashboard/students"}>Cancel</Link>
-          </Button>
-          <Button disabled={isSubmitting} type="submit">
-            {isSubmitting && <Spinner />}
-            Save Student
-          </Button>
-        </div>
-      </form>
+          {/* {submit} */}
+          <div className="flex justify-end gap-3">
+            <Button variant="outline">
+              <Link href={"/dashboard/students"}>Cancel</Link>
+            </Button>
+            <Button disabled={isSubmitting} type="submit">
+              {isSubmitting && <Spinner />}
+              Save Student
+            </Button>
+          </div>
+        </form>
+      </FormProvider>
     </div>
   );
 }

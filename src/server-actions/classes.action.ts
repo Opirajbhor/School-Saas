@@ -14,25 +14,11 @@ import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
 import { parseWithZod } from "../validation/validator.zod";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
+import { readRecord } from "../lib/crud-funtions/server-read-crud";
 
 // get classes and sections
 export async function getClasses() {
-  const { id } = await requireInstitute();
-  try {
-    const data = await db.query.classesDrizzle.findMany({
-      where: eq(classesDrizzle.instituteId, id),
-      with: {
-        sections: true,
-      },
-    });
-
-    return {
-      success: true,
-      data: data || [],
-    };
-  } catch {
-    throw new Error("Failed to fetch Class and Section list.");
-  }
+  return readRecord({ drizzleSchema: classesDrizzle });
 }
 
 // post class

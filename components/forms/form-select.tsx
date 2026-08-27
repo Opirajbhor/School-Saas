@@ -69,9 +69,9 @@ export function FormSelect<TFieldValues extends FieldValues>({
           </SelectTrigger>
         </FormControl>
 
-        <SelectContent>
+        <SelectContent >
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem className={'cursor-pointer'} key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
           ))}

@@ -1,13 +1,12 @@
 "use server";
 import { eq } from "drizzle-orm";
-import { verifyUser } from "./verifyUser.action";
 import { db } from "../db";
 import { student } from "../db/schema/student.drizzle";
 import { AddStudentType, addStudentZod } from "../validation/student.zod";
 import { academicSessions } from "../db/schema";
 import { enrollments } from "../db/schema/enrollments.drizzle";
 import { requireInstitute } from "./get-institute-profile";
-import { parseWithZod } from "../validation/validator.zod";
+import { createRecord } from "../lib/crud-funtions/server-create-crud";
 
 // get student
 export async function getStudents() {
@@ -59,56 +58,63 @@ export async function getAcademicInfo() {
   }
 }
 
-// add student
+// register student
 export async function addStudent(data: AddStudentType) {
-  const profile = await requireInstitute();
+  const result = await createRecord(
+    {
+      zodSchema: addStudentZod.omit({
+        session: true,
+        className: true,
+        section: true,
+        roll: true,
+      }),
+      drizzleSchema: student,
+      beforeCrud: async ({ data }) => {
+        const studentInfo = {
+          studentId: data.studentId,
+          englishName: data.englishName,
+          fatherName: data.fatherName,
+          motherName: data.motherName,
+          gender: data.gender,
+          dateOfBirth: data.dateOfBirth,
+          religion: data.religion,
+          phone: data.phone,
+          address: data.address,
+          status: data.status,
+          banglaName: data.banglaName,
+          photoUrl: data.photoUrl,
+          birthCertificateNo: data.birthCertificateNo,
+        };
+        return studentInfo;
+      },
 
-  // parse with zod-----------------
-  const validatedFields = parseWithZod(addStudentZod, data);
-  if (!validatedFields.success) return validatedFields;
-  // parse with zod-----------------
-
-  const { session, className, roll, section, ...studentInfo } = data;
-  try {
-    const [newStudent] = await db
-      .insert(student)
+      additionFields: {},
+    },
+    data,
+  );
+  if (result.success && result.data) {
+    const studentData = result.data as AddStudentType;
+    await db
+      .insert(enrollments)
       .values({
-        ...studentInfo,
-        instituteId: profile.id,
+        instituteId: studentData.instituteId,
+        studentId: studentData.id,
+        sessionId: "aafcd386-d021-4a95-9ed7-252a47ff1b72",
+        classId: "c4cb091f-7c3d-4e80-bfcf-503c7adac4d5",
+        sectionId: "cbe057c0-5d9f-49ba-bd18-846061c7e4e9",
+        roll: data.roll,
       })
       .returning();
-
-    await db.insert(enrollments).values({
-      instituteId: profile.id,
-      studentId: newStudent.id,
-      sessionId: session,
-      classId: className,
-      sectionId: section,
-      roll: roll,
-    });
-
-    const fullStudentData = await db.query.student.findFirst({
-      where: eq(student.id, newStudent.id),
-      with: {
-        enrollments: {
-          with: {
-            session: true,
-            class: true,
-            section: true,
-          },
-        },
-      },
-    });
-
+    const studentId = result.data.id as string;
+    const enrollment = await db
+      .select()
+      .from(enrollments)
+      .where(eq(enrollments.studentId, studentId))
+      .limit(1);
     return {
-      success: true,
-      data: fullStudentData,
-    };
-  } catch (error) {
-    console.error("Database error during student creation:", error);
-    return {
-      success: false,
-      error: "Failed to create student due to a database failure.",
+      ...result,
+      enrollment,
     };
   }
+  return result;
 }

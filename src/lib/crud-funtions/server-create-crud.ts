@@ -101,65 +101,30 @@ export async function createRecord<T extends PgTable>(
 }
 
 // // // use case
-// // const result = await createRecord(
-// //   {
-// //     zodSchema: zod Schema Name,
-// //     drizzleSchema: drizzle schema name,
-// //     beforeCrud: async ({ data }) => {
-// //       // Example: check duplicate teacher
-// //       // return modified fields if needed
-// //       return {
-// //         data: data
-// //       };
-// //     },
-
-// //     additionFields: {
-// //       status: "ACTIVE",
-// //     },
-
-// //     afterCrud: async ({ record }) => {
-// //       // Optional additional operation
-
-// //     },
-// //   },
-// //   data: data,
-// // );
-
-// // post
-// export async function create(
-//   data: T extends PgTable["$inferInsert"],
-//   zodSchema: z.ZodType<T["$inferInsert"]>,
-//   drizzleSchema: T extends PgTable,
-//   name,
-// ) {
-//   const profile = await requireInstitute();
-
-//   // parse with zod-----------------
-//   const validatedFields = parseWithZod(zodSchema, data);
-//   if (!validatedFields.success) return validatedFields;
-//   // parse with zod-----------------
-
-//   try {
-//     return await db.transaction(async (tx) => {
-//       const [newData] = await tx
-//         .insert(dbSchema)
-//         .values({
-//           ...validatedFields.data,
-//           instituteId: profile?.id,
-//           userId: profile?.userId,
-//         })
-//         .returning();
-
+// const result = await createRecord(
+//   {
+//     zodSchema: zod Schema Name,
+//     drizzleSchema: drizzle schema name,
+//     beforeCrud: async ({ data }) => {
+//       // Example: check duplicate teacher
+//       // return modified fields if needed
 //       return {
-//         success: true as const,
-//         data: newData,
+//         data: data
 //       };
-//     });
-//   } catch {
-//     return {
-//       success: false as const,
-//       error: `Failed to create ${name} due to a database failure.`,
-//       details: {},
-//     };
-//   }
-// }
+//     },
+
+//     additionFields: {
+//       status: "ACTIVE",
+//     },
+
+//     afterCrud: async ({ record }) => {
+//       // Optional additional operation
+
+//     },
+//   },
+//   data: data,
+// );
+
+
+
+

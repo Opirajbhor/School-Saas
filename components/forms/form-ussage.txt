@@ -30,15 +30,6 @@ placeholder="Enter English name"
   ]}
 />
 
-<FormSelect
-  control={form.control}
-  name="status"
-  label="Status"
-  options={[
-    { label: "Active", value: "ACTIVE" },
-    { label: "Inactive", value: "INACTIVE" },
-  ]}
-/>
           </form>
 
 </FormProvider>
