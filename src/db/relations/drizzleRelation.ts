@@ -22,20 +22,4 @@ export const acadecmicSessionRelation = relations(
   }),
 );
 
-// Class Relation-----------------
-export const classesRelations = relations(classesDrizzle, ({ one, many }) => ({
-  session: one(academicSessions, {
-    fields: [classesDrizzle.sessionId],
-    references: [academicSessions.id],
-  }),
 
-  sections: many(sectionDrizzle),
-  groups: many(groups),
-}));
-// Section Relation-----------------
-export const sectionRelations = relations(sectionDrizzle, ({ one }) => ({
-  class: one(classesDrizzle, {
-    fields: [sectionDrizzle.classId],
-    references: [classesDrizzle.id],
-  }),
-}));

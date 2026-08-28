@@ -14,11 +14,32 @@ import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
 import { parseWithZod } from "../validation/validator.zod";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
-import { readRecord } from "../lib/crud-funtions/server-read-crud";
+import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
 
 // get classes and sections
 export async function getClasses() {
-  return readRecord({ drizzleSchema: classesDrizzle });
+  try {
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db, instituteId }) =>
+        db.query.classesDrizzle.findMany({
+          where: eq(classesDrizzle.instituteId, instituteId),
+          with: {
+            sections: true,
+          },
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
 }
 
 // post class

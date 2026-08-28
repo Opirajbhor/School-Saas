@@ -4,6 +4,9 @@ import { academicSessions } from "./academic-session.drizzle";
 import { timestamps } from "./enums-drizzle";
 import { user } from "./auth-schema.drizzle";
 import { unique } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { groups } from "./groups.drizzle";
+
 export const classesDrizzle = pgTable(
   "classes",
   {
@@ -61,4 +64,21 @@ export const sectionDrizzle = pgTable(
   ],
 );
 
+// Class Relation-----------------
+export const classesRelations = relations(classesDrizzle, ({ one, many }) => ({
+  session: one(academicSessions, {
+    fields: [classesDrizzle.sessionId],
+    references: [academicSessions.id],
+  }),
 
+  sections: many(sectionDrizzle),
+  groups: many(groups),
+}));
+
+// Section Relation-----------------
+export const sectionRelations = relations(sectionDrizzle, ({ one }) => ({
+  class: one(classesDrizzle, {
+    fields: [sectionDrizzle.classId],
+    references: [classesDrizzle.id],
+  }),
+}));
