@@ -57,7 +57,7 @@ export async function getClassGroup() {
       db.query.classesDrizzle.findMany({
         where: eq(classesDrizzle.instituteId, instituteId),
         with: {
-          groups: true, // ✅ Correct relation name
+          groups: true, 
         },
       }),
   });

@@ -73,7 +73,7 @@ export function SubjectAssignTab() {
 
       const info = await getClassGroup();
       if (!info.success) {
-        console.log(info.error);
+        console.error(info.error);
       }
 
       // await clientReadAction(getClassGroup, {
@@ -83,10 +83,10 @@ export function SubjectAssignTab() {
 
     getlist();
   }, []);
-  console.log(groups);
+  console.error(groups);
   // add button
   const addBtn = async (data: inputSubAssignType) => {
-    console.log(data);
+    console.error(data);
     // await handleCrudAction(subjectAssignment, data, {
     //   successMessage: "Subjects Assigned Successfully",
     // });

@@ -85,7 +85,7 @@ export default function EditSession({
 
         <form
           onSubmit={handleSubmit(onSubmit, (errors) =>
-            console.log("Validation Errors:", errors),
+            console.error("Validation Errors:", errors),
           )}
         >
           <div className="overflow-hidden">

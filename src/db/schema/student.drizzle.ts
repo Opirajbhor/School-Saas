@@ -10,6 +10,8 @@ import {
 
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { timestamps } from "./enums-drizzle";
+import { relations } from "drizzle-orm";
+import { enrollments } from "./enrollments.drizzle";
 
 export const studentGenderEnum = pgEnum("student_gender", [
   "MALE",
@@ -34,6 +36,7 @@ export const studentStatusEnum = pgEnum("student_status", [
   "TRANSFERRED",
   "LEFT",
 ]);
+
 export const student = pgTable(
   "students",
   {
@@ -73,3 +76,10 @@ export const student = pgTable(
     ),
   ],
 );
+
+// ------------student relations--------
+export const studentRelations = relations(student, ({ many }) => ({
+  enrollments: many(enrollments),
+}));
+
+

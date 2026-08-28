@@ -39,19 +39,3 @@ export const sectionRelations = relations(sectionDrizzle, ({ one }) => ({
     references: [classesDrizzle.id],
   }),
 }));
-
-// student relation
-export const studentRelations = relations(student, ({ one, many }) => ({
-  institute: one(instituteProfile, {
-    fields: [student.instituteId],
-    references: [instituteProfile.id],
-  }),
-  enrollments: many(enrollments),
-}));
-
-export const enrollmentRelations = relations(enrollments, ({ one }) => ({
-  student: one(student, {
-    fields: [enrollments.studentId],
-    references: [student.id],
-  }),
-}));

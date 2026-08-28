@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Spinner } from "@/components/ui/spinner";
 import { AddStudentType, addStudentZod } from "@/src/validation/student.zod";
@@ -49,47 +49,56 @@ export interface AcademicInfoType {
   }>;
 }
 export default function AddStudent() {
-  // active session-----------------
+  // --------------active session-----------------
   const [activeSession, setActiveSession] = useState<
     AcademicInfoType | null | undefined
   >(null);
-  //xxxx active session------------------
 
   useEffect(() => {
     const sessionRes = async () => {
       await clientReadAction(getAcademicInfo, {
         onSuccess: (data) => {
-          setActiveSession(data as classesTypeWithId[]);
+          setActiveSession(data as AcademicInfoType);
         },
       });
     };
     sessionRes();
   }, []);
-
   // ------------------form------------
   const methods = useForm();
 
   const form = useForm({
     resolver: zodResolver(addStudentZod),
     defaultValues: {
-      studentId: `HAR-${randomId}`,
-      englishName: "",
-      banglaName: "",
-      fatherName: "",
-      motherName: "",
-      gender: "MALE",
-      dateOfBirth: new Date(),
-      religion: "ISLAM",
-      phone: "",
       photoUrl: "",
-      birthCertificateNo: "",
-      address: "",
-      status: "ACTIVE",
+      studentId: `HAR-${randomId}`,
       session: activeSession?.id,
     },
   });
   const { isSubmitting } = form.formState;
 
+  // ----------form Effect------------
+  const selectedSession = useWatch({
+    control: form.control,
+    name: "session",
+  });
+  const selectedClass = useWatch({
+    control: form.control,
+    name: "className",
+  });
+
+  // -----for selected sections------------
+  const selectedClassData = activeSession?.classes?.find(
+    (item) => item.id === selectedClass,
+  );
+  const selectClassSections = selectedClassData?.sections ?? [];
+
+  useEffect(() => {
+    form.setValue("className", "");
+    form.setValue("section", "");
+  }, [selectedSession, form]);
+
+  // ---------handle button------------
   const addBtn = async (data: AddStudentType) => {
     await handleCrudAction(addStudent, data, {
       successMessage: "Student Created Successfully",
@@ -99,7 +108,6 @@ export default function AddStudent() {
       },
     });
   };
-  //xxxxxxx form---------------------
   if (activeSession === null || undefined) {
     return <SpinnerCustom />;
   }
@@ -112,7 +120,7 @@ export default function AddStudent() {
         </p>
       </div>
       <FormProvider {...methods}>
-        <form action="" onSubmit={form.handleSubmit(addBtn)}>
+        <form onSubmit={form.handleSubmit(addBtn)}>
           {/* Academic Information */}
           <Card>
             <CardHeader>
@@ -127,7 +135,7 @@ export default function AddStudent() {
                 label="Session"
                 options={
                   activeSession
-                    ? [{ label: activeSession.year, value: activeSession.year }]
+                    ? [{ label: activeSession.year, value: activeSession.id }]
                     : []
                 }
               />
@@ -139,9 +147,9 @@ export default function AddStudent() {
                 name="className"
                 label="Class"
                 options={
-                  classData?.map((item) => ({
-                    label: item,
-                    value: item,
+                  activeSession?.classes?.map((item) => ({
+                    label: item.name,
+                    value: item.id,
                   })) ?? []
                 }
               />
@@ -152,9 +160,9 @@ export default function AddStudent() {
                 name="section"
                 label="Section"
                 options={
-                  classData?.map((item) => ({
-                    label: item,
-                    value: item,
+                  selectClassSections.map((item) => ({
+                    label: item.name,
+                    value: item.id,
                   })) ?? []
                 }
               />

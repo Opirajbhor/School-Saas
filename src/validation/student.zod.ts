@@ -66,3 +66,7 @@ export const addStudentZod = z.object({
 });
 
 export type AddStudentType = z.infer<typeof addStudentZod>;
+
+export type OutputStudentType = AddStudentType & {
+  id: string;
+};

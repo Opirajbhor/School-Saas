@@ -6,27 +6,37 @@ import { AddStudentType, addStudentZod } from "../validation/student.zod";
 import { academicSessions } from "../db/schema";
 import { enrollments } from "../db/schema/enrollments.drizzle";
 import { requireInstitute } from "./get-institute-profile";
-import { createRecord } from "../lib/crud-funtions/server-create-crud";
+import { readMany } from "../lib/crud-funtions/server-read-crud";
 
 // get student
 export async function getStudents() {
-  const { id } = await requireInstitute();
-
   try {
-    const res = await db.query.student.findMany({
-      where: eq(student.instituteId, id),
+    const result = await readMany({
+      drizzleSchema: enrollments,
+      query: ({ db, instituteId }) =>
+        db.query.enrollments.findMany({
+          where: eq(enrollments.instituteId, instituteId),
+          with: {
+            student: true,
+            class: true,
+            section: true,
+            session: true,
+            // groups: true,
+          },
+        }),
     });
 
-    return {
-      success: true,
-      data: res,
-    };
-  } catch (error) {
-    console.error("Database error in Student list:", error);
+    console.log(result.data);
 
     return {
-      success: false,
-      error: "Failed to fetch student list.",
+      success: true as const,
+      data: result.data,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
     };
   }
 }
@@ -59,18 +69,27 @@ export async function getAcademicInfo() {
 }
 
 // register student
+
 export async function addStudent(data: AddStudentType) {
-  const result = await createRecord(
-    {
-      zodSchema: addStudentZod.omit({
-        session: true,
-        className: true,
-        section: true,
-        roll: true,
-      }),
-      drizzleSchema: student,
-      beforeCrud: async ({ data }) => {
-        const studentInfo = {
+  try {
+    // Validate data
+    const validated = addStudentZod.safeParse(data);
+    if (!validated.success) {
+      return {
+        success: false as const,
+        error: "Validation failed",
+        details: validated.error.flatten().fieldErrors,
+      };
+    }
+    const profile = await requireInstitute();
+
+    // Use transaction
+    const result = await db.transaction(async (tx) => {
+      // Insert student
+      const [newStudent] = await tx
+        .insert(student)
+        .values({
+          instituteId: profile.id,
           studentId: data.studentId,
           englishName: data.englishName,
           fatherName: data.fatherName,
@@ -82,39 +101,40 @@ export async function addStudent(data: AddStudentType) {
           address: data.address,
           status: data.status,
           banglaName: data.banglaName,
-          photoUrl: data.photoUrl,
+          photoUrl: data.photoUrl || "",
           birthCertificateNo: data.birthCertificateNo,
-        };
-        return studentInfo;
-      },
+        })
+        .returning();
 
-      additionFields: {},
-    },
-    data,
-  );
-  if (result.success && result.data) {
-    const studentData = result.data as AddStudentType;
-    await db
-      .insert(enrollments)
-      .values({
-        instituteId: studentData.instituteId,
-        studentId: studentData.id,
-        sessionId: "aafcd386-d021-4a95-9ed7-252a47ff1b72",
-        classId: "c4cb091f-7c3d-4e80-bfcf-503c7adac4d5",
-        sectionId: "cbe057c0-5d9f-49ba-bd18-846061c7e4e9",
-        roll: data.roll,
-      })
-      .returning();
-    const studentId = result.data.id as string;
-    const enrollment = await db
-      .select()
-      .from(enrollments)
-      .where(eq(enrollments.studentId, studentId))
-      .limit(1);
+      // Insert enrollment - if this fails, student is rolled back
+      const [enrollment] = await tx
+        .insert(enrollments)
+        .values({
+          instituteId: profile.id,
+          studentId: newStudent.id,
+          sessionId: data.session,
+          classId: data.className,
+          sectionId: data.section,
+          roll: data.roll,
+        })
+        .returning();
+
+      return {
+        ...newStudent,
+        enrollment,
+      };
+    });
+
     return {
-      ...result,
-      enrollment,
+      success: true as const,
+      data: result,
+    };
+  } catch (error) {
+    console.error("Failed to add student:", error);
+    return {
+      success: false as const,
+      error: "Failed to create student and enrollment",
+      details: {},
     };
   }
-  return result;
 }

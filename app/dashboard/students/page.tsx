@@ -31,17 +31,45 @@ import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 
-type RequiredFields = AddStudentType & {
-  session: string;
-  className: string;
-  section: string;
+export type StudentEnrollment = {
+  id: string;
+  instituteId: string;
   roll: string;
+  classId: string;
+  sectionId: string;
+  sessionId: string;
+  studentId: string;
+  class: {
+    id: string;
+    name: string;
+  };
+  section: {
+    id: string;
+    name: string;
+  };
+  session: {
+    id: string;
+    year: string;
+  };
+  student: {
+    id: string;
+    studentId: string;
+    englishName: string;
+    banglaName: string | null;
+    fatherName: string | null;
+    motherName: string | null;
+    religion: string | null;
+    gender: string | null;
+    phone: string | null;
+    address: string | null;
+    dateOfBirth: Date;
+  };
 };
 
 export default function Page() {
   const [loading, setLoading] = useState<boolean>(false);
 
-  const [students, setStudents] = useState<RequiredFields[]>([]);
+  const [students, setStudents] = useState<StudentEnrollment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
@@ -50,12 +78,13 @@ export default function Page() {
   useEffect(() => {
     async function getlist() {
       await clientReadAction(getStudents, {
-        onSuccess: (data) => setStudents(data as RequiredFields[]),
+        onSuccess: (data) => setStudents(data as StudentEnrollment[]),
         onLoading: setLoading,
       });
     }
     getlist();
   }, []);
+  console.log(students);
   if (loading) {
     return <SpinnerCustom />;
   }
@@ -156,39 +185,40 @@ export default function Page() {
                   <p className="text-center mx-auto p-5">No Students found.</p>
                 )}
 
-                {students?.map((student, i) => (
-                  <tr
-                    key={student.studentId}
-                    className="border-b hover:bg-muted/50"
-                  >
-                    <td className="p-4 font-medium">{student.studentId}</td>
+                {students?.map((item) => (
+                  <tr key={item.id} className="border-b hover:bg-muted/50">
+                    <td className="p-4 font-medium">
+                      {item.student.studentId}
+                    </td>
 
                     <td className="p-4">
-                      <p>{student.englishName}</p>
+                      <p>{item.student.englishName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {student.fatherName}
+                        {item.student.fatherName}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {student.motherName}
+                        {item.student.motherName}
                       </p>
                     </td>
 
                     <td className="p-4">
-                      <p>{student.religion}</p>
-                      <p>{student.gender}</p>
-                      <p>{student.dateOfBirth.toLocaleDateString("en-GB")}</p>
+                      <p>{item.student.religion}</p>
+                      <p>{item.student.gender}</p>
+                      <p>
+                        {item.student.dateOfBirth.toLocaleDateString("en-GB")}
+                      </p>
                     </td>
 
                     <td className="p-4">
-                      {/* <p>{student.className}</p> */}
-                      {/* <p>{student.section}</p> */}
-                      {/* <p>{student.roll}</p> */}
+                      <p>{item.class.name}</p>
+                      <p>{item.section.name}</p>
+                      <p>{item.roll}</p>
                     </td>
 
                     <td className="p-4">
-                      <p>{student.phone}</p>
+                      <p>{item.student.phone}</p>
                       <p className="text-sm text-muted-foreground">
-                        {student.address}
+                        {item.student.address}
                       </p>
                     </td>
 

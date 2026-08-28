@@ -37,6 +37,7 @@ type FormSelectProps<TFieldValues extends FieldValues> = {
   description?: string;
   disabled?: boolean;
   className?: string;
+  onChange?: (value: string) => void;
 };
 
 export function FormSelect<TFieldValues extends FieldValues>({
@@ -48,6 +49,7 @@ export function FormSelect<TFieldValues extends FieldValues>({
   description,
   disabled,
   className,
+  onChange,
 }: FormSelectProps<TFieldValues>) {
   const { field } = useController({
     control,
@@ -60,18 +62,31 @@ export function FormSelect<TFieldValues extends FieldValues>({
 
       <Select
         value={field.value ?? ""}
-        onValueChange={field.onChange}
+        onValueChange={(value) => {
+          const stringValue = value ?? "";
+          field.onChange(stringValue);
+          onChange?.(stringValue);
+        }}
         disabled={disabled}
       >
         <FormControl>
           <SelectTrigger>
-            <SelectValue placeholder={placeholder} />
+            <SelectValue placeholder={placeholder}>
+              {
+                options.find((item) => item.value === (field.value ?? ""))
+                  ?.label
+              }
+            </SelectValue>
           </SelectTrigger>
         </FormControl>
 
-        <SelectContent >
+        <SelectContent>
           {options.map((option) => (
-            <SelectItem className={'cursor-pointer'} key={option.value} value={option.value}>
+            <SelectItem
+              className={"cursor-pointer"}
+              key={option.value}
+              value={option.value}
+            >
               {option.label}
             </SelectItem>
           ))}
