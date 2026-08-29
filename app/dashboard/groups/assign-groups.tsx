@@ -45,11 +45,6 @@ export default function AssignGroups({
           setClasses(data as classesTypeWithId[]);
         },
       });
-      await clientReadAction(getActiveAssignClasses, {
-        onSuccess: (data) => {
-          console.log(data);
-        },
-      });
     }
     getList();
   }, []);
@@ -70,8 +65,6 @@ export default function AssignGroups({
   const methods = useForm();
 
   const handleSubmit = async (data: AssignGroupClassType) => {
-
-
     await handleCrudAction(assignGroupClasses, data, {
       successMessage: "Classes Assigned Successfully",
       onSuccess: () => {

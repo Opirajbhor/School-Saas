@@ -37,23 +37,36 @@ export async function toggleGroup(id: string) {
 
 // // get group classes
 export async function getGroupClasses() {
-  const result = await readMany({
-    drizzleSchema: groups,
-    query: ({ db, instituteId }) =>
-      db.query.groups.findMany({
-        where: eq(groups.instituteId, instituteId),
-        with: {
-          groupClasses: {
-            with: {
-              class: true as const,
+  try {
+    const result = await readMany({
+      drizzleSchema: groups,
+      query: ({ db, instituteId }) =>
+        db.query.groups.findMany({
+          where: eq(groups.instituteId, instituteId),
+          with: {
+            groupClasses: {
+              with: {
+                class: true as const,
+              },
+              where: (groupClasses, { eq }) =>
+                eq(groupClasses.status, "ACTIVE"),
             },
-            where: (groupClasses, { eq }) => eq(groupClasses.status, "ACTIVE"),
           },
-        },
-      }),
-  });
+        }),
+    });
 
-  return result;
+    return {
+      success: true as const,
+      data: result.data,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false as const,
+      error: "failed to get data",
+      details: {},
+    };
+  }
 }
 
 // --------group assignments-----------------
