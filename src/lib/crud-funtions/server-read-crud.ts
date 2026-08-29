@@ -91,36 +91,3 @@ export async function readMany<T extends TableWithInstitute>(
     };
   }
 }
-
-// ussage
-// normal ussage------------
-// const result = await readMany({
-//   drizzleSchema: groups,
-// });
-// normal ussage------------
-
-// Custom where ussage------------
-// const result = await readMany({
-//   drizzleSchema: groups,
-//   where: eq(groups.status, true),
-// });
-// Custom where ussage------------
-
-// Relational ussage------------
-// const result = await readMany({
-//   drizzleSchema: groups,
-//   query: ({ db, instituteId }) =>
-//     db.query.groups.findMany({
-//       where: eq(groups.instituteId, instituteId),
-//       with: {
-//         groupClasses: {
-//           with: {
-//             class: true,
-//           },
-//         },
-//       },
-//     }),
-// });
-// Relational ussage------------
-
-//

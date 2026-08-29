@@ -70,7 +70,6 @@ export const groupClasses = pgTable(
   },
   (table) => [
     unique("group_classes_group_class_unique").on(table.groupId, table.classId),
-
     index("group_classes_group_id_idx").on(table.groupId),
     index("group_classes_class_id_idx").on(table.classId),
   ],

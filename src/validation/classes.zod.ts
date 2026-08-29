@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { statusEnumValues } from "./subjects.zod";
 export const classesZod = z.object({
   instituteId: z
     .string()
@@ -10,9 +11,7 @@ export const classesZod = z.object({
   sessionId: z.string({
     message: "Session is required",
   }),
-  isActive: z.boolean({
-    message: "Status is required",
-  }),
+  status: z.enum(statusEnumValues).default("ACTIVE"),
 });
 
 export type classesType = z.infer<typeof classesZod>;

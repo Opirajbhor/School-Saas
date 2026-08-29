@@ -11,7 +11,6 @@ import {
   addGroupZod,
   inputGroupType,
   OutputGroupClassType,
-  outputGroupType,
 } from "@/src/validation/groups.zod";
 import {
   Table,
@@ -26,7 +25,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { createGroup, getGroupClasses, toggleGroup } from "@/src/server-actions/groups.action";
+import {
+  createGroup,
+  getGroupClasses,
+  toggleGroup,
+} from "@/src/server-actions/groups.action";
 
 import AssignGroups from "./assign-groups";
 import { Plus } from "lucide-react";
@@ -162,7 +165,7 @@ export default function Page() {
                     </TableCell>
                     <TableCell className="py-3">
                       <div className="flex items-center justify-end gap-1">
-                        <AssignGroups group={item} />
+                        {item.status && <AssignGroups group={item} />}
                         <StatusModal
                           id={item.id}
                           onStatus={toggleGroup}

@@ -30,6 +30,17 @@ placeholder="Enter English name"
   ]}
 />
 
-          </form>
+<FormCheckboxGroup
+  control={form.control}
+  name="interests"
+  label="Select interests"
+  options={[
+    { value: "tech", label: "Technology" },
+    { value: "sports", label: "Sports" },
+    { value: "music", label: "Music" },
+  ]}
+/>
+
+</form>
 
 </FormProvider>

@@ -35,6 +35,55 @@ export async function toggleGroup(id: string) {
   return toggleStatus({ drizzleSchema: groups }, id);
 }
 
+// // get group classes
+export async function getGroupClasses() {
+  const result = await readMany({
+    drizzleSchema: groups,
+    query: ({ db, instituteId }) =>
+      db.query.groups.findMany({
+        where: eq(groups.instituteId, instituteId),
+        with: {
+          groupClasses: {
+            with: {
+              class: true as const,
+            },
+            where: (groupClasses, { eq }) => eq(groupClasses.status, "ACTIVE"),
+          },
+        },
+      }),
+  });
+
+  return result;
+}
+
+// --------group assignments-----------------
+// get active class items from group assignments
+export async function getActiveAssignClasses() {
+  try {
+    const result = await readMany({
+      drizzleSchema: groupClasses,
+      query: ({ db, instituteId }) =>
+        db.query.groupClasses.findMany({
+          where: and(
+            eq(groupClasses.instituteId, instituteId),
+            eq(groupClasses.status, "ACTIVE"),
+          ),
+        }),
+    });
+    return {
+      success: true as const,
+      data: result,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false as const,
+      error: "failed to fetch data",
+      details: {},
+    };
+  }
+}
+
 // assign to class
 export async function assignGroupClasses(data: AssignGroupClassType) {
   const institute = await requireInstitute();
@@ -48,78 +97,79 @@ export async function assignGroupClasses(data: AssignGroupClassType) {
   }
   const { groupId, classIds } = validation.data;
 
-  // Verify group belongs to current institute
-  const group = await db.query.groups.findFirst({
-    where: and(eq(groups.id, groupId), eq(groups.instituteId, institute.id)),
-    columns: {
-      id: true,
-    },
-  });
+  try {
+    const result = await db.transaction(async (tx) => {
+      // 1. Deactivate all existing classes in the group
+      await tx
+        .update(groupClasses)
+        .set({ status: "INACTIVE" })
+        .where(
+          and(
+            eq(groupClasses.instituteId, institute.id),
+            eq(groupClasses.groupId, groupId),
+          ),
+        );
 
-  if (!group) {
+      // Get existing assignments to determine which are new
+      const existingAssignments = await tx.query.groupClasses.findMany({
+        where: and(
+          eq(groupClasses.groupId, groupId),
+          eq(groupClasses.instituteId, institute.id),
+        ),
+      });
+
+      const existingClassIdSet = new Set(
+        existingAssignments.map((item) => item.classId),
+      );
+
+      // Reactivate existing classes
+      if (classIds.length > 0) {
+        await tx
+          .update(groupClasses)
+          .set({ status: "ACTIVE" })
+          .where(
+            and(
+              inArray(groupClasses.classId, classIds),
+              eq(groupClasses.groupId, groupId),
+              eq(groupClasses.instituteId, institute.id),
+            ),
+          );
+      }
+
+      // Create new class assignments
+      const newClassIds = classIds.filter((id) => !existingClassIdSet.has(id));
+
+      if (newClassIds.length > 0) {
+        await tx.insert(groupClasses).values(
+          newClassIds.map((classId) => ({
+            groupId,
+            classId,
+            instituteId: institute.id,
+            status: "ACTIVE" as const,
+          })),
+        );
+      }
+
+      // Return all active items
+      return await tx.query.groupClasses.findMany({
+        where: and(
+          eq(groupClasses.groupId, groupId),
+          eq(groupClasses.instituteId, institute.id),
+          eq(groupClasses.status, "ACTIVE"),
+        ),
+      });
+    });
+
+    return {
+      success: true as const,
+      data: result,
+    };
+  } catch (error) {
+    console.error(error);
     return {
       success: false as const,
-      error: "Group not found",
+      error: "failed to update group assignment",
       details: {},
     };
   }
-
-  // Verify all selected classes belong to current institute
-  const classes = await db
-    .select({
-      id: classesDrizzle.id,
-    })
-    .from(classesDrizzle)
-    .where(
-      and(
-        eq(classesDrizzle.instituteId, institute.id),
-        inArray(classesDrizzle.id, classIds),
-      ),
-    );
-
-  if (classes.length !== classIds.length) {
-    return {
-      success: false as const,
-      error: "One or more classes are invalid",
-      details: {},
-    };
-  }
-  const values = classIds.map((classId) => ({
-    instituteId: institute.id,
-    groupId,
-    classId,
-  }));
-
-  const assigned = await db
-    .insert(groupClasses)
-    .values(values)
-    .onConflictDoNothing({
-      target: [groupClasses.groupId, groupClasses.classId],
-    })
-    .returning();
-
-  return {
-    success: true as const,
-    data: assigned,
-  };
-}
-
-// // get group classes
-export async function getGroupClasses() {
-  const result = await readMany({
-    drizzleSchema: groups,
-    query: ({ db, instituteId }) =>
-      db.query.groups.findMany({
-        where: eq(groups.instituteId, instituteId),
-        with: {
-          groupClasses: {
-            with: {
-              class: true,
-            },
-          },
-        },
-      }),
-  });
-
-  return result;
 }
