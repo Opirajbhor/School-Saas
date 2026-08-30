@@ -1,11 +1,11 @@
 import { pgTable, uuid, boolean, text, index } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { academicSessions } from "./academic-session.drizzle";
-import { timestamps } from "./enums-drizzle";
+import { statusEnum, timestamps } from "./enums-drizzle";
 import { user } from "./auth-schema.drizzle";
 import { unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { groups } from "./groups.drizzle";
+import { groupClasses } from "./groups.drizzle";
 
 export const classesDrizzle = pgTable(
   "classes",
@@ -19,7 +19,7 @@ export const classesDrizzle = pgTable(
       .references(() => academicSessions.id, { onDelete: "cascade" }),
     userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
     name: text("name").notNull(),
-    isActive: boolean("is_active").notNull().default(true),
+    status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
   },
   // unique constrain
@@ -72,7 +72,7 @@ export const classesRelations = relations(classesDrizzle, ({ one, many }) => ({
   }),
 
   sections: many(sectionDrizzle),
-  groups: many(groups),
+  groupClasses: many(groupClasses),
 }));
 
 // Section Relation-----------------

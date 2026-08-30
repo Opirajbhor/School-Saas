@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { statusEnumValues } from "./subjects.zod";
+import { outputGroupType } from "./groups.zod";
 export const classesZod = z.object({
   instituteId: z
     .string()
@@ -14,7 +15,7 @@ export const classesZod = z.object({
   status: z.enum(statusEnumValues).default("ACTIVE"),
 });
 
-export type classesType = z.infer<typeof classesZod>;
+export type classesType = z.input<typeof classesZod>;
 
 export type classesTypeWithId = classesType & {
   id?: string;
@@ -42,4 +43,10 @@ export type sectionTypeWithId = z.infer<typeof sectionZod>;
 
 export type sectionType = sectionTypeWithId & {
   id?: string;
+};
+
+// for classes and nested groups in the server action-------
+export type ClassesWithGroups = classesType & {
+  id: string;
+  groups: outputGroupType[];
 };

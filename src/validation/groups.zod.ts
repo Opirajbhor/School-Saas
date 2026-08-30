@@ -38,15 +38,9 @@ export type OutputGroupClassType = {
   instituteId: string;
   name: string;
   status: boolean;
-  groupClasses: {
+  groups: {
     id: string;
     groupId: string;
-    classId: string;
-    instituteId: string;
-    class: {
-      id: string;
-      name: string;
-      status: string;
-    };
+    name: string;
   }[];
 };

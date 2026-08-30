@@ -31,7 +31,7 @@ interface StatusModalProps {
   className?: string;
 }
 
-export default function DeleteModal({
+export default function StatusToggleModal({
   id,
   title = "Change Item Status",
   description = "Are you sure you want to Change? ",

@@ -1,6 +1,5 @@
 "use server";
 import { db } from "../db";
-import { verifyUser } from "./verifyUser.action";
 import { and, eq } from "drizzle-orm";
 import {
   classesType,
@@ -14,7 +13,9 @@ import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
 import { parseWithZod } from "../validation/validator.zod";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
-import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
+import { readMany } from "../lib/crud-funtions/server-read-crud";
+import { toggleStatus } from "../lib/crud-funtions/server-status.action";
+import { createRecord } from "../lib/crud-funtions/server-create-crud";
 
 // get classes and sections
 export async function getClasses() {
@@ -23,7 +24,7 @@ export async function getClasses() {
       drizzleSchema: classesDrizzle,
       query: ({ db, instituteId }) =>
         db.query.classesDrizzle.findMany({
-          where: eq(classesDrizzle.instituteId, instituteId),
+          where: and(eq(classesDrizzle.instituteId, instituteId)),
           with: {
             sections: true,
           },
@@ -45,75 +46,54 @@ export async function getClasses() {
 // post class
 export async function postClasses(data: classesType) {
   const profile = await requireInstitute();
-  // parse with zod-----------------
-  const validatedFields = parseWithZod(classesZod, data);
-  if (!validatedFields.success) return validatedFields;
-  // parse with zod-----------------
-
-  // active session id
   const sessionId = await getActiveSessionId(profile?.id);
+  return createRecord(
+    {
+      zodSchema: classesZod,
+      drizzleSchema: classesDrizzle,
+      additionFields: { status: "ACTIVE", sessionId: sessionId },
+    },
+    data,
+  );
+}
+
+// toogle Status
+export async function ToggleClassStatus(id: string) {
+  return toggleStatus(
+    {
+      drizzleSchema: classesDrizzle,
+    },
+    id,
+  );
+}
+
+// ------------------get only active Classes----------------
+export async function getActiveClasses() {
   try {
-    const [newClass] = await db
-      .insert(classesDrizzle)
-      .values({
-        ...validatedFields.data,
-        instituteId: profile?.id,
-        userId: profile.userId,
-        sessionId: sessionId,
-      })
-      .returning();
-    revalidatePath("/dashboard/");
-    revalidatePath("/dashboard/classes");
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db, instituteId }) =>
+        db.query.classesDrizzle.findMany({
+          where: and(
+            eq(classesDrizzle.instituteId, instituteId),
+            eq(classesDrizzle.status, "ACTIVE"),
+          ),
+        }),
+    });
     return {
       success: true as const,
-      data: newClass,
+      data: result.data,
     };
   } catch (error) {
-    console.error("Database error during Class creation:", error);
     return {
       success: false as const,
-      error: "Failed to create class due to a database failure.",
+      error: String(error),
       details: {},
     };
   }
 }
 
-// delete class
-export async function deleteClass(classId: string) {
-  const { id } = await requireInstitute();
-  try {
-    const result = await db
-      .delete(classesDrizzle)
-      .where(
-        and(eq(classesDrizzle.id, classId), eq(classesDrizzle.instituteId, id)),
-      )
-      .returning({
-        id: classesDrizzle.id,
-      });
-
-    if (result.length === 0) {
-      return {
-        success: false,
-        error: "Class not found.",
-      };
-    }
-    revalidatePath("/dashboard/*");
-    revalidatePath("/dashboard/");
-    revalidatePath("/dashboard/classes");
-    return {
-      success: true,
-      message: "Class deleted successfully.",
-    };
-  } catch (error) {
-    console.error("Delete class error:", error);
-
-    return {
-      success: false,
-      error: "Failed to delete class.",
-    };
-  }
-}
-
+// -------------------- section -----------------------
 // post section
 export async function postSection(data: sectionType) {
   const profile = await requireInstitute();

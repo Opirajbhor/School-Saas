@@ -20,6 +20,7 @@ label="code"
 placeholder="Enter English name"
 />
 
+-------------witout array---------------
 <FormSelect
   control={form.control}
   name="gender"
@@ -30,6 +31,28 @@ placeholder="Enter English name"
   ]}
 />
 
+-------------using map on arrays---------------
+<FormSelect
+              control={form.control}
+              name="classId"
+              label="Classes Name"
+              options={
+                classes?.map((item) => ({
+                  label: item.name,
+                  value: item.id,
+                })) ?? []
+              }
+            />
+
+
+<FormCheckbox
+          control={form.control}
+          name="termsAccepted"
+          label="Accept terms and conditions"
+          disabled={true} // Optional: disable checkbox
+        />
+
+-------without map------------
 <FormCheckboxGroup
   control={form.control}
   name="interests"

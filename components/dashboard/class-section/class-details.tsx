@@ -16,10 +16,11 @@ import { classesTypeWithId } from "@/src/validation/classes.zod";
 import AddClassSection from "./add-section";
 import DeleteModal from "@/components/modal/delete-modal";
 import {
-  deleteClass,
   deleteSection,
+  ToggleClassStatus,
 } from "@/src/server-actions/classes.action";
 import { Eye } from "lucide-react";
+import StatusToggleModal from "@/components/modal/status-modal";
 
 export function ClassDetails({
   classData,
@@ -30,7 +31,7 @@ export function ClassDetails({
     React.SetStateAction<classesTypeWithId[] | undefined>
   >;
 }) {
-  const { name, isActive, sessionId, id, sections } = classData;
+  const { name, status, sessionId, id, sections } = classData;
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -57,7 +58,7 @@ export function ClassDetails({
           <h2 className="text-xl text-primary-foreground">Students : 380</h2>
           <h2 className="text-xl text-primary-foreground">
             Status :{" "}
-            {isActive ? (
+            {status === "ACTIVE" ? (
               <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 text-sm p-3">
                 Active
               </Badge>
@@ -109,15 +110,25 @@ export function ClassDetails({
             </Button>
             <AddClassSection classData={classData} setClasses={setClasses} />
 
-            <DeleteModal
-              className="w-full"
-              buttonText="Delete Class Data"
-              id={id!}
-              onDelete={deleteClass}
-              onSuccess={() => {
-                setClasses((prev) => prev?.filter((cls) => cls.id !== id));
-              }}
-            />
+            {id && (
+              <StatusToggleModal
+                id={id}
+                onDelete={ToggleClassStatus}
+                onSuccess={() => {
+                  setClasses((prev) =>
+                    prev?.map((c) =>
+                      c?.id === id
+                        ? {
+                            ...c,
+                            status:
+                              c.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                          }
+                        : c,
+                    ),
+                  );
+                }}
+              />
+            )}
           </div>
         </div>
 

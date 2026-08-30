@@ -1,6 +1,6 @@
 "use client";
 import { ClassDetails } from "@/components/dashboard/class-section/class-details";
-import DeleteModal from "@/components/modal/delete-modal";
+import StatusToggleModal from "@/components/modal/status-modal";
 import { SpinnerCustom } from "@/components/Spinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,9 @@ import {
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import {
-  deleteClass,
   getClasses,
   postClasses,
+  ToggleClassStatus,
 } from "@/src/server-actions/classes.action";
 import {
   classesType,
@@ -48,13 +48,13 @@ export default function Classes() {
     }
     getlist();
   }, []);
+  console.log(classes);
   // RHF
   const form = useForm<classesType>({
     resolver: zodResolver(classesZod),
     defaultValues: {
-      sessionId: "",
-      name: "",
-      isActive: true,
+      status: "ACTIVE",
+      sessionId: "session-id",
     },
   });
   const { isSubmitting } = form.formState;
@@ -140,7 +140,7 @@ export default function Classes() {
                   <TableRow
                     key={i}
                     className={`${
-                      item.isActive
+                      item.status === "ACTIVE"
                         ? "bg-primary/5 hover:bg-primary/10"
                         : "hover:bg-muted/50"
                     } transition-colors group`}
@@ -152,14 +152,14 @@ export default function Classes() {
                     {/* status */}
                     <TableCell className="py-3">
                       <Badge
-                        className={`${item.isActive ? "bg-green-600" : "bg-gray-400"} border`}
+                        className={`${item.status === "ACTIVE" ? "bg-green-600" : "bg-gray-400"} border`}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full bg-primary/5 hover:bg-primary/10 mr-1.5 inline-block`}
                         >
                           *
                         </span>
-                        {item.isActive ? "Active" : "Completed"}
+                        {item.status}
                       </Badge>
                     </TableCell>
                     {/* total sections */}
@@ -183,17 +183,28 @@ export default function Classes() {
                             classData={item}
                             setClasses={setClasses}
                           />
-
-                          <DeleteModal
-                            id={item.id!}
-                            onDelete={deleteClass}
-                            onSuccess={() => {
-                              form.reset();
-                              setClasses((prev) =>
-                                prev?.filter((c) => c?.id !== item?.id),
-                              );
-                            }}
-                          />
+                          {item?.id && (
+                            <StatusToggleModal
+                              id={item.id}
+                              onDelete={ToggleClassStatus}
+                              onSuccess={() => {
+                                form.reset();
+                                setClasses((prev) =>
+                                  prev?.map((c) =>
+                                    c?.id === item.id
+                                      ? {
+                                          ...c,
+                                          status:
+                                            c.status === "ACTIVE"
+                                              ? "INACTIVE"
+                                              : "ACTIVE",
+                                        }
+                                      : c,
+                                  ),
+                                );
+                              }}
+                            />
+                          )}
                         </>
                       </div>
                     </TableCell>
