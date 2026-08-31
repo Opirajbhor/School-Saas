@@ -1,28 +1,13 @@
 "use client";
-import { DynamicCheckboxGroup } from "@/components/dashboard/checkbox-group";
 import { FormCheckboxGroup } from "@/components/forms/form-checkbox-group";
 import { FormSelect } from "@/components/forms/form-select";
 import { SpinnerCustom } from "@/components/Spinner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { getActiveClasses } from "@/src/server-actions/classes.action";
-import {
-  getClassGroup,
-  getClassGroupSubject,
-  getSubjects,
-} from "@/src/server-actions/subjects.action";
-import { classesTypeWithId } from "@/src/validation/classes.zod";
+import { getSubjects } from "@/src/server-actions/subjects.action";
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import {
   inputSubAssignType,
@@ -31,16 +16,15 @@ import {
 } from "@/src/validation/subjects.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { setgroups } from "process";
 import { useEffect, useState } from "react";
-import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 export function SubjectAssignTab() {
   const [loading, setLoading] = useState<boolean>(true);
   const [classData, setClassData] = useState<
     OutputGroupClassType[] | undefined
   >(undefined);
-  const [subjects, setSubjects] = useState<outputSubjectType | undefined>(
+  const [subjects, setSubjects] = useState<outputSubjectType[] | undefined>(
     undefined,
   );
 
@@ -49,7 +33,6 @@ export function SubjectAssignTab() {
     defaultValues: {},
   });
   const { isSubmitting } = form.formState;
-  const { control } = form;
   const methods = useForm();
 
   useEffect(() => {
@@ -70,17 +53,21 @@ export function SubjectAssignTab() {
     }
     getlist();
   }, []);
-  console.log(classData)
-  const groups = useWatch({
+  // ----------- selected Class assigned groups list-------------
+  const selectedClassId = useWatch({
     control: form.control,
     name: "classId",
   });
+  const selectedClassData = classData?.find(
+    (item) => item.id === selectedClassId,
+  );
+
   // add button
   const addBtn = async (data: inputSubAssignType) => {
-    console.error(data);
-    // await handleCrudAction(subjectAssignment, data, {
-    //   successMessage: "Subjects Assigned Successfully",
-    // });
+    console.log(data);
+    await handleCrudAction(subjectAssignment, data, {
+      successMessage: "Subjects Assigned Successfully",
+    });
   };
 
   if (loading) {
@@ -101,7 +88,7 @@ export function SubjectAssignTab() {
           <FormProvider {...methods}>
             <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
               {/* -----------------Classes---------------- */}
-              {/* <FormSelect
+              <FormSelect
                 control={form.control}
                 name="classId"
                 label="Classes Name"
@@ -111,20 +98,20 @@ export function SubjectAssignTab() {
                     label: item.name,
                     value: item.id as string,
                   }))}
-              /> */}
+              />
 
               {/* ----------------Groups-------------- */}
-              {/* <FormSelect
+              <FormSelect
                 control={form.control}
                 name="groupId"
                 label="Group Name"
-                options={(groups ?? [])
-                  .filter((item) => item.id !== undefined)
-                  .map((item) => ({
-                    label: item.name,
-                    value: item.id as string,
-                  }))}
-              /> */}
+                options={(selectedClassData?.groupClasses ?? []).map(
+                  (item) => ({
+                    label: item.group.name,
+                    value: item.group.id as string,
+                  }),
+                )}
+              />
 
               {/* ----------------Subject Type-------------- */}
 
@@ -144,30 +131,14 @@ export function SubjectAssignTab() {
               <FormCheckboxGroup
                 control={form.control}
                 name="subjectIds"
-                label="Select interests"
-                options={[
-                  { value: "tech", label: "Technology" },
-                  { value: "sports", label: "Sports" },
-                  { value: "music", label: "Music" },
-                ]}
+                label="Select Subjects"
+                options={
+                  subjects?.map((item) => ({
+                    label: item.name,
+                    value: item.id,
+                  })) ?? []
+                }
               />
-              <div>
-                <Controller
-                  name="subjectIds"
-                  control={control}
-                  render={({ field }) => (
-                    <DynamicCheckboxGroup
-                      legend="Select Subjects"
-                      description="Choose the religion subjects to assign."
-                      options={subjects ?? []}
-                      labelKey="name"
-                      valueKey="id"
-                      value={field.value} // Connects form value to component
-                      onChange={(selectedIds) => field.onChange(selectedIds)} // Syncs selection back to form
-                    />
-                  )}
-                />
-              </div>
 
               <Button disabled={isSubmitting} variant="default" type="submit">
                 {isSubmitting ? (

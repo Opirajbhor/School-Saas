@@ -78,6 +78,13 @@ export async function getActiveClasses() {
             eq(classesDrizzle.instituteId, instituteId),
             eq(classesDrizzle.status, "ACTIVE"),
           ),
+          with: {
+            groupClasses: {
+              with: {
+                group: true,
+              },
+            },
+          },
         }),
     });
     return {
