@@ -69,8 +69,26 @@ export const subjectAssignmentZod = z.object({
 
 export type inputSubAssignType = z.input<typeof subjectAssignmentZod>;
 
-export type outputSubAssignType = inputSubAssignType & {
+export type RawSubjectAssignment = {
   id: string;
   instituteId: string;
   sessionId: string;
+  classId: string;
+  groupId: string;
+  subjectId: string;
+  subjectType: "COMPULSORY" | "GROUP_BASED" | "OPTIONAL" | null;
+  status: "ACTIVE" | "INACTIVE";
+  class: { id: string; name: string } | null;
+  subject: { id: string; name: string } | null;
+  group: { id: string; name: string } | null;
+};
+
+export type OutputSubAssignType = inputSubAssignType & {
+  id: string;
+  instituteId: string;
+  sessionId: string;
+  subjectName: string;
+  groupName: string;
+  className: string;
+  subjectId: string;
 };

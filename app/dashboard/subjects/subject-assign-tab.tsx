@@ -7,7 +7,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { getActiveClasses } from "@/src/server-actions/classes.action";
-import { getSubjects } from "@/src/server-actions/subjects.action";
+import {
+  getSubjects,
+  subjectAssignment,
+} from "@/src/server-actions/subjects.action";
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import {
   inputSubAssignType,
@@ -18,6 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { SubjectAssignTable } from "./assigned-subject-table";
 
 export function SubjectAssignTab() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -27,13 +31,6 @@ export function SubjectAssignTab() {
   const [subjects, setSubjects] = useState<outputSubjectType[] | undefined>(
     undefined,
   );
-
-  const form = useForm<inputSubAssignType>({
-    resolver: zodResolver(subjectAssignmentZod),
-    defaultValues: {},
-  });
-  const { isSubmitting } = form.formState;
-  const methods = useForm();
 
   useEffect(() => {
     async function getlist() {
@@ -53,6 +50,14 @@ export function SubjectAssignTab() {
     }
     getlist();
   }, []);
+
+  const form = useForm<inputSubAssignType>({
+    resolver: zodResolver(subjectAssignmentZod),
+    defaultValues: {},
+  });
+  const { isSubmitting } = form.formState;
+  const methods = useForm();
+
   // ----------- selected Class assigned groups list-------------
   const selectedClassId = useWatch({
     control: form.control,
@@ -64,9 +69,11 @@ export function SubjectAssignTab() {
 
   // add button
   const addBtn = async (data: inputSubAssignType) => {
-    console.log(data);
     await handleCrudAction(subjectAssignment, data, {
       successMessage: "Subjects Assigned Successfully",
+      onSuccess(data) {
+        console.log(data);
+      },
     });
   };
 
@@ -77,7 +84,9 @@ export function SubjectAssignTab() {
     <div>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         {/* Data Table Section */}
-
+        <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+          <SubjectAssignTable />
+        </div>
         {/* <!--  Add subject Form --> */}
         <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">

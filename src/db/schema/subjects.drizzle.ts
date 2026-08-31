@@ -91,7 +91,7 @@ export const subjectAssignRelationOne = relations(
       references: [academicSessions.id],
     }),
     subject: one(subjectDbSchema, {
-      fields: [subjectAssignSchema.sessionId],
+      fields: [subjectAssignSchema.subjectId],
       references: [subjectDbSchema.id],
     }),
 

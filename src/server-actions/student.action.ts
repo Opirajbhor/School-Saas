@@ -26,9 +26,7 @@ export async function getStudents() {
         }),
     });
 
-    console.log(result.data);
-
-    return {
+     return {
       success: true as const,
       data: result.data,
     };
