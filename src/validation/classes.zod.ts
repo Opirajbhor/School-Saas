@@ -43,6 +43,7 @@ export type sectionTypeWithId = z.infer<typeof sectionZod>;
 
 export type sectionType = sectionTypeWithId & {
   id?: string;
+  status: string;
 };
 
 // for classes and nested groups in the server action-------

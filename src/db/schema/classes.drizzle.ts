@@ -51,7 +51,8 @@ export const sectionDrizzle = pgTable(
       .references(() => classesDrizzle.id, { onDelete: "cascade" }),
     userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
     name: text("name").notNull(),
-    isActive: boolean("is_active").notNull().default(true),
+    status: statusEnum("status").notNull().default("ACTIVE"),
+
     ...timestamps,
   },
   // unique constrain
@@ -73,12 +74,4 @@ export const classesRelations = relations(classesDrizzle, ({ one, many }) => ({
 
   sections: many(sectionDrizzle),
   groupClasses: many(groupClasses),
-}));
-
-// Section Relation-----------------
-export const sectionRelations = relations(sectionDrizzle, ({ one }) => ({
-  class: one(classesDrizzle, {
-    fields: [sectionDrizzle.classId],
-    references: [classesDrizzle.id],
-  }),
 }));

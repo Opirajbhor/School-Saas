@@ -106,34 +106,14 @@ export async function postSection(data: sectionType) {
   const profile = await requireInstitute();
   const sessionId = await getActiveSessionId(profile?.id);
 
-  // parse with zod-----------------
-  const validatedFields = parseWithZod(sectionZod, data);
-  if (!validatedFields.success) return validatedFields;
-  // parse with zod-----------------
-
-  try {
-    const [newSection] = await db
-      .insert(sectionDrizzle)
-      .values({
-        ...validatedFields.data,
-        instituteId: profile?.id,
-        userId: profile?.userId,
-        sessionId: sessionId,
-      })
-      .returning();
-    revalidatePath("/dashboard/classes");
-    revalidatePath("/dashboard");
-    return {
-      success: true,
-      data: newSection,
-    };
-  } catch (error) {
-    console.error("Database error during section creation:", error);
-    return {
-      success: false,
-      error: "Failed to create section due to a database failure.",
-    };
-  }
+  return createRecord(
+    {
+      zodSchema: sectionZod,
+      drizzleSchema: sectionDrizzle,
+      additionFields: { status: "ACTIVE", sessionId: sessionId },
+    },
+    data,
+  );
 }
 
 // delete section

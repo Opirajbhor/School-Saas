@@ -1,11 +1,15 @@
 "use client";
 
+import StatusToggleModal from "@/components/modal/status-modal";
 import { SpinnerCustom } from "@/components/Spinner";
 import { AppTable } from "@/components/table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
-import { getAssignSubjects } from "@/src/server-actions/subjects.action";
+import {
+  getAssignSubjects,
+  ToggleAssignSubjectStatus,
+} from "@/src/server-actions/subjects.action";
 import { OutputSubAssignType } from "@/src/validation/subjects.zod";
 import { useEffect, useState } from "react";
 
@@ -27,7 +31,6 @@ export function SubjectAssignTable() {
     }
     getlist();
   }, []);
-  console.log(subjects);
   if (loading) {
     return <SpinnerCustom />;
   }
@@ -43,7 +46,9 @@ export function SubjectAssignTable() {
         onSelectionChange={setSelectedSub}
         toolbar={
           <>
-            <Button variant="outline">Export</Button>
+            <Badge className="p-3 text-md" variant={"outline"}>
+              Total Assigned Subjects: {subjects?.length}
+            </Badge>
           </>
         }
         columns={[
@@ -81,28 +86,27 @@ export function SubjectAssignTable() {
           {
             key: "actions",
             label: "Actions",
-            // render: (item) => (
-            //   <div className="flex gap-2">
-            //     <StatusToggleModal
-            //       id={item.id}
-            //       onDelete={ToggleSubjectStatus}
-            //       onSuccess={() => {
-            //         form.reset();
-            //         setSubjects((prev) =>
-            //           prev?.map((c) =>
-            //             c?.id === item.id
-            //               ? {
-            //                   ...c,
-            //                   status:
-            //                     c.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-            //                 }
-            //               : c,
-            //           ),
-            //         );
-            //       }}
-            //     />
-            //   </div>
-            // ),
+            render: (item) => (
+              <div className="flex gap-2">
+                <StatusToggleModal
+                  id={item.id}
+                  onDelete={ToggleAssignSubjectStatus}
+                  onSuccess={() => {
+                    setSubjects((prev) =>
+                      prev?.map((c) =>
+                        c?.id === item.id
+                          ? {
+                              ...c,
+                              status:
+                                c.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                            }
+                          : c,
+                      ),
+                    );
+                  }}
+                />
+              </div>
+            ),
           },
         ]}
       />

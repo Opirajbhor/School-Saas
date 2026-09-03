@@ -104,7 +104,7 @@ export async function subjectAssignment(data: inputSubAssignType) {
   }
 }
 
-// ------------get all the subjects------------------
+// ------------get all the assigned subjects------------------
 export async function getAssignSubjects() {
   try {
     const result = await readMany({
@@ -152,4 +152,15 @@ export async function getAssignSubjects() {
       details: {},
     };
   }
+}
+
+
+//------------- toogle assign subject Status -----------------
+export async function ToggleAssignSubjectStatus(id: string) {
+  return toggleStatus(
+    {
+      drizzleSchema: subjectAssignSchema,
+    },
+    id,
+  );
 }

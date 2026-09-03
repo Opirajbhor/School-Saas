@@ -43,7 +43,11 @@ export function SubjectAssignTab() {
 
       await clientReadAction(getSubjects, {
         onSuccess: (data) => {
-          setSubjects(data as outputSubjectType[]);
+          setSubjects(
+            data.filter(
+              (item) => item.status === "ACTIVE",
+            ) as outputSubjectType[],
+          );
         },
         onLoading: setLoading,
       });

@@ -84,7 +84,6 @@ export default function Page() {
     }
     getlist();
   }, []);
-  console.log(students);
   if (loading) {
     return <SpinnerCustom />;
   }

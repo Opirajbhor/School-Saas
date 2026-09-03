@@ -8,5 +8,6 @@ export * from "./schema/student.drizzle";
 export * from "./schema/groups.drizzle";
 export * from "./schema/enums-drizzle";
 export * from "./schema/enrollments.drizzle";
+export * from "./schema/teacher-assignment.drizzle";
 
 export * from "../db/relations/drizzleRelation";
