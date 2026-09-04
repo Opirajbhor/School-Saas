@@ -95,7 +95,7 @@ export default function Page() {
       onSuccess: (data) => {
         setClassTeachers((prev = []) => {
           const newItems = Array.isArray(data) ? data : [data];
-          return [...prev, ...newItems] as classTeacherType[]; 
+          return [...prev, ...newItems] as classTeacherType[];
         });
         form.reset();
       },
@@ -109,7 +109,7 @@ export default function Page() {
       <div>
         <Card>
           <CardHeader>
-            <CardTitle>Academic Information</CardTitle>
+            <CardTitle>Class Teacher Assignments</CardTitle>
           </CardHeader>
           <div>
             {/* ------------- assignment form --------------- */}
