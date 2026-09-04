@@ -11,6 +11,7 @@ import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
 import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
 import { and, eq } from "drizzle-orm";
+import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
 
 //------------- get class, sections and teachers info -----------
 export async function getClassWithTeacher() {
@@ -26,7 +27,7 @@ export async function getClassWithTeacher() {
       },
     };
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return {
       success: false as const,
       error: "failed to get class and teacher info",
@@ -39,7 +40,7 @@ export async function getClassWithTeacher() {
 export async function assignClassTeacher(data: InputClassTeacherType) {
   const profile = await requireInstitute();
   const activeSessionId = await getActiveSessionId(profile.id);
-  return createRecord(
+  const newId = await createRecord(
     {
       zodSchema: sectionClassTeacherZod,
       drizzleSchema: sectionClassTeachers,
@@ -47,6 +48,41 @@ export async function assignClassTeacher(data: InputClassTeacherType) {
     },
     data,
   );
+  if (newId.success) {
+    try {
+      const result = await readMany({
+        drizzleSchema: sectionClassTeachers,
+        query: ({ db, instituteId }) =>
+          db.query.sectionClassTeachers.findMany({
+            where: and(
+              eq(sectionClassTeachers.instituteId, instituteId),
+              eq(sectionClassTeachers.id, newId.data.id as string),
+            ),
+            with: {
+              teacher: true,
+              class: true,
+              section: true,
+            },
+          }),
+      });
+      return {
+        success: true as const,
+        data: result.data,
+      };
+    } catch (error) {
+      return {
+        success: false as const,
+        error: String(error),
+        details: {},
+      };
+    }
+  } else {
+    return {
+      success: false as const,
+      error: "failed to assign Teacher",
+      details: {},
+    };
+  }
 }
 
 // ------------get all assigned class Teacher ------------
@@ -75,4 +111,14 @@ export async function getassignedClassTeachers() {
       details: {},
     };
   }
+}
+
+// ---------------- delete assign teacher
+export async function deleteAssignTeacher(id: string) {
+  return deleteRecord(
+    {
+      drizzleSchema: sectionClassTeachers,
+    },
+    id,
+  );
 }

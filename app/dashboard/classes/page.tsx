@@ -48,7 +48,6 @@ export default function Classes() {
     }
     getlist();
   }, []);
-  console.log(classes);
   // RHF
   const form = useForm<classesType>({
     resolver: zodResolver(classesZod),
@@ -63,7 +62,9 @@ export default function Classes() {
     await handleCrudAction(postClasses, data, {
       successMessage: "Class created successfully",
       onSuccess: (newClass) => {
-        setClasses((prev) => [...(prev || []), newClass]);
+        setClasses(
+          (prev) => [...(prev || []), newClass] as classesTypeWithId[],
+        );
         form.reset();
       },
     });

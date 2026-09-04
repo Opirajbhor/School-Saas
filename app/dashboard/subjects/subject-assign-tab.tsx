@@ -75,9 +75,7 @@ export function SubjectAssignTab() {
   const addBtn = async (data: inputSubAssignType) => {
     await handleCrudAction(subjectAssignment, data, {
       successMessage: "Subjects Assigned Successfully",
-      onSuccess(data) {
-        console.log(data);
-      },
+      onSuccess(data) {},
     });
   };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormSelect } from "@/components/forms/form-select";
+import DeleteModal from "@/components/modal/delete-modal";
 import { SpinnerCustom } from "@/components/Spinner";
 import { AppTable } from "@/components/table/data-table";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import {
   assignClassTeacher,
+  deleteAssignTeacher,
   getassignedClassTeachers,
   getClassWithTeacher,
 } from "@/src/server-actions/teacher-assignment.action";
@@ -55,12 +57,33 @@ export default function Page() {
 
   const { isSubmitting } = form.formState;
   const methods = useForm();
+  // ------------assignable Teacher list ------------
+  const availableTeachers =
+    teacherInfo?.filter(
+      (teacher) => !classTeachers?.some((ct) => ct.teacherId === teacher.id),
+    ) ?? [];
 
+  // ------------- available section list------------
+
+  const availableSections =
+    classInfo
+      ?.map((item) => ({
+        ...item,
+        sections: item.sections.filter(
+          (sec) => !classTeachers?.some((ct) => sec.id === ct.sectionId),
+        ),
+      }))
+      .filter((item) => item.sections.length > 0) ?? [];
+
+  // --------get class id from react hook form -------------
   const selectedClassId = useWatch({
     control: form.control,
     name: "classId",
   });
-  const selectedClass = classInfo.find((item) => item.id === selectedClassId);
+  // ------------ get selected class sections --------------
+  const selectedClass = availableSections.find(
+    (item) => item.id === selectedClassId,
+  );
   const selectedSectionId = useWatch({
     control: form.control,
     name: "sectionId",
@@ -70,7 +93,10 @@ export default function Page() {
     await handleCrudAction(assignClassTeacher, data, {
       successMessage: "Student Created Successfully",
       onSuccess: (data) => {
-        console.log(data);
+        setClassTeachers((prev = []) => {
+          const newItems = Array.isArray(data) ? data : [data];
+          return [...prev, ...newItems] as classTeacherType[];
+        });
         form.reset();
       },
     });
@@ -86,6 +112,7 @@ export default function Page() {
             <CardTitle>Academic Information</CardTitle>
           </CardHeader>
           <div>
+            {/* ------------- assignment form --------------- */}
             <FormProvider {...methods}>
               <form
                 className="flex items-center justify-center gap-10"
@@ -97,7 +124,7 @@ export default function Page() {
                   name="classId"
                   label="Select Class"
                   options={
-                    (classInfo ?? [])
+                    (availableSections ?? [])
                       .filter((item) => item.id !== undefined)
                       .filter((item) => item.status === "ACTIVE")
                       .map((item) => ({
@@ -126,7 +153,7 @@ export default function Page() {
                   name="teacherId"
                   label="Select Class Teacher"
                   disabled={!selectedSectionId}
-                  options={(teacherInfo ?? [])
+                  options={(availableTeachers ?? [])
                     .filter((item) => item.id !== undefined)
                     .filter((item) => item.status === "ACTIVE")
                     .map((item) => ({
@@ -135,7 +162,9 @@ export default function Page() {
                     }))}
                 />
 
-                <Button type="submit">Assign</Button>
+                <Button disabled={isSubmitting} type="submit">
+                  Assign
+                </Button>
               </form>
             </FormProvider>
           </div>
@@ -159,27 +188,35 @@ export default function Page() {
                   key: "name",
                   label: "Class Name",
                   render: (item) => (
-                    <div className=" p-3">{item.class.name}</div>
+                    <div className=" p-3">{item?.class?.name}</div>
                   ),
                 },
 
                 {
                   key: "sections",
                   label: "Section",
-                  render: (item) => <div>{item.section.name}</div>,
+                  render: (item) => <div>{item?.section?.name}</div>,
                 },
 
                 {
                   key: "teacherId",
                   label: "Class Teacher",
-                  render: (item) => <div>{item.teacher.nameEnglish}</div>,
+                  render: (item) => <div>{item?.teacher?.nameEnglish}</div>,
                 },
                 {
                   key: "actions",
                   label: "Actions",
                   render: (item) => (
                     <div>
-                      <Button variant={"destructive"}>Delete</Button>
+                      <DeleteModal
+                        id={item.id}
+                        onDelete={deleteAssignTeacher}
+                        onSuccess={() =>
+                          setClassTeachers((prev) =>
+                            prev?.filter((ct) => ct.id !== item.id),
+                          )
+                        }
+                      />
                     </div>
                   ),
                 },

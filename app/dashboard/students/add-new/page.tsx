@@ -103,7 +103,6 @@ export default function AddStudent() {
     await handleCrudAction(addStudent, data, {
       successMessage: "Student Created Successfully",
       onSuccess: (data) => {
-        console.log(data);
         form.reset();
       },
     });
