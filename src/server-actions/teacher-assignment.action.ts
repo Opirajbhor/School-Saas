@@ -12,6 +12,9 @@ import { requireInstitute } from "./get-institute-profile";
 import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
 import { and, eq } from "drizzle-orm";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
+import { classesDrizzle } from "../db/schema";
+
+// ---------------- class teacher ---------------
 
 //------------- get class, sections and teachers info -----------
 export async function getClassWithTeacher() {
@@ -121,4 +124,34 @@ export async function deleteAssignTeacher(id: string) {
     },
     id,
   );
+}
+
+// ---------------- subject teacher ---------------
+// ------------------get only active Classes, section, groups----------------
+export async function getActiveClassesSection() {
+  try {
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db, instituteId }) =>
+        db.query.classesDrizzle.findMany({
+          where: and(
+            eq(classesDrizzle.instituteId, instituteId),
+            eq(classesDrizzle.status, "ACTIVE"),
+          ),
+          with: {
+            sections: true,
+          },
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
 }
