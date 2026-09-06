@@ -59,7 +59,7 @@ export type outputSubjectType = inputSubjectType & {
 // subject assign zod validation
 export const subjectAssignmentZod = z.object({
   classId: z.uuid("Invalid class id"),
-  groupId: z.uuid("Invalid group id"),
+  groupId: z.uuid("Invalid group id").nullable(),
   subjectIds: z
     .array(z.uuid("Invalid subject id"))
     .min(1, "Select at least one subject"),

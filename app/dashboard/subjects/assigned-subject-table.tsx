@@ -1,43 +1,27 @@
 "use client";
 
 import StatusToggleModal from "@/components/modal/status-modal";
-import { SpinnerCustom } from "@/components/Spinner";
 import { AppTable } from "@/components/table/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
-import {
-  getAssignSubjects,
-  ToggleAssignSubjectStatus,
-} from "@/src/server-actions/subjects.action";
+import { ToggleAssignSubjectStatus } from "@/src/server-actions/subjects.action";
 import { OutputSubAssignType } from "@/src/validation/subjects.zod";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 
-export function SubjectAssignTable() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [subjects, setSubjects] = useState<OutputSubAssignType[] | undefined>(
-    undefined,
-  );
+export function SubjectAssignTable({
+  assignSubjects,
+  setAssignSubjects,
+}: {
+  assignSubjects: OutputSubAssignType[];
+  setAssignSubjects: Dispatch<
+    SetStateAction<OutputSubAssignType[] | undefined>
+  >;
+}) {
   const [selectedSub, setSelectedSub] = useState<string[]>([]);
 
-  useEffect(() => {
-    async function getlist() {
-      await clientReadAction(getAssignSubjects, {
-        onSuccess: (data) => {
-          setSubjects(data as OutputSubAssignType[]);
-        },
-        onLoading: setLoading,
-      });
-    }
-    getlist();
-  }, []);
-  if (loading) {
-    return <SpinnerCustom />;
-  }
   return (
     <div>
       <AppTable
-        data={subjects ?? []}
+        data={assignSubjects ?? []}
         searchable
         searchPlaceholder="Search Assigned Subjects..."
         searchKeys={["status", "className", "groupName", "subjectName"]}
@@ -47,7 +31,7 @@ export function SubjectAssignTable() {
         toolbar={
           <>
             <Badge className="p-3 text-md" variant={"outline"}>
-              Total Assigned Subjects: {subjects?.length}
+              Total Assigned Subjects: {assignSubjects?.length}
             </Badge>
           </>
         }
@@ -92,7 +76,7 @@ export function SubjectAssignTable() {
                   id={item.id}
                   onDelete={ToggleAssignSubjectStatus}
                   onSuccess={() => {
-                    setSubjects((prev) =>
+                    setAssignSubjects((prev) =>
                       prev?.map((c) =>
                         c?.id === item.id
                           ? {

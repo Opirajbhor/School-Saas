@@ -55,9 +55,9 @@ export const subjectAssignSchema = pgTable(
     classId: uuid("class_id")
       .notNull()
       .references(() => classesDrizzle.id, { onDelete: "cascade" }),
-    groupId: uuid("group_id")
-      .notNull()
-      .references(() => groups.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "cascade",
+    }),
     subjectId: uuid("subject_id")
       .notNull()
       .references(() => subjectDbSchema.id, { onDelete: "cascade" }),

@@ -8,12 +8,14 @@ import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { getActiveClasses } from "@/src/server-actions/classes.action";
 import {
+  getAssignSubjects,
   getSubjects,
   subjectAssignment,
 } from "@/src/server-actions/subjects.action";
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import {
   inputSubAssignType,
+  OutputSubAssignType,
   outputSubjectType,
   subjectAssignmentZod,
 } from "@/src/validation/subjects.zod";
@@ -31,6 +33,9 @@ export function SubjectAssignTab() {
   const [subjects, setSubjects] = useState<outputSubjectType[] | undefined>(
     undefined,
   );
+  const [assignSubjects, setAssignSubjects] = useState<
+    OutputSubAssignType[] | undefined
+  >(undefined);
 
   useEffect(() => {
     async function getlist() {
@@ -51,13 +56,22 @@ export function SubjectAssignTab() {
         },
         onLoading: setLoading,
       });
+
+      await clientReadAction(getAssignSubjects, {
+        onSuccess: (data) => {
+          setAssignSubjects(data as OutputSubAssignType[]);
+        },
+        onLoading: setLoading,
+      });
     }
     getlist();
   }, []);
 
   const form = useForm<inputSubAssignType>({
     resolver: zodResolver(subjectAssignmentZod),
-    defaultValues: {},
+    defaultValues: {
+      groupId: null,
+    },
   });
   const { isSubmitting } = form.formState;
   const methods = useForm();
@@ -71,11 +85,17 @@ export function SubjectAssignTab() {
     (item) => item.id === selectedClassId,
   );
 
-  // add button
+  const subType = useWatch({
+    control: form.control,
+    name: "subjectType",
+  });
+
   const addBtn = async (data: inputSubAssignType) => {
     await handleCrudAction(subjectAssignment, data, {
       successMessage: "Subjects Assigned Successfully",
-      onSuccess(data) {},
+      onSuccess: (responseData) => {
+        setAssignSubjects(responseData as OutputSubAssignType[]);
+      },
     });
   };
 
@@ -87,7 +107,10 @@ export function SubjectAssignTab() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         {/* Data Table Section */}
         <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
-          <SubjectAssignTable />
+          <SubjectAssignTable
+            assignSubjects={assignSubjects || []}
+            setAssignSubjects={setAssignSubjects}
+          />
         </div>
         {/* <!--  Add subject Form --> */}
         <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -110,20 +133,6 @@ export function SubjectAssignTab() {
                     value: item.id as string,
                   }))}
               />
-
-              {/* ----------------Groups-------------- */}
-              <FormSelect
-                control={form.control}
-                name="groupId"
-                label="Group Name"
-                options={(selectedClassData?.groupClasses ?? []).map(
-                  (item) => ({
-                    label: item.group.name,
-                    value: item.group.id as string,
-                  }),
-                )}
-              />
-
               {/* ----------------Subject Type-------------- */}
 
               <FormSelect
@@ -135,6 +144,20 @@ export function SubjectAssignTab() {
                   { label: "GROUP_BASED", value: "GROUP_BASED" },
                   { label: "OPTIONAL", value: "OPTIONAL" },
                 ]}
+              />
+
+              {/* ----------------Groups-------------- */}
+              <FormSelect
+                control={form.control}
+                name="groupId"
+                label="Group Name"
+                disabled={subType !== "GROUP_BASED"}
+                options={(selectedClassData?.groupClasses ?? []).map(
+                  (item) => ({
+                    label: item.group.name,
+                    value: item.group.id as string,
+                  }),
+                )}
               />
 
               {/* --------subjects list-------------- */}

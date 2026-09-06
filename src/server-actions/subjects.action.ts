@@ -70,7 +70,6 @@ export async function subjectAssignment(data: inputSubAssignType) {
       };
     }
 
-    // Everything inside this transaction succeeds together.
     // If any subject assignment fails, ALL assignments are rolled back.
     const results = await db.transaction(async (tx) => {
       return Promise.all(
@@ -88,10 +87,11 @@ export async function subjectAssignment(data: inputSubAssignType) {
         }),
       );
     });
+    const resultsValue = await getAssignSubjects();
 
     return {
       success: true as const,
-      data: results.flat(),
+      data: resultsValue.data,
     };
   } catch (err) {
     console.error("Subject assignment failed:", err);
@@ -153,7 +153,6 @@ export async function getAssignSubjects() {
     };
   }
 }
-
 
 //------------- toogle assign subject Status -----------------
 export async function ToggleAssignSubjectStatus(id: string) {

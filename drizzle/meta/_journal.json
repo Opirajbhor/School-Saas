@@ -239,6 +239,13 @@
       "when": 1788449244631,
       "tag": "0033_minor_mephisto",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1788698451135,
+      "tag": "0034_brave_warbound",
+      "breakpoints": true
     }
   ]
 }
