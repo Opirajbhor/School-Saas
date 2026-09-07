@@ -4,79 +4,80 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import {
   addSubjects,
   getSubjects,
   ToggleSubjectStatus,
 } from "@/src/server-actions/subjects.action";
 import {
-  inputSubjectType,
+  InputSubjectType,
   inputSubjectZod,
-  outputSubjectType,
+  OutputSubjectType,
 } from "@/src/validation/subjects.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
-import { Toggle } from "@/components/ui/toggle";
-import { MdOutlineRadioButtonUnchecked } from "react-icons/md";
-import { IoMdCheckmarkCircle } from "react-icons/io";
 import { SubjectAssignTab } from "./subject-assign-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormInput } from "@/components/forms/form-input";
 import { FormSelect } from "@/components/forms/form-select";
 import { AppTable } from "@/components/table/data-table";
 import StatusToggleModal from "@/components/modal/status-modal";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { FormCheckbox } from "@/components/forms/form-checkbox";
 
 export default function Page() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [subjects, setSubjects] = useState<outputSubjectType[] | undefined>(
-    undefined,
-  );
   const [selectedSub, setSelectedSub] = useState<string[]>([]);
 
-  useEffect(() => {
-    async function getlist() {
-      await clientReadAction(getSubjects, {
-        onSuccess: (data) => setSubjects(data as outputSubjectType[]),
-        onLoading: setLoading,
-      });
-    }
-    getlist();
-  }, []);
+  // ------------- query fn ---------------
+  const queryClient = useQueryClient();
+  const { data: subjects = [], isPending } = useQuery<OutputSubjectType[]>({
+    queryKey: ["subjects"],
+    queryFn: async () => {
+      const result = await getSubjects();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as OutputSubjectType[];
+    },
+  });
   const activeSubjects = subjects?.filter((item) => item.status === "ACTIVE");
-  const [isReligion, setIsReligion] = useState<boolean>(false);
-  const form = useForm<inputSubjectType>({
+
+  // -------------- form -------------------
+  const form = useForm<InputSubjectType>({
     resolver: zodResolver(inputSubjectZod),
     defaultValues: {
-      status: "ACTIVE",
-      isReligion: isReligion,
+      isOptional: false,
+      isReligion: false,
       religion: null,
+      status: "ACTIVE",
     },
   });
   const { isSubmitting } = form.formState;
-  const methods = useForm();
-
+  const subType = useWatch({
+    control: form.control,
+    name: "subject_type",
+  });
   // add button
-  const addBtn = async (data: inputSubjectType) => {
-    const payload = {
-      ...data,
-      isReligion: isReligion,
-      religion: isReligion ? data.religion : null,
-    };
-    await handleCrudAction(addSubjects, payload, {
+  const addBtn = async (data: InputSubjectType) => {
+    await handleCrudAction(addSubjects, data, {
       successMessage: "Subject Created Successfully",
-      onSuccess: (item) => {
-        setSubjects((prev) => [...(prev || []), item as outputSubjectType]);
-        form.reset();
-        setIsReligion(false);
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["subjects"],
+        });
       },
     });
   };
 
-  if (loading) {
+  // reset the form value if sub type changes
+  useEffect(() => {
+    form.setValue("isOptional", false);
+    form.setValue("religion", null);
+  }, [subType, form]);
+  if (isPending) {
     return <SpinnerCustom />;
   }
   return (
@@ -175,8 +176,8 @@ export default function Page() {
                   {
                     key: "status",
                     label: "Status",
-                    render: (teacher) =>
-                      teacher.status === "ACTIVE" ? (
+                    render: (item) =>
+                      item.status === "ACTIVE" ? (
                         <Badge variant="default">ACTIVE</Badge>
                       ) : (
                         <span className="text-muted-foreground">INACTIVE</span>
@@ -193,19 +194,9 @@ export default function Page() {
                           onDelete={ToggleSubjectStatus}
                           onSuccess={() => {
                             form.reset();
-                            setSubjects((prev) =>
-                              prev?.map((c) =>
-                                c?.id === item.id
-                                  ? {
-                                      ...c,
-                                      status:
-                                        c.status === "ACTIVE"
-                                          ? "INACTIVE"
-                                          : "ACTIVE",
-                                    }
-                                  : c,
-                              ),
-                            );
+                            queryClient.invalidateQueries({
+                              queryKey: ["subjects"],
+                            });
                           }}
                         />
                       </div>
@@ -220,7 +211,7 @@ export default function Page() {
                 Add subject
               </h3>
 
-              <FormProvider {...methods}>
+              <FormProvider {...form}>
                 <form
                   className="space-y-4"
                   onSubmit={form.handleSubmit(addBtn)}
@@ -249,33 +240,32 @@ export default function Page() {
                     name="code"
                     placeholder="e.g., 101, 102"
                   />
-
-                  {/*---------- toggle -------------*/}
-
-                  <div>
-                    <Toggle
-                      onClick={() => setIsReligion(!isReligion)}
-                      aria-label="Toggle bookmark"
-                      size="sm"
-                      variant="outline"
-                      className="cursor-pointer"
-                    >
-                      {isReligion ? (
-                        <IoMdCheckmarkCircle className="group-aria-pressed/toggle:fill-foreground" />
-                      ) : (
-                        <MdOutlineRadioButtonUnchecked className="group-aria-pressed/toggle:fill-foreground" />
-                      )}
-                      Religion Subject
-                    </Toggle>
-                  </div>
-
-                  {/*--------- religion list --------------*/}
-
+                  {/* ---------type-------- */}
                   <FormSelect
                     control={form.control}
+                    name="subject_type"
+                    label="Subject Type"
+                    options={[
+                      { label: "COMPULSORY", value: "COMPULSORY" },
+                      { label: "GROUP_BASED", value: "GROUP_BASED" },
+                      { label: "RELIGION", value: "RELIGION" },
+                    ]}
+                  />
+
+                  {/*--------- optional checkbox --------------*/}
+                  <FormCheckbox
+                    control={form.control}
+                    name="isOptional"
+                    label="Add to Optional List"
+                    disabled={subType !== "GROUP_BASED"}
+                  />
+
+                  {/*--------- religion list --------------*/}
+                  <FormSelect
+                    disabled={subType !== "RELIGION"}
+                    control={form.control}
                     name="religion"
-                    label="Select Religion"
-                    disabled={!isReligion}
+                    label="Choose Religion"
                     options={[
                       { label: "ISLAM", value: "ISLAM" },
                       { label: "HINDUISM", value: "HINDUISM" },
@@ -283,6 +273,7 @@ export default function Page() {
                       { label: "BUDDHISM", value: "BUDDHISM" },
                     ]}
                   />
+
                   {/* -------submit button------------- */}
                   <Button
                     disabled={isSubmitting}

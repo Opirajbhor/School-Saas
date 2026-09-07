@@ -16,7 +16,7 @@ export const statusEnum = pgEnum("status", ["ACTIVE", "INACTIVE"]);
 export const subjectTypeEnum = pgEnum("subject_type", [
   "COMPULSORY",
   "GROUP_BASED",
-  "OPTIONAL",
+  "RELIGION",
 ]);
 
 export const timestamps = {

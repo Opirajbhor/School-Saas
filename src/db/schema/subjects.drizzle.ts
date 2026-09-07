@@ -22,6 +22,10 @@ export const subjectDbSchema = pgTable(
     name: text("name").notNull(),
     code: text("code").notNull(),
     shortName: text("short_name").notNull(),
+    subject_type: subjectTypeEnum("subject_type")
+      .notNull()
+      .default("COMPULSORY"),
+    isOptional: boolean("is_optional").notNull().default(false),
     isReligion: boolean("is_religion").notNull().default(false),
     status: statusEnum("status").notNull().default("ACTIVE"),
     religion: religionEnum("religion"),

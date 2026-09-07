@@ -6,7 +6,7 @@ import {
 } from "../db/schema/teacher-assignment.drizzle";
 import { classesType, sectionType, sectionTypeWithId } from "./classes.zod";
 import { editTeacherType, Teacherlist } from "./teacher.zod";
-import { OutputSubAssignType, outputSubjectType } from "./subjects.zod";
+import { OutputSubAssignType, SubjectType } from "./subjects.zod";
 import { outputGroupType } from "./groups.zod";
 
 // ------------------- class Teacher Zod Validation --------------
@@ -76,5 +76,5 @@ export type ClassSectionType = {
 };
 
 export type ClassSubjectType = OutputSubAssignType & {
-  subject: outputSubjectType;
+  subject: SubjectType;
 };

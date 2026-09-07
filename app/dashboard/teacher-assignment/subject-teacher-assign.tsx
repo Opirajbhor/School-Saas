@@ -201,7 +201,10 @@ const SubjectTeacherAssign = () => {
                   label: "Select Teacher",
                   render: (item) => (
                     <FormProvider {...form2}>
-                      <form onSubmit={form2.handleSubmit(AssignBtn)}>
+                      <form
+                        className="flex items-center gap-3"
+                        onSubmit={form2.handleSubmit(AssignBtn)}
+                      >
                         <FormSelect
                           control={form2.control}
                           name="teacherId"

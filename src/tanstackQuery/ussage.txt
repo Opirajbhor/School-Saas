@@ -1,9 +1,15 @@
 
 
   // ------- tanstack Query  -------------
-  const { data: classInfo = [], isPending } = useQuery({
-    queryKey: ["activeClassSection"],
-    queryFn: async () => fetchData(getActiveClassesSection),
+const { data: subjects = [], isPending } = useQuery({
+    queryKey: ["subjects"],
+    queryFn: async () => {
+      const result = await getSubjects();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as SubjectType[];
+    },
   });
 
 

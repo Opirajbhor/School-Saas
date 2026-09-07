@@ -6,7 +6,7 @@ import {
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
 import {
   inputSubAssignType,
-  inputSubjectType,
+  InputSubjectType,
   inputSubjectZod,
   RawSubjectAssignment,
 } from "../validation/subjects.zod";
@@ -19,7 +19,7 @@ import { getActiveSessionId } from "./academicSession.action";
 import { db } from "../db";
 
 // ------------ post a new subject ---------------
-export async function addSubjects(data: inputSubjectType) {
+export async function addSubjects(data: InputSubjectType) {
   return createRecord(
     {
       zodSchema: inputSubjectZod,
@@ -32,7 +32,7 @@ export async function addSubjects(data: inputSubjectType) {
 
 // ------------get all the subjects------------------
 export async function getSubjects() {
-  return readRecord({ drizzleSchema: subjectDbSchema });
+  return await readRecord({ drizzleSchema: subjectDbSchema });
 }
 
 //------------- toogle subject Status -----------------

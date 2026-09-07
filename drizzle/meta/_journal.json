@@ -246,6 +246,20 @@
       "when": 1788698451135,
       "tag": "0034_brave_warbound",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1788801126153,
+      "tag": "0035_same_zarda",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1788805036856,
+      "tag": "0036_dear_starbolt",
+      "breakpoints": true
     }
   ]
 }
