@@ -16,6 +16,7 @@ import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
 import { readMany } from "../lib/crud-funtions/server-read-crud";
 import { toggleStatus } from "../lib/crud-funtions/server-status.action";
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
+import { OutputClassTeacherType } from "../validation/teacher-assignment.zod";
 
 // get classes and sections
 export async function getClasses() {
@@ -32,7 +33,7 @@ export async function getClasses() {
     });
     return {
       success: true as const,
-      data: result.data,
+      data: result.data as OutputClassTeacherType[],
     };
   } catch (error) {
     return {

@@ -2,7 +2,10 @@
 import { getTeacher } from "./teacher.action";
 import { getClasses } from "./classes.action";
 import {
+  ClassSectionType,
+  classTeacherType,
   InputClassTeacherType,
+  OutputClassTeacherType,
   sectionClassTeacherZod,
 } from "../validation/teacher-assignment.zod";
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
@@ -12,7 +15,12 @@ import { requireInstitute } from "./get-institute-profile";
 import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
 import { and, eq } from "drizzle-orm";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
-import { classesDrizzle } from "../db/schema";
+import {
+  classesDrizzle,
+  groupClasses,
+  subjectAssignSchema,
+} from "../db/schema";
+import { Teacherlist } from "../validation/teacher.zod";
 
 // ---------------- class teacher ---------------
 
@@ -25,8 +33,8 @@ export async function getClassWithTeacher() {
     return {
       success: true as const,
       data: {
-        classData,
-        teacherInfo,
+        classData: classData.data as OutputClassTeacherType[],
+        teacherInfo: teacherInfo.data as Teacherlist[],
       },
     };
   } catch (error) {
@@ -105,7 +113,7 @@ export async function getassignedClassTeachers() {
     });
     return {
       success: true as const,
-      data: result.data,
+      data: result.data as classTeacherType[],
     };
   } catch (error) {
     return {
@@ -140,9 +148,74 @@ export async function getActiveClassesSection() {
           ),
           with: {
             sections: true,
+            groupClasses: {
+              with: {
+                group: true,
+              },
+            },
           },
         }),
     });
+    return {
+      success: true as const,
+      data: result.data as ClassSectionType[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
+}
+
+// ------------get assigned groups to classes ---------------
+export async function getActiveAssignGroup() {
+  try {
+    const result = await readMany({
+      drizzleSchema: groupClasses,
+      query: ({ db, instituteId }) =>
+        db.query.groupClasses.findMany({
+          where: and(
+            eq(groupClasses.instituteId, instituteId),
+            eq(groupClasses.status, "ACTIVE"),
+          ),
+          with: {
+            group: true,
+          },
+        }),
+    });
+    return {
+      success: true as const,
+      data: result,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false as const,
+      error: "failed to fetch data",
+      details: {},
+    };
+  }
+}
+
+// ------------- get class subjects -------------
+export async function getSingleClassSubjects(classId: string) {
+  try {
+    const result = await readMany({
+      drizzleSchema: subjectAssignSchema,
+      query: ({ db, instituteId }) =>
+        db.query.subjectAssignSchema.findMany({
+          where: and(
+            eq(subjectAssignSchema.instituteId, instituteId),
+            eq(subjectAssignSchema.classId, classId),
+          ),
+          with: {
+            subject: true,
+          },
+        }),
+    });
+
     return {
       success: true as const,
       data: result.data,

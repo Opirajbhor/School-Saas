@@ -1,57 +1,51 @@
 "use client";
-
 import { FormSelect } from "@/components/forms/form-select";
 import DeleteModal from "@/components/modal/delete-modal";
 import { SpinnerCustom } from "@/components/Spinner";
 import { AppTable } from "@/components/table/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import {
   assignClassTeacher,
   deleteAssignTeacher,
   getassignedClassTeachers,
-  getClassWithTeacher,
 } from "@/src/server-actions/teacher-assignment.action";
 import {
-  classTeacherType,
   InputClassTeacherType,
-  OutputClassTeacherType,
   sectionClassTeacherZod,
 } from "@/src/validation/teacher-assignment.zod";
-import { Teacherlist } from "@/src/validation/teacher.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
-import SubjectTeacherAssign from "./subject-teacher-assign";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchData } from "@/src/tanstackQuery/queryReturnDataFn";
+import { getClasses } from "@/src/server-actions/classes.action";
+import { getTeacher } from "@/src/server-actions/teacher.action";
+import { useState } from "react";
 
 export function ClassTeacherAssign() {
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const [classInfo, setClassInfo] = useState<OutputClassTeacherType[]>([]);
-  const [teacherInfo, setTeacherInfo] = useState<Teacherlist[]>([]);
   const [selectedSub, setSelectedSub] = useState<string[]>([]);
-  const [classTeachers, setClassTeachers] = useState<
-    classTeacherType[] | undefined
-  >(undefined);
-  useEffect(() => {
-    const get = async () => {
-      await clientReadAction(getClassWithTeacher, {
-        onSuccess: (data) => {
-          setClassInfo(data.classData.data as OutputClassTeacherType[]);
-          setTeacherInfo(data.teacherInfo.data as Teacherlist[]);
-        },
-      });
-      await clientReadAction(getassignedClassTeachers, {
-        onLoading: setLoading,
-        onSuccess: (data) => setClassTeachers(data as classTeacherType[]),
-      });
-    };
-    get();
-  }, []);
 
+  const queryClient = useQueryClient();
+  // ------- tanstack Class Query  -------------
+  const { data: classInfo = [], isPending: isClasses } = useQuery({
+    queryKey: ["classes"],
+    queryFn: async () => fetchData(getClasses),
+  });
+  // ------- tanstack Teacher Query  -------------
+  const { data: teacherInfo = [], isPending: isTeacher } = useQuery({
+    queryKey: ["teachers"],
+    queryFn: async () => fetchData(getTeacher),
+  });
+
+  // ------- tanstack Class Teacher Query  -------------
+  const { data: classTeachers = [], isPending: isClassTeacherPending } =
+    useQuery({
+      queryKey: ["classTeacher", "assigned"],
+      queryFn: async () => fetchData(getassignedClassTeachers),
+    });
+
+  // ------------- form ------------------
   const form = useForm<InputClassTeacherType>({
     resolver: zodResolver(sectionClassTeacherZod),
     defaultValues: {},
@@ -65,7 +59,6 @@ export function ClassTeacherAssign() {
     ) ?? [];
 
   // ------------- available section list------------
-
   const availableSections =
     classInfo
       ?.map((item) => ({
@@ -90,19 +83,19 @@ export function ClassTeacherAssign() {
     name: "sectionId",
   });
 
+  // ------------- handle button add class teacher ---------------
   const addBtn = async (data: InputClassTeacherType) => {
     await handleCrudAction(assignClassTeacher, data, {
       successMessage: "Student Created Successfully",
-      onSuccess: (data) => {
-        setClassTeachers((prev = []) => {
-          const newItems = Array.isArray(data) ? data : [data];
-          return [...prev, ...newItems] as classTeacherType[];
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["classTeacher", "assigned"],
         });
         form.reset();
       },
     });
   };
-  if (loading) {
+  if (isClasses || isTeacher || isClassTeacherPending) {
     return <SpinnerCustom />;
   }
   return (
@@ -212,9 +205,9 @@ export function ClassTeacherAssign() {
                       id={item.id}
                       onDelete={deleteAssignTeacher}
                       onSuccess={() =>
-                        setClassTeachers((prev) =>
-                          prev?.filter((ct) => ct.id !== item.id),
-                        )
+                        queryClient.invalidateQueries({
+                          queryKey: ["classTeacher", "assigned"],
+                        })
                       }
                     />
                   </div>

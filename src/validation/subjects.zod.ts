@@ -92,3 +92,4 @@ export type OutputSubAssignType = inputSubAssignType & {
   className: string;
   subjectId: string;
 };
+

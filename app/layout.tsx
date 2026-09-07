@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/src/tanstackQuery/provider";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -41,7 +42,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system">
-          {children}
+          <QueryProvider>{children}</QueryProvider>
         </ThemeProvider>
 
         <Toaster />

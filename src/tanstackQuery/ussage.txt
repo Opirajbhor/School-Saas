@@ -1,0 +1,15 @@
+
+
+  // ------- tanstack Query  -------------
+  const { data: classInfo = [], isPending } = useQuery({
+    queryKey: ["activeClassSection"],
+    queryFn: async () => fetchData(getActiveClassesSection),
+  });
+
+
+
+  --------------- for update state -----------
+  const queryClient = useQueryClient();
+
+---- inside the button ---------
+  queryClient.invalidateQueries({ queryKey: ["classTeacher", "assigned"] });

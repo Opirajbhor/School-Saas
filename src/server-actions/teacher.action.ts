@@ -5,6 +5,7 @@ import {
   addTeacherType,
   addTeacherZod,
   editTeacherType,
+  Teacherlist,
 } from "../validation/teacher.zod";
 import { teachers } from "../db/schema/teacher.drizzle";
 import { and, eq } from "drizzle-orm";
@@ -53,12 +54,16 @@ export async function getTeacher() {
     });
 
     return {
-      success: true,
-      data: data || [],
+      success: true as const,
+      data: data as Teacherlist[],
     };
   } catch (error) {
     console.error("Database error in Teachers list:", error);
-    throw new Error("Failed to fetch Teachers list.");
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
   }
 }
 
