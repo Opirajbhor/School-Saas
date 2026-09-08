@@ -1,0 +1,1 @@
+ALTER TABLE "groups" RENAME COLUMN "is_active" TO "status";

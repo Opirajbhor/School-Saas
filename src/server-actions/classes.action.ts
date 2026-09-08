@@ -1,22 +1,19 @@
 "use server";
-import { db } from "../db";
 import { and, eq } from "drizzle-orm";
 import {
   classesType,
+  classesTypeWithId,
   classesZod,
   sectionType,
   sectionZod,
 } from "../validation/classes.zod";
 import { classesDrizzle, sectionDrizzle } from "../db/schema/classes.drizzle";
-import { revalidatePath } from "next/cache";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
-import { parseWithZod } from "../validation/validator.zod";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
 import { readMany } from "../lib/crud-funtions/server-read-crud";
 import { toggleStatus } from "../lib/crud-funtions/server-status.action";
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
-import { OutputClassTeacherType } from "../validation/teacher-assignment.zod";
 
 // get classes and sections
 export async function getClasses() {
@@ -33,7 +30,7 @@ export async function getClasses() {
     });
     return {
       success: true as const,
-      data: result.data as OutputClassTeacherType[],
+      data: result.data as classesTypeWithId[],
     };
   } catch (error) {
     return {

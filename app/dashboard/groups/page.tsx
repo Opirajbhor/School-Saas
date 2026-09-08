@@ -34,27 +34,30 @@ import {
 import AssignGroups from "./assign-groups";
 import { Plus } from "lucide-react";
 import StatusModal from "@/components/modal/status-toggle-modal";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AppTable } from "@/components/table/data-table";
 
 export default function Page() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [groups, setGroups] = useState<OutputGroupClassType[] | undefined>(
-    undefined,
-  );
+  const [selectedSub, setSelectedSub] = useState<string[]>([]);
 
-  useEffect(() => {
-    async function getlist() {
-      await clientReadAction(getGroupClasses, {
-        onSuccess: (data) => setGroups(data as OutputGroupClassType[]),
-      });
-      setLoading(false);
-    }
-    getlist();
-  }, []);
-  const activegroups = groups?.filter((item) => item.status === true);
+  // ------------- query fn ---------------
+  const queryClient = useQueryClient();
+  const { data: groups = [], isPending } = useQuery<OutputGroupClassType[]>({
+    queryKey: ["groups"],
+    queryFn: async () => {
+      const result = await getGroupClasses();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as OutputGroupClassType[];
+    },
+  });
+
+  const activegroups = groups?.filter((item) => item.status === "ACTIVE");
   const form = useForm<inputGroupType>({
     resolver: zodResolver(addGroupZod),
     defaultValues: {
-      status: true,
+      status: "ACTIVE",
     },
   });
   const { isSubmitting } = form.formState;
@@ -62,14 +65,15 @@ export default function Page() {
   const addBtn = async (data: inputGroupType) => {
     await handleCrudAction(createGroup, data, {
       successMessage: "Group Created Successfully",
-      onSuccess: (items) => {
-        setGroups((prev) => [...(prev || []), items as OutputGroupClassType]);
-        form.reset();
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["groups"],
+        });
       },
     });
   };
 
-  if (loading) {
+  if (isPending) {
     return <SpinnerCustom />;
   }
   return (
@@ -116,81 +120,67 @@ export default function Page() {
 
           {/* Responsive Table Wrapper */}
           <div className="overflow-x-auto p-2">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
-                    Group Name
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-center">
-                    Status
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-center">
-                    Assigned Classes
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {groups?.map((item, i) => (
-                  <TableRow
-                    key={i}
-                    className={`${
-                      item?.status === true
-                        ? "bg-primary/5 hover:bg-primary/10"
-                        : "hover:bg-muted/50"
-                    } transition-colors`}
-                  >
-                    <TableCell className="py-3 font-medium">
-                      {item.name}
-                    </TableCell>
-                    <TableCell className="py-3 text-center">
-                      <Badge
-                        variant={item.status ? "default" : "secondary"}
-                        className={
-                          item.status ? "bg-green-100 text-green-800" : ""
-                        }
-                      >
-                        {item.status ? "ACTIVE" : "INACTIVE"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-3 text-center font-medium">
+            <AppTable
+              data={groups ?? []}
+              searchable
+              searchPlaceholder="Search Assigned Subjects..."
+              searchKeys={["status", "name"]}
+              selectable
+              selectedIds={selectedSub}
+              onSelectionChange={setSelectedSub}
+              toolbar={<></>}
+              columns={[
+                {
+                  key: "name",
+                  label: "Group Name",
+                },
+
+                {
+                  key: "status",
+                  label: "Status",
+                  render: (item) =>
+                    item.status === "ACTIVE" ? (
+                      <Badge variant="default">ACTIVE</Badge>
+                    ) : (
+                      <span className="text-muted-foreground">INACTIVE</span>
+                    ),
+                },
+                {
+                  key: "classes",
+                  label: "Assigned Classes",
+                  render: (item) => (
+                    <div>
                       {item.groupClasses.length > 0
-                        ? item.groupClasses
-                            .map((gc) => gc.class.name)
+                        ? item?.groupClasses
+                            .map((gc) => gc?.class?.name)
                             .join(", ")
                         : "Not Assigned"}
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        {item.status && <AssignGroups group={item} />}
-                        <StatusModal
-                          id={item.id}
-                          onStatus={toggleGroup}
-                          onSuccess={(result) => {
-                            form.reset();
-                            const updated = (
-                              result as { data?: OutputGroupClassType }
-                            )?.data;
-                            if (!updated) return;
-                            setGroups(
-                              (prev) =>
-                                prev?.map((group) =>
-                                  group.id === item.id
-                                    ? { ...group, ...updated }
-                                    : group,
-                                ) || [],
-                            );
-                          }}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  ),
+                },
+
+                {
+                  key: "actions",
+                  label: "Actions",
+                  render: (item) => (
+                    <div className="flex items-center  gap-3">
+                      {item.status === "ACTIVE" && (
+                        <AssignGroups group={item} />
+                      )}
+                      <StatusModal
+                        id={item.id}
+                        onStatus={toggleGroup}
+                        onSuccess={() => {
+                          queryClient.invalidateQueries({
+                            queryKey: ["groups"],
+                          });
+                        }}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </div>
         </div>
         {/* <!--  Add Group Form --> */}

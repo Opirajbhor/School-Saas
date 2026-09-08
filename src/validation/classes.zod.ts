@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { statusEnumValues } from "./subjects.zod";
 import { outputGroupType } from "./groups.zod";
+
 export const classesZod = z.object({
   instituteId: z
     .string()
@@ -19,6 +20,7 @@ export type classesType = z.input<typeof classesZod>;
 
 export type classesTypeWithId = classesType & {
   id?: string;
+  sessionId: string;
   sections?: sectionType[];
 };
 

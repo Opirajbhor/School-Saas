@@ -24,7 +24,8 @@ export const groups = pgTable(
         onUpdate: "cascade",
       }),
     name: text("name").notNull(),
-    status: boolean("is_active").notNull().default(true),
+    status: statusEnum("status").notNull().default("ACTIVE"),
+
     ...timestamps,
   },
   (table) => [

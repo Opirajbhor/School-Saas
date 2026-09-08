@@ -1,6 +1,6 @@
 "use client";
 import { ArrowBigRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,10 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { getClasses } from "@/src/server-actions/classes.action";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import {
@@ -20,34 +17,31 @@ import {
   assignGroupClassZod,
   OutputGroupClassType,
 } from "@/src/validation/groups.zod";
-import {
-  assignGroupClasses,
-  getActiveAssignClasses,
-} from "@/src/server-actions/groups.action";
+import { assignGroupClasses } from "@/src/server-actions/groups.action";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "@/lib/utils";
 import { FormCheckboxGroup } from "@/components/forms/form-checkbox-group";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function AssignGroups({
   group,
 }: {
   group: OutputGroupClassType;
 }) {
-  const [classes, setClasses] = useState<classesTypeWithId[]>([]);
   const [open, setOpen] = useState(false);
-  // ------fetch class data----------
-  useEffect(() => {
-    async function getList() {
-      await clientReadAction(getClasses, {
-        onSuccess: (data) => {
-          setClasses(data as classesTypeWithId[]);
-        },
-      });
-    }
-    getList();
-  }, []);
+  // ------------- query fn ---------------
+  const queryClient = useQueryClient();
+  const { data: classes = [] } = useQuery<classesTypeWithId[]>({
+    queryKey: ["page-groups", "classes"],
+    queryFn: async () => {
+      const result = await getClasses();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as classesTypeWithId[];
+    },
+  });
 
   const form = useForm<AssignGroupClassType>({
     resolver: zodResolver(assignGroupClassZod),
@@ -62,20 +56,19 @@ export default function AssignGroups({
     control: form.control,
     name: "classIds",
   });
-  const methods = useForm();
 
   const handleSubmit = async (data: AssignGroupClassType) => {
     await handleCrudAction(assignGroupClasses, data, {
       successMessage: "Classes Assigned Successfully",
       onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["groups"],
+        });
         form.reset({
           groupId: group.id,
           classIds: [],
         });
         setOpen(false);
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       },
     });
   };
@@ -96,7 +89,6 @@ export default function AssignGroups({
       classIds: [],
     });
   };
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -116,7 +108,7 @@ export default function AssignGroups({
         <DialogHeader className="border-b px-6 py-4">
           <DialogTitle>Assign {group.name} to Classes</DialogTitle>
         </DialogHeader>
-        <FormProvider {...methods}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="space-y-4 p-6">
               <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
