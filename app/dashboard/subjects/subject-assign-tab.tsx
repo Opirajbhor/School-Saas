@@ -5,67 +5,58 @@ import { SpinnerCustom } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { getActiveClasses } from "@/src/server-actions/classes.action";
 import {
   getAssignSubjects,
-  getSubjects,
   subjectAssignment,
 } from "@/src/server-actions/subjects.action";
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import {
   inputSubAssignType,
   OutputSubAssignType,
-  outputSubjectType,
+  OutputSubjectType,
   subjectAssignmentZod,
 } from "@/src/validation/subjects.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { SubjectAssignTable } from "./assigned-subject-table";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function SubjectAssignTab() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [classData, setClassData] = useState<
-    OutputGroupClassType[] | undefined
-  >(undefined);
-  const [subjects, setSubjects] = useState<outputSubjectType[] | undefined>(
-    undefined,
-  );
-  const [assignSubjects, setAssignSubjects] = useState<
-    OutputSubAssignType[] | undefined
-  >(undefined);
-
-  useEffect(() => {
-    async function getlist() {
-      await clientReadAction(getActiveClasses, {
-        onSuccess: (data) => {
-          setClassData(data as OutputGroupClassType[]);
-        },
-        onLoading: setLoading,
-      });
-
-      await clientReadAction(getSubjects, {
-        onSuccess: (data) => {
-          setSubjects(
-            data.filter(
-              (item) => item.status === "ACTIVE",
-            ) as outputSubjectType[],
-          );
-        },
-        onLoading: setLoading,
-      });
-
-      await clientReadAction(getAssignSubjects, {
-        onSuccess: (data) => {
-          setAssignSubjects(data as OutputSubAssignType[]);
-        },
-        onLoading: setLoading,
-      });
-    }
-    getlist();
-  }, []);
+  // --------------query ------------------
+  const queryClient = useQueryClient();
+  // get cached subject data
+  const subjects = queryClient.getQueryData(["subjects"]) as
+    | OutputSubjectType[]
+    | undefined;
+  // get cached assign subject data
+  const assignSubjects = queryClient.getQueryData([
+    "page-subject",
+    "assignSubjects",
+  ]) as OutputSubAssignType[] | undefined;
+  // get active class data
+  const { data: classData = [], isPending } = useQuery<OutputGroupClassType[]>({
+    queryKey: ["page-subject", "classWithSection"],
+    queryFn: async () => {
+      const result = await getActiveClasses();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as OutputGroupClassType[];
+    },
+  });
+  // get assigned subject data for table
+  const { isPending: isAssignSubjects } = useQuery<OutputSubAssignType[]>({
+    queryKey: ["page-subject", "assignSubjects"],
+    queryFn: async () => {
+      const result = await getAssignSubjects();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as OutputSubAssignType[];
+    },
+  });
 
   const form = useForm<inputSubAssignType>({
     resolver: zodResolver(subjectAssignmentZod),
@@ -74,7 +65,6 @@ export function SubjectAssignTab() {
     },
   });
   const { isSubmitting } = form.formState;
-  const methods = useForm();
 
   // ----------- selected Class assigned groups list-------------
   const selectedClassId = useWatch({
@@ -90,16 +80,29 @@ export function SubjectAssignTab() {
     name: "subjectType",
   });
 
+  // get unique subjects
+  const uniqueSubs = subjects?.filter(
+    (item) =>
+      item.subject_type === subType &&
+      item.status === "ACTIVE" &&
+      !assignSubjects?.some(
+        (ass) => ass?.subjectId === item.id && ass?.classId === selectedClassId,
+      ),
+  );
+
+  // --------- subject assign to class button -------------
   const addBtn = async (data: inputSubAssignType) => {
     await handleCrudAction(subjectAssignment, data, {
       successMessage: "Subjects Assigned Successfully",
-      onSuccess: (responseData) => {
-        setAssignSubjects(responseData as OutputSubAssignType[]);
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["page-subject", "assignSubjects"],
+        });
       },
     });
   };
 
-  if (loading) {
+  if (isPending || isAssignSubjects) {
     return <SpinnerCustom />;
   }
   return (
@@ -107,10 +110,7 @@ export function SubjectAssignTab() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         {/* Data Table Section */}
         <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
-          <SubjectAssignTable
-            assignSubjects={assignSubjects || []}
-            setAssignSubjects={setAssignSubjects}
-          />
+          <SubjectAssignTable />
         </div>
         {/* <!--  Add subject Form --> */}
         <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -119,7 +119,7 @@ export function SubjectAssignTab() {
           </h3>
 
           {/*  subject assign form */}
-          <FormProvider {...methods}>
+          <FormProvider {...form}>
             <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
               {/* -----------------Classes---------------- */}
               <FormSelect
@@ -142,7 +142,7 @@ export function SubjectAssignTab() {
                 options={[
                   { label: "COMPULSORY", value: "COMPULSORY" },
                   { label: "GROUP_BASED", value: "GROUP_BASED" },
-                  { label: "OPTIONAL", value: "OPTIONAL" },
+                  { label: "RELIGION", value: "RELIGION" },
                 ]}
               />
 
@@ -167,9 +167,10 @@ export function SubjectAssignTab() {
                 name="subjectIds"
                 label="Select Subjects"
                 options={
-                  subjects?.map((item) => ({
+                  uniqueSubs?.map((item) => ({
                     label: item.name,
                     value: item.id,
+                    disabled: item.status !== "ACTIVE",
                   })) ?? []
                 }
               />

@@ -5,18 +5,23 @@ import { AppTable } from "@/components/table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { ToggleAssignSubjectStatus } from "@/src/server-actions/subjects.action";
 import { OutputSubAssignType } from "@/src/validation/subjects.zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useState } from "react";
 
-export function SubjectAssignTable({
-  assignSubjects,
-  setAssignSubjects,
-}: {
-  assignSubjects: OutputSubAssignType[];
-  setAssignSubjects: Dispatch<
-    SetStateAction<OutputSubAssignType[] | undefined>
-  >;
-}) {
+export function SubjectAssignTable() {
   const [selectedSub, setSelectedSub] = useState<string[]>([]);
+
+  // --------------query ------------------
+  const queryClient = useQueryClient();
+  // get cached subject data
+  const { data: assignSubjects = [] } = useQuery({
+    queryKey: ["page-subject", "assignSubjects"],
+    queryFn: () =>
+      queryClient.getQueryData<OutputSubAssignType[]>([
+        "page-subject",
+        "assignSubjects",
+      ]) ?? [],
+  });
 
   return (
     <div>
@@ -47,13 +52,12 @@ export function SubjectAssignTable({
           },
 
           {
-            key: "groupName",
-            label: "Group Name",
-          },
-
-          {
             key: "subjectType",
             label: "Subject Type",
+          },
+          {
+            key: "groupName",
+            label: "Group Name",
           },
 
           {
@@ -76,17 +80,9 @@ export function SubjectAssignTable({
                   id={item.id}
                   onDelete={ToggleAssignSubjectStatus}
                   onSuccess={() => {
-                    setAssignSubjects((prev) =>
-                      prev?.map((c) =>
-                        c?.id === item.id
-                          ? {
-                              ...c,
-                              status:
-                                c.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                            }
-                          : c,
-                      ),
-                    );
+                    queryClient.invalidateQueries({
+                      queryKey: ["page-subject", "assignSubjects"],
+                    });
                   }}
                 />
               </div>

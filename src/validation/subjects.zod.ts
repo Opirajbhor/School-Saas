@@ -14,7 +14,7 @@ export const statusEnumValues = ["ACTIVE", "INACTIVE"] as const;
 export const subjectTypeEnum = [
   "COMPULSORY",
   "GROUP_BASED",
-  "OPTIONAL",
+  "RELIGION",
 ] as const;
 
 export const inputSubjectZod = createInsertSchema(subjectDbSchema).omit({
