@@ -3,16 +3,22 @@ import { getTeacher } from "./teacher.action";
 import { getClasses } from "./classes.action";
 import {
   ClassSectionType,
+  classSubjectGroupType,
+  ClassSubjectType,
   classTeacherType,
   InputClassTeacherType,
   OutputClassTeacherType,
+  OutputSubjectTeacher,
   sectionClassTeacherZod,
 } from "../validation/teacher-assignment.zod";
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
-import { sectionClassTeachers } from "../db/schema/teacher-assignment.drizzle";
+import {
+  sectionClassTeachers,
+  sectionSubjectTeachers,
+} from "../db/schema/teacher-assignment.drizzle";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
-import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
+import { readMany } from "../lib/crud-funtions/server-read-crud";
 import { and, eq } from "drizzle-orm";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
 import {
@@ -21,6 +27,7 @@ import {
   subjectAssignSchema,
 } from "../db/schema";
 import { Teacherlist } from "../validation/teacher.zod";
+import { classesTypeWithId } from "../validation/classes.zod";
 
 // ---------------- class teacher ---------------
 
@@ -33,7 +40,7 @@ export async function getClassWithTeacher() {
     return {
       success: true as const,
       data: {
-        classData: classData.data as OutputClassTeacherType[],
+        classData: classData.data as classesTypeWithId[],
         teacherInfo: teacherInfo.data as Teacherlist[],
       },
     };
@@ -147,8 +154,11 @@ export async function getActiveClassesSection() {
             eq(classesDrizzle.status, "ACTIVE"),
           ),
           with: {
-            sections: true,
+            sections: {
+              where: eq(classesDrizzle.status, "ACTIVE"),
+            },
             groupClasses: {
+              where: eq(classesDrizzle.status, "ACTIVE"),
               with: {
                 group: true,
               },
@@ -200,9 +210,10 @@ export async function getActiveAssignGroup() {
 }
 
 // ------------- get class subjects -------------
-export async function getSingleClassSubjects(classId: string) {
+export async function getSingleClassSubjects(data: classSubjectGroupType) {
+  const { classId } = data;
   try {
-    const result = await readMany({
+    const assignedSubjects = await readMany({
       drizzleSchema: subjectAssignSchema,
       query: ({ db, instituteId }) =>
         db.query.subjectAssignSchema.findMany({
@@ -215,10 +226,56 @@ export async function getSingleClassSubjects(classId: string) {
           },
         }),
     });
+    const assignedTeachers = await readMany({
+      drizzleSchema: sectionSubjectTeachers,
+      query: ({ db, instituteId }) =>
+        db.query.sectionSubjectTeachers.findMany({
+          where: and(
+            eq(sectionSubjectTeachers.instituteId, instituteId),
+            eq(sectionSubjectTeachers.sectionId, data.sectionId),
+          ),
+          with: {
+            subject: true,
+          },
+        }),
+    });
+    const allTeachers = await getTeacher();
+
+    if (
+      !assignedSubjects.success ||
+      !assignedSubjects.success ||
+      !allTeachers.success
+    ) {
+      return {
+        success: false as const,
+        error: "failled to get Section Data",
+        details: {},
+      };
+    }
+
+    const subjects = (assignedSubjects?.data as ClassSubjectType[]) ?? [];
+    const teachers = (assignedTeachers?.data as OutputSubjectTeacher[]) ?? [];
+
+    // -------merging both arrays---------
+    const tableData = subjects.map((subject) => {
+      const assignment = teachers.find(
+        (t) => t.subjectId === subject.subjectId,
+      );
+      return {
+        ...subject,
+        teacherId: assignment?.teacherId ?? null,
+        teacherName: assignment?.teacherName ?? null,
+      };
+    });
+
+    // -----------get all teacher data--------------
 
     return {
       success: true as const,
-      data: result.data,
+      data: {
+        tableData,
+        teachers: allTeachers.data as Teacherlist[],
+      },
     };
   } catch (error) {
     return {

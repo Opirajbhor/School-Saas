@@ -6,8 +6,9 @@ import {
 } from "../db/schema/teacher-assignment.drizzle";
 import { classesType, sectionType, sectionTypeWithId } from "./classes.zod";
 import { editTeacherType, Teacherlist } from "./teacher.zod";
-import { OutputSubAssignType, SubjectType } from "./subjects.zod";
+import { OutputSubAssignType, OutputSubjectType } from "./subjects.zod";
 import { outputGroupType } from "./groups.zod";
+import { InferSelectModel } from "drizzle-orm";
 
 // ------------------- class Teacher Zod Validation --------------
 export const sectionClassTeacherZod = createInsertSchema(sectionClassTeachers)
@@ -46,13 +47,17 @@ export const classSubjectGroupZod = z.object({
 });
 export type classSubjectGroupType = z.infer<typeof classSubjectGroupZod>;
 // ------------------- Subject Teacher Zod Validation --------------
-
 export const subjectTeacherZod = z.object({
   teacherId: z.uuid("Invalid Teacher id"),
 });
-
 export type InputSubjectTeacherType = z.input<typeof subjectTeacherZod>;
 
+export type OutputSubjectTeacher = InferSelectModel<
+  typeof sectionSubjectTeachers
+> & {
+  teacherId?: string;
+  teacherName?: string;
+};
 // subect teacher assign type
 type GroupClass = {
   id: string;
@@ -76,5 +81,5 @@ export type ClassSectionType = {
 };
 
 export type ClassSubjectType = OutputSubAssignType & {
-  subject: SubjectType;
+  subject: OutputSubjectType;
 };

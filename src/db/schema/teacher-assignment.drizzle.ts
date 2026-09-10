@@ -47,27 +47,21 @@ export const sectionSubjectTeachers = pgTable(
   "section_subject_teachers",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-
     instituteId: uuid("institute_id")
       .notNull()
       .references(() => instituteProfile.id),
-
     sectionId: uuid("section_id")
       .notNull()
       .references(() => sectionDrizzle.id),
-
     subjectId: uuid("subject_id")
       .notNull()
       .references(() => subjectDbSchema.id),
-
     teacherId: uuid("teacher_id")
       .notNull()
       .references(() => teachers.id),
-
     sessionId: uuid("session_id")
       .notNull()
       .references(() => academicSessions.id),
-
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
   },

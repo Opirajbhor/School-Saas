@@ -23,27 +23,18 @@ import {
 } from "@/src/validation/teacher-assignment.zod";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 const SubjectTeacherAssign = () => {
-  const [searchClassData, setSearchClassData] =
-    useState<classSubjectGroupType | null>(null);
   const [selectedSub, setSelectedSub] = useState<string[]>([]);
-  const [classSubjects, setClassSubjects] = useState<
-    ClassSubjectType[] | undefined
-  >(undefined);
-  const [teacherList, setTeacherList] = useState<Teacherlist[] | undefined>(
-    undefined,
-  );
 
   // ------- tanstack Query  -------------
   const { data: classInfo = [], isPending } = useQuery({
     queryKey: ["ClassSection", "active"],
     queryFn: async () => fetchData(getActiveClassesSection),
   });
-
   // ---------------- subject and teacher search form -------------
   const form = useForm<classSubjectGroupType>({
     resolver: zodResolver(classSubjectGroupZod),
@@ -67,22 +58,16 @@ const SubjectTeacherAssign = () => {
     form.setValue("sectionId", "");
     form.setValue("groupId", "");
   }, [selectedClassId, form]);
-  // ---Search button----
-  const searchBtn = async (data: classSubjectGroupType) => {
-    setSearchClassData(data);
-    await handleCrudAction(getSingleClassSubjects, data.classId, {
-      onSuccess: (data) => {
-        setClassSubjects(data as ClassSubjectType[]);
-      },
-      successMessage: "Subjects loaded successfully",
-    });
-    await clientReadAction(getTeacher, {
-      onSuccess: (data) => {
-        setTeacherList(data as Teacherlist[]);
-      },
-    });
-  };
 
+  // ----------Search button---------------
+  const { mutate, data: sectionSubData } = useMutation({
+    mutationFn: (data: classSubjectGroupType) =>
+      fetchData(() => getSingleClassSubjects(data)),
+  });
+  const searchBtn = (data: classSubjectGroupType) => {
+    mutate(data);
+  };
+  const allTeachers = (sectionSubData?.teachers as Teacherlist[]) ?? [];
   // ---------------- teacher assign to subject form -------------
   const form2 = useForm<InputSubjectTeacherType>({
     resolver: zodResolver(subjectTeacherZod),
@@ -93,7 +78,6 @@ const SubjectTeacherAssign = () => {
 
   const AssignBtn = async (data: InputSubjectTeacherType) => {
     console.log("teacherid", data);
-    console.log("classinfo", searchClassData);
   };
 
   if (isPending) {
@@ -164,20 +148,14 @@ const SubjectTeacherAssign = () => {
             {/* ---------- subject assignment table----------- */}
 
             <AppTable
-              data={classSubjects ?? []}
+              data={sectionSubData?.tableData ?? []}
               searchable
               searchPlaceholder="Search Assigned Subjects..."
               searchKeys={["status", "className", "groupName", "subjectName"]}
               selectable
               selectedIds={selectedSub}
               onSelectionChange={setSelectedSub}
-              toolbar={
-                <>
-                  <Badge className="p-3 text-md" variant={"outline"}>
-                    Total Assigned Subjects: {classSubjects?.length}
-                  </Badge>
-                </>
-              }
+              toolbar={<></>}
               columns={[
                 {
                   key: "subjectName",
@@ -195,11 +173,16 @@ const SubjectTeacherAssign = () => {
                   label: "Subject Type",
                   render: (item) => item.subjectType,
                 },
+                {
+                  key: "teacherId",
+                  label: "Assigned Teacher",
+                  render: (item) => item.teacherName,
+                },
 
                 {
                   key: "actions",
                   label: "Select Teacher",
-                  render: (item) => (
+                  render: () => (
                     <FormProvider {...form2}>
                       <form
                         className="flex items-center gap-3"
@@ -210,7 +193,7 @@ const SubjectTeacherAssign = () => {
                           name="teacherId"
                           label=""
                           options={
-                            teacherList?.map((t) => ({
+                            allTeachers?.map((t) => ({
                               label: t.nameEnglish,
                               value: t.id,
                             })) ?? []

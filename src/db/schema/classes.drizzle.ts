@@ -1,4 +1,4 @@
-import { pgTable, uuid, boolean, text, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid,  text, index } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { academicSessions } from "./academic-session.drizzle";
 import { statusEnum, timestamps } from "./enums-drizzle";
