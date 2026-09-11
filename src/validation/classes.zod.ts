@@ -53,3 +53,9 @@ export type ClassesWithGroups = classesType & {
   id: string;
   groups: outputGroupType[];
 };
+
+// -----------class with section
+
+export type ClassWithSectionType = classesType & {
+  sections: sectionType[];
+};

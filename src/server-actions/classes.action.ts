@@ -41,6 +41,46 @@ export async function getClasses() {
   }
 }
 
+// --------------------single class and section ------------
+export async function getClassAndSection({
+  classId,
+  sectionId,
+}: {
+  classId: string;
+  sectionId: string;
+}) {
+  try {
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db, instituteId }) =>
+        db.query.classesDrizzle.findMany({
+          where: and(
+            eq(classesDrizzle.instituteId, instituteId),
+            eq(classesDrizzle.id, classId),
+          ),
+          with: {
+            sections: {
+              where: and(
+                eq(sectionDrizzle.status, "ACTIVE"),
+                eq(sectionDrizzle.id, sectionId),
+              ),
+            },
+          },
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data as classesTypeWithId[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
+}
+
 // post class
 export async function postClasses(data: classesType) {
   const profile = await requireInstitute();

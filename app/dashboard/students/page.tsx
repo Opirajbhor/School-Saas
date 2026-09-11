@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { AddStudentType } from "@/src/validation/student.zod";
 import { toast } from "sonner";

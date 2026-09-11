@@ -21,7 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";
 import {
   getTeacher,

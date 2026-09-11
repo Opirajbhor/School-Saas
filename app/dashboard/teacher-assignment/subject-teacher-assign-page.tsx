@@ -2,22 +2,18 @@
 import { FormSelect } from "@/components/forms/form-select";
 import { SpinnerCustom } from "@/components/Spinner";
 import { AppTable } from "@/components/table/data-table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import {
   getActiveClassesSection,
   getSingleClassSubjects,
 } from "@/src/server-actions/teacher-assignment.action";
-import { getTeacher } from "@/src/server-actions/teacher.action";
 import { fetchData } from "@/src/tanstackQuery/queryReturnDataFn";
+import { ClassWithSectionType } from "@/src/validation/classes.zod";
 
 import {
   classSubjectGroupType,
   classSubjectGroupZod,
-  ClassSubjectType,
   InputSubjectTeacherType,
   subjectTeacherZod,
 } from "@/src/validation/teacher-assignment.zod";
@@ -26,10 +22,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
+import AssingTeacherModal from "./sub-teacher-assign-compo";
 
 const SubjectTeacherAssign = () => {
   const [selectedSub, setSelectedSub] = useState<string[]>([]);
-
+  const [searchParams, setSearchParams] =
+    useState<classSubjectGroupType | null>(null);
   // ------- tanstack Query  -------------
   const { data: classInfo = [], isPending } = useQuery({
     queryKey: ["ClassSection", "active"],
@@ -48,37 +46,26 @@ const SubjectTeacherAssign = () => {
   });
   const sections =
     classInfo?.find((item) => item.id === selectedClassId)?.sections ?? [];
-  const groups =
-    classInfo?.find((item) =>
-      item.groupClasses.some((g) => g.classId === selectedClassId),
-    )?.groupClasses ?? [];
 
   // reset the form value if class changes
   useEffect(() => {
     form.setValue("sectionId", "");
-    form.setValue("groupId", "");
   }, [selectedClassId, form]);
 
   // ----------Search button---------------
-  const { mutate, data: sectionSubData } = useMutation({
-    mutationFn: (data: classSubjectGroupType) =>
-      fetchData(() => getSingleClassSubjects(data)),
+  const { data: sectionSubData } = useQuery({
+    queryKey: ["single-class-subjects", searchParams],
+    queryFn: () => fetchData(() => getSingleClassSubjects(searchParams!)),
+    enabled: !!searchParams,
   });
+
   const searchBtn = (data: classSubjectGroupType) => {
-    mutate(data);
+    setSearchParams(data);
   };
   const allTeachers = (sectionSubData?.teachers as Teacherlist[]) ?? [];
-  // ---------------- teacher assign to subject form -------------
-  const form2 = useForm<InputSubjectTeacherType>({
-    resolver: zodResolver(subjectTeacherZod),
-    defaultValues: {},
-  });
-
-  // ---subject Teacher add fn----
-
-  const AssignBtn = async (data: InputSubjectTeacherType) => {
-    console.log("teacherid", data);
-  };
+  // ------- selected class and section
+  const classData =
+    (sectionSubData?.class as ClassWithSectionType) ?? undefined;
 
   if (isPending) {
     return <SpinnerCustom />;
@@ -125,7 +112,7 @@ const SubjectTeacherAssign = () => {
                   }
                 />
                 {/* ---------Select Groups---------- */}
-                <FormSelect
+                {/* <FormSelect
                   control={form.control}
                   name="groupId"
                   label="Select Group"
@@ -137,7 +124,7 @@ const SubjectTeacherAssign = () => {
                         label: item.group.name as string,
                       })) ?? []
                   }
-                />
+                /> */}
 
                 <Button disabled={isSubmitting} type="submit">
                   Search
@@ -145,6 +132,16 @@ const SubjectTeacherAssign = () => {
               </form>
             </FormProvider>
 
+            {/* ---------select class and section card---------- */}
+            <div className="flex items-center justify-center gap-5 mt-10">
+              <Card className="p-5 w-80">
+                <h2>Selected Class</h2> <span>{classData?.name}</span>
+              </Card>
+              <Card className="p-5 w-80">
+                <h2>Selected Section</h2>{" "}
+                <span>{classData?.sections[0].name}</span>
+              </Card>
+            </div>
             {/* ---------- subject assignment table----------- */}
 
             <AppTable
@@ -182,26 +179,12 @@ const SubjectTeacherAssign = () => {
                 {
                   key: "actions",
                   label: "Select Teacher",
-                  render: () => (
-                    <FormProvider {...form2}>
-                      <form
-                        className="flex items-center gap-3"
-                        onSubmit={form2.handleSubmit(AssignBtn)}
-                      >
-                        <FormSelect
-                          control={form2.control}
-                          name="teacherId"
-                          label=""
-                          options={
-                            allTeachers?.map((t) => ({
-                              label: t.nameEnglish,
-                              value: t.id,
-                            })) ?? []
-                          }
-                        />
-                        <Button type="submit">Assign</Button>
-                      </form>
-                    </FormProvider>
+                  render: (item) => (
+                    <AssingTeacherModal
+                      classData={classData}
+                      teacherData={allTeachers}
+                      subjectId={item.subjectId}
+                    />
                   ),
                 },
               ]}

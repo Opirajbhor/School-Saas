@@ -1,8 +1,8 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SubjectTeacherAssign from "./subject-teacher-assign";
-import { ClassTeacherAssign } from "./class-teacher-assign";
+import SubjectTeacherAssign from "./subject-teacher-assign-page";
+import { ClassTeacherAssign } from "./class-teacher-assign-page";
 
 export default function Page() {
   return (

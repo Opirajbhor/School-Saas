@@ -43,12 +43,14 @@ export type classTeacherType = z.infer<typeof selectSectionClassTeacherZod> & {
 export const classSubjectGroupZod = z.object({
   classId: z.uuid("Invalid Class id"),
   sectionId: z.uuid("Invalid Section id"),
-  groupId: z.uuid("Invalid Group id"),
 });
 export type classSubjectGroupType = z.infer<typeof classSubjectGroupZod>;
 // ------------------- Subject Teacher Zod Validation --------------
 export const subjectTeacherZod = z.object({
   teacherId: z.uuid("Invalid Teacher id"),
+  classId: z.uuid("Invalid Class id"),
+  sectionId: z.uuid("Invalid Section id"),
+  subjectId: z.uuid("Invalid Subject id"),
 });
 export type InputSubjectTeacherType = z.input<typeof subjectTeacherZod>;
 
@@ -57,6 +59,9 @@ export type OutputSubjectTeacher = InferSelectModel<
 > & {
   teacherId?: string;
   teacherName?: string;
+  teacher: {
+    nameEnglish: string;
+  };
 };
 // subect teacher assign type
 type GroupClass = {

@@ -1,6 +1,6 @@
 "use server";
 import { getTeacher } from "./teacher.action";
-import { getClasses } from "./classes.action";
+import { getClassAndSection, getClasses } from "./classes.action";
 import {
   ClassSectionType,
   classSubjectGroupType,
@@ -10,6 +10,7 @@ import {
   OutputClassTeacherType,
   OutputSubjectTeacher,
   sectionClassTeacherZod,
+  subjectTeacherZod,
 } from "../validation/teacher-assignment.zod";
 import { createRecord } from "../lib/crud-funtions/server-create-crud";
 import {
@@ -27,7 +28,10 @@ import {
   subjectAssignSchema,
 } from "../db/schema";
 import { Teacherlist } from "../validation/teacher.zod";
-import { classesTypeWithId } from "../validation/classes.zod";
+import {
+  classesTypeWithId,
+  ClassWithSectionType,
+} from "../validation/classes.zod";
 
 // ---------------- class teacher ---------------
 
@@ -131,7 +135,7 @@ export async function getassignedClassTeachers() {
   }
 }
 
-// ---------------- delete assign teacher
+// ---------------- delete assign class teacher --------
 export async function deleteAssignTeacher(id: string) {
   return deleteRecord(
     {
@@ -179,6 +183,33 @@ export async function getActiveClassesSection() {
   }
 }
 
+// --------- assign new subject Teacher --------------
+export async function assignSubjectTeacher(data: InputClassTeacherType) {
+  const profile = await requireInstitute();
+  const activeSessionId = await getActiveSessionId(profile.id);
+  try {
+    const newId = await createRecord(
+      {
+        zodSchema: subjectTeacherZod,
+        drizzleSchema: sectionSubjectTeachers,
+        additionFields: { status: "ACTIVE", sessionId: activeSessionId },
+      },
+      data,
+    );
+    return {
+      success: true as const,
+      data: newId,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false as const,
+      error: "failed to assign Teacher",
+      details: {},
+    };
+  }
+}
+
 // ------------get assigned groups to classes ---------------
 export async function getActiveAssignGroup() {
   try {
@@ -209,9 +240,9 @@ export async function getActiveAssignGroup() {
   }
 }
 
-// ------------- get class subjects -------------
+// ------------- get class section all subjects -------------
 export async function getSingleClassSubjects(data: classSubjectGroupType) {
-  const { classId } = data;
+  const { classId, sectionId } = data;
   try {
     const assignedSubjects = await readMany({
       drizzleSchema: subjectAssignSchema,
@@ -232,19 +263,22 @@ export async function getSingleClassSubjects(data: classSubjectGroupType) {
         db.query.sectionSubjectTeachers.findMany({
           where: and(
             eq(sectionSubjectTeachers.instituteId, instituteId),
-            eq(sectionSubjectTeachers.sectionId, data.sectionId),
+            eq(sectionSubjectTeachers.sectionId, sectionId),
           ),
           with: {
             subject: true,
+            teacher: true,
           },
         }),
     });
     const allTeachers = await getTeacher();
+    const classData = await getClassAndSection({ classId, sectionId });
 
     if (
       !assignedSubjects.success ||
       !assignedSubjects.success ||
-      !allTeachers.success
+      !allTeachers.success ||
+      !classData.success
     ) {
       return {
         success: false as const,
@@ -264,7 +298,7 @@ export async function getSingleClassSubjects(data: classSubjectGroupType) {
       return {
         ...subject,
         teacherId: assignment?.teacherId ?? null,
-        teacherName: assignment?.teacherName ?? null,
+        teacherName: assignment?.teacher.nameEnglish ?? null,
       };
     });
 
@@ -275,6 +309,7 @@ export async function getSingleClassSubjects(data: classSubjectGroupType) {
       data: {
         tableData,
         teachers: allTeachers.data as Teacherlist[],
+        class: classData.data[0] as ClassWithSectionType,
       },
     };
   } catch (error) {
