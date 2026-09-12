@@ -7,6 +7,7 @@ import {
   ClassSubjectType,
   classTeacherType,
   InputClassTeacherType,
+  InputSubjectTeacherType,
   OutputClassTeacherType,
   OutputSubjectTeacher,
   sectionClassTeacherZod,
@@ -19,7 +20,7 @@ import {
 } from "../db/schema/teacher-assignment.drizzle";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
-import { readMany } from "../lib/crud-funtions/server-read-crud";
+import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
 import { and, eq } from "drizzle-orm";
 import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
 import {
@@ -32,6 +33,8 @@ import {
   classesTypeWithId,
   ClassWithSectionType,
 } from "../validation/classes.zod";
+import { db } from "../db";
+import { updateRecord } from "../lib/crud-funtions/server-update-crud";
 
 // ---------------- class teacher ---------------
 
@@ -184,10 +187,48 @@ export async function getActiveClassesSection() {
 }
 
 // --------- assign new subject Teacher --------------
-export async function assignSubjectTeacher(data: InputClassTeacherType) {
+export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
   const profile = await requireInstitute();
   const activeSessionId = await getActiveSessionId(profile.id);
   try {
+    const checkData = await db
+      .select()
+      .from(sectionSubjectTeachers)
+      .where(
+        and(
+          eq(sectionSubjectTeachers.instituteId, profile.id),
+          eq(sectionSubjectTeachers.sessionId, activeSessionId),
+          eq(sectionSubjectTeachers.sectionId, data.sectionId),
+          eq(sectionSubjectTeachers.subjectId, data.subjectId),
+        ),
+      )
+      .limit(1);
+    // -----if subject already assinged----------
+    const existing = checkData[0] ?? null;
+    if (existing) {
+      if (existing.teacherId === data.teacherId) {
+        return {
+          success: false as const,
+          error: "Same teacher can not be assigned again",
+          details: {},
+        };
+      }
+
+      const updateData = await updateRecord(
+        {
+          drizzleSchema: sectionSubjectTeachers,
+          zodSchema: subjectTeacherZod,
+        },
+        existing.id,
+        data,
+      );
+      return {
+        success: true as const,
+        data: updateData,
+      };
+    }
+
+    // ----------create new record ------------
     const newId = await createRecord(
       {
         zodSchema: subjectTeacherZod,
