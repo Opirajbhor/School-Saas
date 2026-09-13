@@ -1,12 +1,13 @@
 "use server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { student } from "../db/schema/student.drizzle";
 import { AddStudentType, addStudentZod } from "../validation/student.zod";
-import { academicSessions } from "../db/schema";
+import { academicSessions, groupClasses } from "../db/schema";
 import { enrollments } from "../db/schema/enrollments.drizzle";
 import { requireInstitute } from "./get-institute-profile";
 import { readMany } from "../lib/crud-funtions/server-read-crud";
+import { toggleStatus } from "../lib/crud-funtions/server-status.action";
 
 // get student
 export async function getStudents() {
@@ -21,12 +22,12 @@ export async function getStudents() {
             class: true,
             section: true,
             session: true,
-            // groups: true,
+            group: true,
           },
         }),
     });
 
-     return {
+    return {
       success: true as const,
       data: result.data,
     };
@@ -39,28 +40,50 @@ export async function getStudents() {
   }
 }
 
+// toogle Status
+export async function ToggleStudentStatus(id: string) {
+  return toggleStatus(
+    {
+      drizzleSchema: enrollments,
+    },
+    id,
+  );
+}
 // get academicInfo
 export async function getAcademicInfo() {
   const { id } = await requireInstitute();
   try {
-    const academicInfo = await db.query.academicSessions.findMany({
-      where: eq(academicSessions.instituteId, id),
+    const academicInfo = await db.query.academicSessions.findFirst({
+      where: and(
+        eq(academicSessions.instituteId, id),
+        eq(academicSessions.isActive, true),
+      ),
       with: {
         classes: {
           with: {
             sections: true,
+            groupClasses: {
+              where: eq(groupClasses.status, "ACTIVE"),
+              with: {
+                group: true,
+              },
+            },
           },
         },
       },
     });
     return {
-      success: true,
-      data: academicInfo.find((s) => s.isActive),
+      success: true as const,
+      data: academicInfo,
     };
-  } catch {
-    console.error("failed to get the Academic Info");
+  } catch (error) {
+    console.error(
+      "failed to get the Academic Info--------",
+      error,
+      "--------------",
+    );
     return {
-      success: false,
+      success: false as const,
       error: "Failed to fetch list.",
     };
   }
@@ -101,6 +124,7 @@ export async function addStudent(data: AddStudentType) {
           banglaName: data.banglaName,
           photoUrl: data.photoUrl || "",
           birthCertificateNo: data.birthCertificateNo,
+          groupId: data.groupId || null,
         })
         .returning();
 
@@ -114,6 +138,7 @@ export async function addStudent(data: AddStudentType) {
           classId: data.className,
           sectionId: data.section,
           roll: data.roll,
+          groupId: data.groupId,
         })
         .returning();
 

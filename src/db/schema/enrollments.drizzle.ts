@@ -4,6 +4,8 @@ import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { academicSessions } from "./academic-session.drizzle";
 import { classesDrizzle, sectionDrizzle } from "./classes.drizzle";
 import { relations } from "drizzle-orm";
+import { groups } from "./groups.drizzle";
+import { statusEnum } from "./enums-drizzle";
 
 export const enrollments = pgTable(
   "enrollments",
@@ -39,7 +41,11 @@ export const enrollments = pgTable(
       .references(() => sectionDrizzle.id, {
         onDelete: "cascade",
       }),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "cascade",
+    }),
     roll: varchar("roll", { length: 10 }).notNull(),
+    status: statusEnum("status").notNull().default("ACTIVE"),
   },
   (table) => [
     unique("student_unique_per_session").on(table.studentId, table.sessionId),
@@ -62,5 +68,9 @@ export const enrollmentRelations = relations(enrollments, ({ one }) => ({
   session: one(academicSessions, {
     fields: [enrollments.sessionId],
     references: [academicSessions.id],
+  }),
+  group: one(groups, {
+    fields: [enrollments.groupId],
+    references: [groups.id],
   }),
 }));

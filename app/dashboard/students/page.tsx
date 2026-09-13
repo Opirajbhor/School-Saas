@@ -20,71 +20,41 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/utils/utils";
 import { StatCards } from "@/components/dashboard/stat-cards";
-import { AddStudentType } from "@/src/validation/student.zod";
-import { toast } from "sonner";
-import { getStudents } from "@/src/server-actions/student.action";
+import { StudentEnrollment } from "@/src/validation/student.zod";
+import {
+  getStudents,
+  ToggleStudentStatus,
+} from "@/src/server-actions/student.action";
 import Link from "next/link";
 import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
-
-export type StudentEnrollment = {
-  id: string;
-  instituteId: string;
-  roll: string;
-  classId: string;
-  sectionId: string;
-  sessionId: string;
-  studentId: string;
-  class: {
-    id: string;
-    name: string;
-  };
-  section: {
-    id: string;
-    name: string;
-  };
-  session: {
-    id: string;
-    year: string;
-  };
-  student: {
-    id: string;
-    studentId: string;
-    englishName: string;
-    banglaName: string | null;
-    fatherName: string | null;
-    motherName: string | null;
-    religion: string | null;
-    gender: string | null;
-    phone: string | null;
-    address: string | null;
-    dateOfBirth: Date;
-  };
-};
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
+import StatusToggleModal from "@/components/modal/status-modal";
 
 export default function Page() {
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const [students, setStudents] = useState<StudentEnrollment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-  const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
 
   // get Student data
-  useEffect(() => {
-    async function getlist() {
-      await clientReadAction(getStudents, {
-        onSuccess: (data) => setStudents(data as StudentEnrollment[]),
-        onLoading: setLoading,
-      });
-    }
-    getlist();
-  }, []);
-  if (loading) {
+  // ------------- query fn ---------------
+  const queryClient = useQueryClient();
+
+  const { data: students, isPending } = useQuery<StudentEnrollment[]>({
+    queryKey: ["page-Student", "enrollment"],
+    queryFn: async () => {
+      const result = await getStudents();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as StudentEnrollment[];
+    },
+  });
+  const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
+
+  if (isPending) {
     return <SpinnerCustom />;
   }
 
@@ -170,6 +140,7 @@ export default function Page() {
                   </th>
 
                   <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
+                    Group <br />
                     PHONE <br />
                     Address
                   </th>
@@ -201,23 +172,24 @@ export default function Page() {
                     </td>
 
                     <td className="p-4">
-                      <p>{item.student.religion}</p>
-                      <p>{item.student.gender}</p>
+                      <p>{item?.student.religion}</p>
+                      <p>{item?.student.gender}</p>
                       <p>
-                        {item.student.dateOfBirth.toLocaleDateString("en-GB")}
+                        {item?.student.dateOfBirth.toLocaleDateString("en-GB")}
                       </p>
                     </td>
 
                     <td className="p-4">
-                      <p>{item.class.name}</p>
-                      <p>{item.section.name}</p>
-                      <p>{item.roll}</p>
+                      <p>{item?.class?.name}</p>
+                      <p>{item?.section.name}</p>
+                      <p>{item?.roll}</p>
                     </td>
 
                     <td className="p-4">
-                      <p>{item.student.phone}</p>
+                      <p>{item?.group?.name ?? "-"}</p>
+                      <p>{item?.student.phone}</p>
                       <p className="text-sm text-muted-foreground">
-                        {item.student.address}
+                        {item?.student.address}
                       </p>
                     </td>
 
@@ -230,10 +202,15 @@ export default function Page() {
                         <Button size="sm">
                           <Pen />
                         </Button>
-
-                        <Button size="sm" variant="destructive">
-                          <Trash />
-                        </Button>
+                        <StatusToggleModal
+                          id={item.id}
+                          onDelete={ToggleStudentStatus}
+                          onSuccess={() => {
+                            queryClient.invalidateQueries({
+                              queryKey: ["page-Student", "enrollment"],
+                            });
+                          }}
+                        />
                       </div>
                     </td>
                   </tr>

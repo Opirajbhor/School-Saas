@@ -1,4 +1,4 @@
-import { pgTable, uuid,  text, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, index } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { academicSessions } from "./academic-session.drizzle";
 import { statusEnum, timestamps } from "./enums-drizzle";
@@ -6,6 +6,10 @@ import { user } from "./auth-schema.drizzle";
 import { unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { groupClasses } from "./groups.drizzle";
+import {
+  sectionClassTeachers,
+  sectionSubjectTeachers,
+} from "./teacher-assignment.drizzle";
 
 export const classesDrizzle = pgTable(
   "classes",
@@ -74,4 +78,14 @@ export const classesRelations = relations(classesDrizzle, ({ one, many }) => ({
 
   sections: many(sectionDrizzle),
   groupClasses: many(groupClasses),
+}));
+
+// section relatioin ----------------
+export const sectionRelations = relations(sectionDrizzle, ({ one, many }) => ({
+  class: one(classesDrizzle, {
+    fields: [sectionDrizzle.classId],
+    references: [classesDrizzle.id],
+  }),
+  classTeacher: one(sectionClassTeachers),
+  subjectTeachers: many(sectionSubjectTeachers),
 }));

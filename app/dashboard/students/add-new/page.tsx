@@ -6,7 +6,11 @@ import { Label } from "@/components/ui/label";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Spinner } from "@/components/ui/spinner";
-import { AddStudentType, addStudentZod } from "@/src/validation/student.zod";
+import {
+  AcademicInfoType,
+  AddStudentType,
+  addStudentZod,
+} from "@/src/validation/student.zod";
 import {
   addStudent,
   getAcademicInfo,
@@ -14,58 +18,30 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { classData } from "@/src/data/class-data/class-data";
 import { SpinnerCustom } from "@/components/Spinner";
 import { FormSelect } from "@/components/forms/form-select";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { FormInput } from "@/components/forms/form-input";
 import { FormTextarea } from "@/components/forms/form-textarea";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const randomId = Math.floor(Math.random() * 100) + 1;
 
-export interface AcademicInfoType {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string | null;
-  instituteId: string;
-  year: string;
-  isActive: boolean;
-  classes: Array<{
-    id: string;
-    name: string;
-    createdAt: Date;
-    sections: Array<{
-      id: string;
-      name: string;
-      classId: string;
-      createdAt: Date;
-      updatedAt: Date;
-      instituteId?: string;
-      userId?: string | null;
-      isActive?: boolean;
-    }>;
-  }>;
-}
 export default function AddStudent() {
   // --------------active session-----------------
-  const [activeSession, setActiveSession] = useState<
-    AcademicInfoType | null | undefined
-  >(null);
-
-  useEffect(() => {
-    const sessionRes = async () => {
-      await clientReadAction(getAcademicInfo, {
-        onSuccess: (data) => {
-          setActiveSession(data as AcademicInfoType);
-        },
-      });
-    };
-    sessionRes();
-  }, []);
+  // ------------- query fn ---------------
+  const queryClient = useQueryClient();
+  const { data: activeSession, isPending } = useQuery<AcademicInfoType>({
+    queryKey: ["page-addStudent"],
+    queryFn: async () => {
+      const result = await getAcademicInfo();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as AcademicInfoType;
+    },
+  });
   // ------------------form------------
-  const methods = useForm();
 
   const form = useForm({
     resolver: zodResolver(addStudentZod),
@@ -73,6 +49,8 @@ export default function AddStudent() {
       photoUrl: "",
       studentId: `HAR-${randomId}`,
       session: activeSession?.id,
+      status: "ACTIVE",
+      groupId: null,
     },
   });
   const { isSubmitting } = form.formState;
@@ -92,6 +70,7 @@ export default function AddStudent() {
     (item) => item.id === selectedClass,
   );
   const selectClassSections = selectedClassData?.sections ?? [];
+  const selectClassGroups = selectedClassData?.groupClasses ?? [];
 
   useEffect(() => {
     form.setValue("className", "");
@@ -102,12 +81,12 @@ export default function AddStudent() {
   const addBtn = async (data: AddStudentType) => {
     await handleCrudAction(addStudent, data, {
       successMessage: "Student Created Successfully",
-      onSuccess: (data) => {
+      onSuccess: () => {
         form.reset();
       },
     });
   };
-  if (activeSession === null || undefined) {
+  if (isPending) {
     return <SpinnerCustom />;
   }
   return (
@@ -118,7 +97,7 @@ export default function AddStudent() {
           Create a new student and enroll them into a class.
         </p>
       </div>
-      <FormProvider {...methods}>
+      <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(addBtn)}>
           {/* Academic Information */}
           <Card>
@@ -159,9 +138,9 @@ export default function AddStudent() {
                 name="section"
                 label="Section"
                 options={
-                  selectClassSections.map((item) => ({
-                    label: item.name,
-                    value: item.id,
+                  selectClassSections?.map((item) => ({
+                    label: item?.name,
+                    value: item?.id,
                   })) ?? []
                 }
               />
@@ -173,16 +152,16 @@ export default function AddStudent() {
                 label="Roll No"
                 placeholder="Enter Roll "
               />
-              {/*------------STATUS----------- */}
+              {/*------------Group----------- */}
 
               <FormSelect
                 control={form.control}
-                name="status"
-                label="Status"
-                options={[
-                  { label: "ACTIVE", value: "ACTIVE" },
-                  { label: "INACTIVE", value: "INACTIVE" },
-                ]}
+                name="groupId"
+                label="Group"
+                options={selectClassGroups?.map((item) => ({
+                  label: item?.group.name,
+                  value: item?.group.id,
+                }))}
               />
             </CardContent>
           </Card>

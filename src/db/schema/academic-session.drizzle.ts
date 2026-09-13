@@ -9,6 +9,8 @@ import {
 import { unique } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { timestamps } from "./enums-drizzle";
+import { classesDrizzle } from "./classes.drizzle";
+import { relations } from "drizzle-orm";
 
 export const academicSessions = pgTable(
   "academic_sessions",
@@ -36,4 +38,11 @@ export const academicSessions = pgTable(
 
     index("academic_sessions_institute_idx").on(table.instituteId),
   ],
+);
+
+export const academicSessionsRelations = relations(
+  academicSessions,
+  ({ many }) => ({
+    classes: many(classesDrizzle),
+  }),
 );

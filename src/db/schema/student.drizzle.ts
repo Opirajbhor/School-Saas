@@ -12,6 +12,7 @@ import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { timestamps } from "./enums-drizzle";
 import { relations } from "drizzle-orm";
 import { enrollments } from "./enrollments.drizzle";
+import { groups } from "./groups.drizzle";
 
 export const studentGenderEnum = pgEnum("student_gender", [
   "MALE",
@@ -46,6 +47,7 @@ export const student = pgTable(
       .references(() => instituteProfile.id, {
         onDelete: "cascade",
       }),
+    groupId: uuid("group_id").references(() => groups.id),
     studentId: varchar("student_id", { length: 30 }).notNull(),
     englishName: varchar("english_name", { length: 100 }).notNull(),
     banglaName: varchar("bangla_name", { length: 200 }),
@@ -81,5 +83,3 @@ export const student = pgTable(
 export const studentRelations = relations(student, ({ many }) => ({
   enrollments: many(enrollments),
 }));
-
-

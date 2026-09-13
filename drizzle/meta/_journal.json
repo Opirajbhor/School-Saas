@@ -267,6 +267,55 @@
       "when": 1788879904720,
       "tag": "0037_cooing_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1789315697618,
+      "tag": "0038_strange_mephisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1789315872603,
+      "tag": "0039_spicy_norman_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789316353302,
+      "tag": "0040_tearful_falcon",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789316372496,
+      "tag": "0041_flowery_scalphunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1789316964475,
+      "tag": "0042_yummy_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1789317227862,
+      "tag": "0043_heavy_namor",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1789318307604,
+      "tag": "0044_dear_warbird",
+      "breakpoints": true
     }
   ]
 }

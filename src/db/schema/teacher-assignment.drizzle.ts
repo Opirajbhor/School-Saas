@@ -105,14 +105,7 @@ export const sectionClassTeacherRelations = relations(
   }),
 );
 
-export const sectionRelations = relations(sectionDrizzle, ({ one, many }) => ({
-  class: one(classesDrizzle, {
-    fields: [sectionDrizzle.classId],
-    references: [classesDrizzle.id],
-  }),
-  classTeacher: one(sectionClassTeachers),
-  subjectTeachers: many(sectionSubjectTeachers),
-}));
+
 
 export const teacherRelations = relations(teachers, ({ many }) => ({
   classTeacherAssignments: many(sectionClassTeachers),
