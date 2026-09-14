@@ -316,6 +316,20 @@
       "when": 1789318307604,
       "tag": "0044_dear_warbird",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1789400024905,
+      "tag": "0045_icy_santa_claus",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1789400548440,
+      "tag": "0046_optimal_kabuki",
+      "breakpoints": true
     }
   ]
 }

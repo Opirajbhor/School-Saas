@@ -12,6 +12,9 @@ import { and, eq } from "drizzle-orm";
 import { requireInstitute } from "./get-institute-profile";
 import { parseWithZod } from "../validation/validator.zod";
 import { updateRecord } from "../lib/crud-funtions/server-update-crud";
+import { auth } from "@/auth";
+import { authClient } from "../better-auth/auth-client";
+import { headers } from "next/headers";
 
 // add teacher
 export async function addTeacher(data: addTeacherType) {
@@ -19,24 +22,40 @@ export async function addTeacher(data: addTeacherType) {
   // parse with zod-----------------
   const validatedFields = parseWithZod(addTeacherZod, data);
   if (!validatedFields.success) return validatedFields;
-  // parse with zod-----------------
-
+  //--------- create user then teacher info---------
   try {
-    const [newTeacher] = await db
-      .insert(teachers)
-      .values({
-        ...validatedFields.data,
-        instituteId: profile.id,
-        userId: profile.userId,
-      })
-      .returning();
-
+    const newUser = await auth.api.createUser({
+      headers: await headers(),
+      body: {
+        email: validatedFields.data.email,
+        password: validatedFields.data.password,
+        name: validatedFields.data.nameEnglish,
+        role: "user",
+      },
+    });
+    if (!newUser.user) {
+      return {
+        success: false as const,
+        error: "Failed to create teacher account due to a database failure.",
+        details: {},
+      };
+    }
+    const dbTxn = await db.transaction(async (tx) => {
+      await tx
+        .insert(teachers)
+        .values({
+          ...validatedFields.data,
+          instituteId: profile.id,
+          userId: newUser.user.id,
+        })
+        .returning();
+    });
     return {
       success: true as const,
-      data: newTeacher,
+      data: dbTxn,
     };
   } catch (error) {
-    console.error("Database error during teacher creation:", error);
+    console.error("Database error during teacher creation", error);
     return {
       success: false as const,
       error: "Failed to create teacher account due to a database failure.",

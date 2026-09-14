@@ -1,26 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Search,
-  Filter,
-  Download,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/utils/utils";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";
 import {
@@ -37,41 +21,39 @@ import TeacherStats from "@/components/dashboard/teachers/teacher-card";
 import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
 import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import { SpinnerCustom } from "@/components/Spinner";
-import { useSearch } from "@/src/lib/useSearch";
+
 import { AppTable } from "@/components/table/data-table";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function Teacherpage() {
-  const [teachers, setTeachers] = useState<Teacherlist[] | null>();
-  const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const itemsPerPage = 6;
-  const totalPages = Math.ceil((teachers?.length ?? 0) / itemsPerPage);
-  const [statlist, setStatlist] = useState<TeacherStatsResponse>({
-    success: false,
-    error: "",
-  });
 
-  useEffect(() => {
-    async function getlist() {
-      try {
-        await clientReadAction(getTeacher, {
-          onSuccess: (data) => setTeachers(data as Teacherlist[]),
-          onLoading: setLoading,
-        });
-        const stats = await getTeacherStats();
-        if (!stats.success) {
-          setTeachers(null);
-          return;
-        }
-        setStatlist(stats);
-      } catch (error) {
-        console.error(error);
+  // ------------- query fn ---------------
+  const { data: teachers = [], isPending } = useQuery<Teacherlist[]>({
+    queryKey: ["teachers"],
+    queryFn: async () => {
+      const result = await getTeacher();
+      if (!result.success) {
+        throw new Error(result.error);
       }
-    }
-
-    getlist();
-  }, []);
+      return result.data as Teacherlist[];
+    },
+  });
+  const { data: statlist, isPending: isLoading } =
+    useQuery<TeacherStatsResponse>({
+      queryKey: ["statlist"],
+      queryFn: async () => {
+        const result = await getTeacherStats();
+        if (!result.success) {
+          throw new Error(result.error);
+        } else {
+          return result as TeacherStatsResponse;
+        }
+      },
+    });
+  const totalPages = Math.ceil((teachers?.length ?? 0) / itemsPerPage);
 
   const getInitials = (name: string) => {
     return name
@@ -81,7 +63,7 @@ export default function Teacherpage() {
       .toUpperCase();
   };
 
-  if (loading) {
+  if (isPending || isLoading) {
     return <SpinnerCustom />;
   }
   return (
@@ -90,9 +72,7 @@ export default function Teacherpage() {
       <p className="text-muted-foreground ">
         Manage teaching staff, assignments, and contact details.
       </p>
-      <div>
-        <TeacherStats stats={statlist} />
-      </div>
+      <div>{statlist && <TeacherStats stats={statlist} />}</div>
       {/* Main Card */}
       <Card className="pb-0 gap-0">
         {/* Table */}
@@ -113,7 +93,7 @@ export default function Teacherpage() {
           onSelectionChange={setSelectedUsers}
           toolbar={
             <>
-              <AddTeacher setTeachers={setTeachers} />
+              <AddTeacher />
             </>
           }
           columns={[
@@ -179,8 +159,8 @@ export default function Teacherpage() {
               label: "Actions",
               render: (teacher) => (
                 <div className="flex gap-2">
-                  <EditTeachers user={teacher} setTeachers={setTeachers} />
-                  <DeleteTeacher user={teacher} setTeachers={setTeachers} />
+                  <EditTeachers user={teacher} />
+                  <DeleteTeacher user={teacher} />
                 </div>
               ),
             },

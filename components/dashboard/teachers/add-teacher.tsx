@@ -1,6 +1,6 @@
 "use client";
 import { Plus } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,15 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getInstituteProfile } from "@/src/server-actions/getInstitituteProfile.action";
-import { ProfileType } from "@/src/validation/auth.zod";
-import {
-  addTeacherType,
-  addTeacherZod,
-  Teacherlist,
-} from "@/src/validation/teacher.zod";
+
+import { addTeacherType, addTeacherZod } from "@/src/validation/teacher.zod";
 import { FieldDescription } from "@/components/ui/field";
 
 import {
@@ -28,28 +23,20 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { addTeacher } from "@/src/server-actions/teacher.action";
-import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { useQueryClient } from "@tanstack/react-query";
+import { FormInput } from "@/components/forms/form-input";
+import { FormSelect } from "@/components/forms/form-select";
 
-export default function AddTeacher({
-  setTeachers,
-}: {
-  setTeachers: Dispatch<SetStateAction<Teacherlist[] | null | undefined>>;
-}) {
+export default function AddTeacher() {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // ------------------
   const form = useForm<addTeacherType>({
     resolver: zodResolver(addTeacherZod),
     defaultValues: {
-      instituteId: "",
-      nameBangla: "",
-      nameEnglish: "",
-      designation: "",
-      mobile: "",
-      email: "",
-      photoUrl: "",
       gender: "MALE",
       status: "ACTIVE",
     },
@@ -59,9 +46,11 @@ export default function AddTeacher({
   // add button
   const addBtn = async (data: addTeacherType) => {
     await handleCrudAction(addTeacher, data, {
-      successMessage: "Session Created Successfully",
-      onSuccess: (item) => {
-        setTeachers((prev) => [...(prev || []), item as Teacherlist]);
+      successMessage: "Teacher Created Successfully",
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["teachers"],
+        });
         form.reset();
       },
     });
@@ -85,109 +74,101 @@ export default function AddTeacher({
         <DialogHeader className="border-b px-6 py-4 pt-5">
           <DialogTitle>শিক্ষক যুক্ত করুন</DialogTitle>
         </DialogHeader>
-
-        <form onSubmit={form.handleSubmit(addBtn)}>
-          <div className="space-y-6 p-6">
-            {/* bangla name */}
-            <div className="space-y-2">
-              <Label>নাম: (বাংলায়)</Label>
-              <Input
-                {...form.register("nameBangla")}
-                placeholder="নাম বাংলায়"
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(addBtn)}>
+            <div className="space-y-6 p-6">
+              {/* bangla name */}
+              <FormInput
+                control={form.control}
+                name="nameBangla"
+                label="Bangla Name Name"
+                placeholder="Enter Bangla name"
               />
-              <FieldDescription
-                className={
-                  form.formState.errors.nameBangla?.message && "text-red-400"
-                }
-              >
-                {form.formState.errors.nameBangla?.message}
-              </FieldDescription>
-            </div>
-            {/* english name */}
-            <div className="space-y-2">
-              <Label> নাম: (ইংরেজিতে)</Label>
-              <Input
-                {...form.register("nameEnglish")}
-                placeholder="নাম ইংরেজিতে"
+
+              {/* english name */}
+              <FormInput
+                control={form.control}
+                name="nameEnglish"
+                label="English Name"
+                placeholder="Enter English name"
               />
-              <FieldDescription
-                className={
-                  form.formState.errors.nameEnglish?.message && "text-red-400"
-                }
-              >
-                {form.formState.errors.nameEnglish?.message}
-              </FieldDescription>
-            </div>
-            {/* designation */}
-            <div className="space-y-2">
-              <Label>পদবী</Label>
-              <Input {...form.register("designation")} placeholder="পদবী" />
-              <FieldDescription
-                className={
-                  form.formState.errors.designation?.message && "text-red-400"
-                }
-              >
-                {form.formState.errors.designation?.message}
-              </FieldDescription>
-            </div>
-            {/* mobile */}
-            <div className="space-y-2">
-              <Label> মোবাইল নম্বর</Label>
-              <Input {...form.register("mobile")} placeholder="মোবাইল নম্বর" />
-              <FieldDescription
-                className={
-                  form.formState.errors.mobile?.message && "text-red-400"
-                }
-              >
-                {form.formState.errors.mobile?.message}
-              </FieldDescription>
-            </div>
-            {/* email */}
-            <div className="space-y-2">
-              <Label> ই-মেইল</Label>
-              <Input {...form.register("email")} placeholder="ই-মেইল" />
-              <FieldDescription
-                className={
-                  form.formState.errors.email?.message && "text-red-400"
-                }
-              >
-                {form.formState.errors.email?.message}
-              </FieldDescription>
-            </div>
-            {/* ---------------------gender */}
-            <div className="flex flex-col gap-1.5 w-full max-w-xs">
-              <label className="text-xs font-medium text-muted-foreground">
-                লিঙ্গ
-              </label>
 
-              <NativeSelect
-                defaultValue={form.getValues("gender")}
-                {...form.register("gender")}
-                className="w-full text-xs h-9"
-              >
-                <NativeSelectOption value="MALE">পুরুষ</NativeSelectOption>
-                <NativeSelectOption value="FEMALE">মহিলা</NativeSelectOption>
-                <NativeSelectOption value="OTHER">অন্যান্য</NativeSelectOption>
-              </NativeSelect>
-            </div>
-          </div>
+              {/* designation */}
+              <FormInput
+                control={form.control}
+                name="designation"
+                label="Designation"
+                placeholder="e.g. Assistant Teacher, Senior Teacher"
+              />
 
-          <div className="flex items-center justify-end border-t p-4 space-x-2">
-            <DialogClose asChild>
-              <Button type="button" variant="ghost">
-                Cancel
+              {/* mobile */}
+              <FormInput
+                control={form.control}
+                type="number"
+                name="mobile"
+                label="Mobile"
+                placeholder="e.g. 017XXXXXXXX"
+              />
+
+              {/* email */}
+              <FormInput
+                control={form.control}
+                type="email"
+                name="email"
+                label="E-mail"
+                placeholder="e.g. name@mail.com"
+              />
+
+              {/* -----gender----- */}
+
+              <div className="flex flex-col gap-1.5 w-full max-w-xs">
+                <label className="text-xs font-medium text-muted-foreground">
+                  লিঙ্গ
+                </label>
+
+                <NativeSelect
+                  defaultValue={form.getValues("gender")}
+                  {...form.register("gender")}
+                  className="w-full text-xs h-9"
+                >
+                  <NativeSelectOption value="MALE">MALE</NativeSelectOption>
+                  <NativeSelectOption value="FEMALE">FEMALE</NativeSelectOption>
+                  <NativeSelectOption value="OTHER">OTHER</NativeSelectOption>
+                </NativeSelect>
+              </div>
+              {/* PASSWORD */}
+              <FormInput
+                control={form.control}
+                name="password"
+                label="Password"
+                placeholder="e.g. Minimum 8 characters long"
+              />
+              {/* Confirm PASSWORD */}
+              <FormInput
+                control={form.control}
+                name="confirmPassword"
+                label="Confirm Password"
+                placeholder="e.g. Minimum 8 characters long"
+              />
+            </div>
+
+            <div className="flex items-center justify-end border-t p-4 space-x-2">
+              <DialogClose asChild>
+                <Button type="button" variant="ghost">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                disabled={isSubmitting}
+                className="cursor-pointer"
+                type="submit"
+                size="sm"
+              >
+                {isSubmitting && <Spinner />} Add Teacher
               </Button>
-            </DialogClose>
-            <Button
-              disabled={isSubmitting}
-              className="cursor-pointer"
-              type="submit"
-              size="sm"
-            >
-              {isSubmitting && <Spinner />} Add Teacher
-            </Button>
-          </div>
-        </form>
+            </div>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

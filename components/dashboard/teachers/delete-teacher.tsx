@@ -14,30 +14,26 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { deleteTeacher } from "@/src/server-actions/teacher.action";
 import { Teacherlist } from "@/src/validation/teacher.zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangleIcon } from "lucide-react";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { toast } from "sonner";
 
 export interface DeleteTeacherProps {
   user: Teacherlist;
-  setTeachers: Dispatch<SetStateAction<Teacherlist[] | null | undefined>>;
 }
-export default function DeleteTeacher({
-  user,
-  setTeachers,
-}: DeleteTeacherProps) {
+export default function DeleteTeacher({ user }: DeleteTeacherProps) {
   const [open, setOpen] = useState(false);
   const [load, setLoad] = useState(false);
-
+  const queryClient = useQueryClient();
   const deleteuser = async () => {
     setLoad(true);
     const result = await deleteTeacher(user.id);
     if (result.success) {
       toast.success(result.message);
-      setTeachers((prev) => {
-        const current = prev || [];
-        return current.filter((teacher) => teacher.id !== user.id);
+      queryClient.invalidateQueries({
+        queryKey: ["teachers"],
       });
     } else {
       toast.error(result.error);

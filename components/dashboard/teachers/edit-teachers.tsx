@@ -27,11 +27,9 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { editTeacher } from "@/src/server-actions/teacher.action";
+import { useQueryClient } from "@tanstack/react-query";
 
-export default function EditTeachers({
-  user,
-  setTeachers,
-}: DeleteTeacherProps) {
+export default function EditTeachers({ user }: DeleteTeacherProps) {
   const form = useForm<editTeacherType>({
     resolver: zodResolver(editTeacherZod),
     defaultValues: {
@@ -47,6 +45,7 @@ export default function EditTeachers({
     },
   });
   const { isSubmitting } = form.formState;
+  const queryClient = useQueryClient();
 
   //   edit button
   const editBtn = async (data: editTeacherType) => {
@@ -55,16 +54,8 @@ export default function EditTeachers({
       return toast.error("Something went wrong!");
     }
     if (res.success) {
-      setTeachers((prev) => {
-        if (!prev) return prev;
-        return prev.map((teacher) =>
-          teacher.id === data.id
-            ? {
-                ...teacher,
-                ...data,
-              }
-            : teacher,
-        );
+      queryClient.invalidateQueries({
+        queryKey: ["teachers"],
       });
     }
     toast.success("Teacher updated successfully");

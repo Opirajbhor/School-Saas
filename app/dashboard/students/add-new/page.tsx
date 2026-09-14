@@ -138,10 +138,15 @@ export default function AddStudent() {
                 name="section"
                 label="Section"
                 options={
-                  selectClassSections?.map((item) => ({
-                    label: item?.name,
-                    value: item?.id,
-                  })) ?? []
+                  selectClassSections
+                    ?.filter(
+                      (item): item is typeof item & { id: string } =>
+                        item.id !== undefined,
+                    )
+                    .map((item) => ({
+                      label: item?.name,
+                      value: item?.id,
+                    })) ?? []
                 }
               />
               {/*------------ROLL----------- */}
