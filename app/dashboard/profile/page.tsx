@@ -10,7 +10,7 @@ import { Key, Lock, User, Shield, Star } from "lucide-react";
 import {
   getInstituteProfile,
   instituteProfileUpdate,
-} from "@/src/server-actions/getInstitituteProfile.action";
+} from "@/src/server-actions/get-user-profile.action";
 import { useEffect, useState } from "react";
 import { ProfileType } from "@/src/validation/auth.zod";
 import { SpinnerCustom } from "@/components/Spinner";

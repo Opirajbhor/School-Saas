@@ -1,6 +1,6 @@
 "use server";
 import { db } from "../db";
-import { verifyUser } from "./verifyUser.action";
+import { verifyUser } from "./get-user-context.action";
 import {
   addTeacherType,
   addTeacherZod,
