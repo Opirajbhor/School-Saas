@@ -7,21 +7,17 @@ import { ResultsTable } from "@/components/dashboard/result-table";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { Welcome } from "@/components/dashboard/welcome";
 import { SpinnerCustom } from "@/components/Spinner";
-import {
-  getInstituteProfile,
-  getLoggedInTeacher,
-} from "@/src/server-actions/get-user-profile.action";
+import { getInstituteProfile } from "@/src/server-actions/get-user-profile.action";
 
 export default async function page() {
   const profile = await getInstituteProfile();
-  const teacher = await getLoggedInTeacher();
-  console.log(teacher);
   if (!profile) {
     return <SpinnerCustom />;
   }
+  const { institute, teacher } = profile;
   return (
     <main className="flex-1 space-y-6 p-4 md:p-6">
-      <Welcome profile={profile} />
+      <Welcome institute={institute} teacher={teacher} />
       <StatCards />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

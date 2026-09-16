@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ProfileType } from "@/src/validation/auth.zod";
+import { Teacherlist } from "@/src/validation/teacher.zod";
 
 import {
   FileBarChart,
@@ -10,7 +11,8 @@ import {
 } from "lucide-react";
 
 interface ProfileComponentProps {
-  profile: ProfileType | undefined | null;
+  institute: ProfileType;
+  teacher: Teacherlist | null;
 }
 const quickActions = [
   { label: "Add Student", icon: UserPlus, primary: true },
@@ -18,17 +20,16 @@ const quickActions = [
   { label: "Enter Marks", icon: PencilLine, primary: false },
   { label: "Publish Result", icon: GraduationCap, primary: false },
 ];
-export async function Welcome(profile: ProfileComponentProps) {
-  const userInfo = profile.profile;
-
+export async function Welcome({ institute, teacher }: ProfileComponentProps) {
+  const { adminNameEnglish, instituteNameEnglish } = institute;
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <p className="text-sm font-medium text-primary">
-          Welcome back, {userInfo?.adminNameEnglish}
+          Welcome back, {teacher?.nameEnglish ?? adminNameEnglish}
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground text-balance">
-          {userInfo?.instituteNameEnglish}
+          {instituteNameEnglish}
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Here is what&apos;s happening across your school today — Session 2026.

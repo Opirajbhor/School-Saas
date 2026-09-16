@@ -8,7 +8,7 @@ export default async function LoginupPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (session?.session.token) {
+  if (session?.session?.token) {
    await redirect("/dashboard");
   }
 

@@ -1,4 +1,7 @@
+import { InferSelectModel } from "drizzle-orm";
 import { z } from "zod";
+import { teachers } from "../db/schema";
+
 export const addTeacherZod = z
   .object({
     instituteId: z
@@ -54,19 +57,7 @@ export const editTeacherZod = z.object({
 export type addTeacherType = z.infer<typeof addTeacherZod>;
 export type editTeacherType = z.infer<typeof editTeacherZod>;
 
-export type Teacherlist = {
-  id: string;
-  instituteId: string;
-  userId: string | null;
-  nameBangla: string;
-  nameEnglish: string;
-  designation: string;
-  mobile: string;
-  email: string;
-  photoUrl: string | "";
-  gender: "MALE" | "FEMALE" | "OTHER";
-  status: "ACTIVE" | "INACTIVE";
-};
+export type Teacherlist = InferSelectModel<typeof teachers>;
 
 export type TeacherStatsResponse = {
   success: boolean;

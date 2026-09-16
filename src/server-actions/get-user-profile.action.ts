@@ -9,23 +9,34 @@ import { requireInstitute } from "./get-user-context.action";
 
 // get login institute profile
 export async function getInstituteProfile() {
-  const { instituteId } = await requireInstitute();
-
   try {
-    const profile = await db.query.instituteProfile.findFirst({
-      where: eq(instituteProfile.id, instituteId),
-    });
-    return profile ?? null;
+    const { instituteId, teacherId } = await requireInstitute();
+    const [institute, teacher] = await Promise.all([
+      db.query.instituteProfile.findFirst({
+        where: eq(instituteProfile.id, instituteId),
+      }),
+      teacherId
+        ? db.query.teachers.findFirst({
+            where: eq(teachers.id, teacherId),
+          })
+        : Promise.resolve(null),
+    ]);
+
+    if (!institute) return null;
+    return {
+      institute,
+      teacher: teacher ?? null,
+    };
   } catch (error) {
     console.error("Database error in getInstituteProfile:", error);
-    throw new Error("Failed to fetch institute profile.");
+    throw Error("Failed to fetch institute profile.");
   }
 }
 
 // get login teacher profile
 export async function getLoggedInTeacher() {
   const { role, userId } = await requireInstitute();
-  console.log(role, userId)
+  console.log(role, userId);
   try {
     if (role !== "user") {
       throw new Error("Unauthorized");

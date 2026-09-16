@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LogInType, logInZod } from "@/src/validation/auth.zod";
 import { loginAction } from "@/src/server-actions/login.action";
 import Link from "next/link";
+import Image from "next/image";
 
 export function LoginForm({
   className,
@@ -97,7 +98,7 @@ export function LoginForm({
 
               <FieldDescription className="text-center">
                 Don&apos;t have an account?{" "}
-                <Link href="/auth/signup">Sign up</Link>
+                <Link href="/auth/onboarding/signup">Sign up</Link>
               </FieldDescription>
             </FieldGroup>
           </form>

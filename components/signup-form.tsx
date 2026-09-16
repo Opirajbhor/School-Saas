@@ -17,10 +17,7 @@ import { signUpAction } from "@/src/server-actions/signup.action";
 import { toast } from "sonner";
 import { redirect } from "next/navigation";
 
-export function SignupForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
+export function SignupForm() {
   const form = useForm<SignUpType>({
     resolver: zodResolver(signUpZod),
     defaultValues: {
@@ -52,8 +49,7 @@ export function SignupForm({
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className={cn("flex flex-col gap-6", className)}
-      {...props}
+      className={cn("flex flex-col gap-6")}
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">

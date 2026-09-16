@@ -330,6 +330,13 @@
       "when": 1789400548440,
       "tag": "0046_optimal_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1789495048182,
+      "tag": "0047_lying_white_tiger",
+      "breakpoints": true
     }
   ]
 }

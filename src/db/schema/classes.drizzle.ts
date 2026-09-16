@@ -21,7 +21,6 @@ export const classesDrizzle = pgTable(
     sessionId: uuid("session_id")
       .notNull()
       .references(() => academicSessions.id, { onDelete: "cascade" }),
-    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
@@ -53,7 +52,6 @@ export const sectionDrizzle = pgTable(
     classId: uuid("class_id")
       .notNull()
       .references(() => classesDrizzle.id, { onDelete: "cascade" }),
-    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     status: statusEnum("status").notNull().default("ACTIVE"),
 

@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import stationery from "@/public/stationery.png";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
@@ -100,7 +99,7 @@ export const HeroHeader = () => {
                     <span>Login</span>
                   </Button>
                 </Link>
-                <Link href="/auth/signup">
+                <Link href="/auth/onboarding/signup">
                   <Button size="sm" className={cn(isScrolled && "lg:hidden")}>
                     <span>Sign Up</span>
                   </Button>
