@@ -7,16 +7,16 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // const step = await getOnboardingStep();
-  // if (step === "UNAUTHORIZED") {
-  //   redirect("/auth/onboarding/institute-profile");
-  // }
-  // if (step === "INSTITUTE") {
-  //   redirect("/auth/onboarding/institute-profile");
-  // }
-  // if (step === "ADMIN") {
-  //   redirect("/auth/onboarding/admin-profile");
-  // }
+  const step = await getOnboardingStep();
+  if (step === "UNAUTHORIZED") {
+    redirect("/auth/onboarding/institute-profile");
+  }
+  if (step === "INSTITUTE") {
+    redirect("/auth/onboarding/institute-profile");
+  }
+  if (step === "ADMIN") {
+    redirect("/auth/onboarding/admin-profile");
+  }
 
   return <DashboardShell>{children}</DashboardShell>;
 }

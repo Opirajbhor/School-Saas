@@ -13,52 +13,26 @@ export async function getUserContext() {
   if (!session?.user?.id) {
     return null;
   }
-
   const userId = session.user.id;
   const role = session.user.role;
+  const userInfo = await db.query.teachers.findFirst({
+    where: eq(teachers.userId, userId),
+    columns: {
+      id: true,
+      instituteId: true,
+    },
+  });
 
-  if (role === "admin") {
-    const profile = await db.query.instituteProfile.findFirst({
-      where: eq(instituteProfile.userId, userId),
-      columns: {
-        id: true,
-      },
-    });
-
-    if (!profile) {
-      return null;
-    }
-
-    return {
-      userId,
-      role,
-      instituteId: profile.id,
-      teacherId: null,
-    };
+  if (!userInfo) {
+    return null;
   }
 
-  if (role === "user") {
-    const teacher = await db.query.teachers.findFirst({
-      where: eq(teachers.userId, userId),
-      columns: {
-        id: true,
-        instituteId: true,
-      },
-    });
-
-    if (!teacher) {
-      return null;
-    }
-
-    return {
-      userId,
-      role,
-      instituteId: teacher.instituteId,
-      teacherId: teacher.id,
-    };
-  }
-
-  return null;
+  return {
+    userId,
+    role,
+    instituteId: userInfo.instituteId,
+    teacherId: userInfo.id,
+  };
 }
 
 // -------- verify authorization ---------

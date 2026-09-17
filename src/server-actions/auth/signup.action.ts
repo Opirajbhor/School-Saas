@@ -56,6 +56,9 @@ export async function getOnboardingStep() {
 
   const role = session.user.role;
 
+  if (role === "user") {
+    return "USER";
+  }
   // -------step-2 check institute profile -----------------
 
   if (role === "admin") {
@@ -72,14 +75,14 @@ export async function getOnboardingStep() {
     if (!teacher) return "ADMIN";
 
     // ------------step-4 complete --------------------
-    return redirect("/dashboard");
+    return "COMPLETE";
   }
 }
 
 // ------------------institute profile ---------------
 export async function instituteProfileAction(data: InstituteInput) {
-  const { role, userId } = await requireUserContext();
-  if (role !== "admin") {
+  const profile = await currentUser();
+  if (profile?.user?.role !== "admin") {
     return {
       success: false as const,
       error: "UNAUTHORIZED",
@@ -97,7 +100,7 @@ export async function instituteProfileAction(data: InstituteInput) {
   try {
     await db.insert(instituteProfile).values({
       ...validation.data,
-      userId: userId,
+      userId: profile?.user?.id,
       status: "ACTIVE",
     });
 
@@ -126,7 +129,7 @@ export async function adminProfileAction(data: AdminProfileInput) {
   const validatedFields = parseWithZod(adminProfileZod, data);
   if (!validatedFields.success) return validatedFields;
   try {
-    await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       await tx
         .insert(teachers)
         .values({
@@ -136,7 +139,10 @@ export async function adminProfileAction(data: AdminProfileInput) {
         })
         .returning();
     });
-    return redirect("/dashboard");
+    return {
+      success: true as const,
+      data: result,
+    };
   } catch (error) {
     console.error("Failed to create Admin Profile", error);
     return {

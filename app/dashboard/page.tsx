@@ -15,6 +15,7 @@ export default async function page() {
     return <SpinnerCustom />;
   }
   const { institute, teacher } = profile;
+
   return (
     <main className="flex-1 space-y-6 p-4 md:p-6">
       <Welcome institute={institute} teacher={teacher} />

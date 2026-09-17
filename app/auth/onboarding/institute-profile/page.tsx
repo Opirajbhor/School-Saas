@@ -27,7 +27,6 @@ export default function Page() {
       router.push("/dashboard");
     }
   }, [session, router]);
-  console.log(session);
   const form = useForm<InstituteInput>({
     resolver: zodResolver(instituteZod),
     defaultValues: {
@@ -68,7 +67,7 @@ export default function Page() {
       upazila: upazilaName,
     });
     if (result.success) {
-      // router.push("/auth/onboarding/admin-profile");
+      router.push("/auth/onboarding/admin-profile");
     }
     if (!result.success) {
       console.log(result.error);

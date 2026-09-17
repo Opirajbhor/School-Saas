@@ -12,10 +12,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FormInput } from "@/components/forms/form-input";
 import { adminProfileAction } from "@/src/server-actions/auth/signup.action";
 import { AdminProfileInput, adminProfileZod } from "@/src/validation/auth.zod";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { authClient } from "@/src/better-auth/auth-client";
+import { FormSelect } from "@/components/forms/form-select";
 
-export default function AddTeacher() {
+export default function AdminProfilePage() {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  useEffect(() => {
+    if (session?.user.role === "user") {
+      router.push("/dashboard");
+    }
+  }, [session, router]);
   const queryClient = useQueryClient();
-    const {} = queryClient
+  const {} = queryClient;
   // ------------------
   const form = useForm<AdminProfileInput>({
     resolver: zodResolver(adminProfileZod),
@@ -30,6 +41,9 @@ export default function AddTeacher() {
   const addBtn = async (data: AdminProfileInput) => {
     await handleCrudAction(adminProfileAction, data, {
       successMessage: "Admin Created Successfully",
+      onSuccess: () => {
+        router.push("/dashboard");
+      },
     });
   };
 
@@ -56,11 +70,21 @@ export default function AddTeacher() {
             />
 
             {/* designation */}
-            <FormInput
+
+            <FormSelect
               control={form.control}
               name="designation"
               label="Designation"
-              placeholder="e.g. Assistant Teacher, Senior Teacher"
+              options={[
+                { label: "PRINCIPAL", value: "PRINCIPAL" },
+                { label: "HEADMASTER", value: "HEADMASTER" },
+                {
+                  label: "ASSISTANT HEADMASTER",
+                  value: "ASSISTANT HEADMASTER",
+                },
+                { label: "ASSISTANT TEACHER", value: "ASSISTANT TEACHER" },
+              ]}
+              description={form.formState.errors.gender?.message}
             />
 
             {/* mobile */}
@@ -82,22 +106,17 @@ export default function AddTeacher() {
             />
 
             {/* -----gender----- */}
-
-            <div className="flex flex-col gap-1.5 w-full max-w-xs">
-              <label className="text-xs font-medium text-muted-foreground">
-                লিঙ্গ
-              </label>
-
-              <NativeSelect
-                defaultValue={form.getValues("gender")}
-                {...form.register("gender")}
-                className="w-full text-xs h-9"
-              >
-                <NativeSelectOption value="MALE">MALE</NativeSelectOption>
-                <NativeSelectOption value="FEMALE">FEMALE</NativeSelectOption>
-                <NativeSelectOption value="OTHER">OTHER</NativeSelectOption>
-              </NativeSelect>
-            </div>
+            <FormSelect
+              control={form.control}
+              name="gender"
+              label="Gender"
+              options={[
+                { label: "MALE", value: "MALE" },
+                { label: "FEMALE", value: "FEMALE" },
+                { label: "OTHER", value: "OTHER" },
+              ]}
+              description={form.formState.errors.gender?.message}
+            />
           </div>
 
           <Button
