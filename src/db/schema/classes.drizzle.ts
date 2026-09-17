@@ -2,7 +2,6 @@ import { pgTable, uuid, text, index } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { academicSessions } from "./academic-session.drizzle";
 import { statusEnum, timestamps } from "./enums-drizzle";
-import { user } from "./auth-schema.drizzle";
 import { unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { groupClasses } from "./groups.drizzle";

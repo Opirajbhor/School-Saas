@@ -11,6 +11,8 @@ const methods = useForm();
   name="nameEnglish"
   label="English Name"
   placeholder="Enter English name"
+                description={form.formState.errors.phone?.message}
+
 />
 
 <FormTextarea
@@ -18,6 +20,8 @@ control={form.control}
 name="code"
 label="code"
 placeholder="Enter English name"
+                description={form.formState.errors.phone?.message}
+
 />
 
 -------------witout array---------------
@@ -29,6 +33,8 @@ placeholder="Enter English name"
     { label: "Male", value: "MALE" },
     { label: "Female", value: "FEMALE" },
   ]}
+                description={form.formState.errors.phone?.message}
+
 />
 
 -------------using map on arrays---------------
@@ -42,6 +48,8 @@ placeholder="Enter English name"
                   value: item.id,
                 })) ?? []
               }
+                description={form.formState.errors.phone?.message}
+
             />
 
 
@@ -50,6 +58,8 @@ placeholder="Enter English name"
           name="termsAccepted"
           label="Accept terms and conditions"
           disabled={true} // Optional: disable checkbox
+                description={form.formState.errors.phone?.message}
+
         />
 
 -------without map------------
@@ -62,6 +72,8 @@ placeholder="Enter English name"
     { value: "sports", label: "Sports" },
     { value: "music", label: "Music" },
   ]}
+                description={form.formState.errors.phone?.message}
+
 />
 
 </form>

@@ -11,9 +11,11 @@ export const teachers = pgTable(
       .notNull()
       .references(() => instituteProfile.id, {
         onDelete: "cascade",
+        onUpdate: "cascade",
       }),
     userId: text("user_id").references(() => user.id, {
-      onDelete: "set null",
+      onDelete: "cascade",
+      onUpdate: "cascade",
     }),
     nameBangla: text("name_bangla").notNull(),
     nameEnglish: text("name_english").notNull(),

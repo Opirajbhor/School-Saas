@@ -21,7 +21,6 @@ export const academicSessions = pgTable(
       .references(() => instituteProfile.id, {
         onDelete: "cascade",
       }),
-    userId: text("user_id"),
     year: varchar("year", {
       length: 20,
     }).notNull(),

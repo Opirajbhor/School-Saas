@@ -1,8 +1,9 @@
 "use server";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
-import { instituteProfile, teachers } from "../db/schema";
-import { currentUser } from "./currentUser.action";
+import { currentUser } from "../auth/currentUser.action";
+import { instituteProfile, teachers } from "@/src/db/schema";
+import { db } from "@/src/db";
+import { redirect } from "next/navigation";
 
 // --------get user context -----------
 
@@ -61,11 +62,11 @@ export async function getUserContext() {
 }
 
 // -------- verify authorization ---------
-export async function requireInstitute() {
+export async function requireUserContext() {
   const profile = await getUserContext();
 
-  if (!profile) {
-    throw new Error("unauthorized");
+  if (!profile?.userId) {
+    redirect("/auth/login");
   }
 
   return profile;

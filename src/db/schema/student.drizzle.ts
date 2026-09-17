@@ -46,8 +46,12 @@ export const student = pgTable(
       .notNull()
       .references(() => instituteProfile.id, {
         onDelete: "cascade",
+        onUpdate: "cascade",
       }),
-    groupId: uuid("group_id").references(() => groups.id),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
     studentId: varchar("student_id", { length: 30 }).notNull(),
     englishName: varchar("english_name", { length: 100 }).notNull(),
     banglaName: varchar("bangla_name", { length: 200 }),

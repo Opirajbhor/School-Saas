@@ -1,15 +1,12 @@
-import { auth } from "@/auth";
 import { LoginForm } from "@/components/login-form";
-import { headers } from "next/headers";
+import { currentUser } from "@/src/server-actions/auth/currentUser.action";
 import { redirect } from "next/navigation";
 
 export default async function LoginupPage() {
   // server session api
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await currentUser();
   if (session?.session?.token) {
-   await redirect("/dashboard");
+    await redirect("/dashboard");
   }
 
   return (

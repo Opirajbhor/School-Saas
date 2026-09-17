@@ -13,7 +13,7 @@ import { SignUpType, signUpZod } from "@/src/validation/auth.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MdOutlineSchool } from "react-icons/md";
 import BdAddress from "@/components/bd-address/bd-address";
-import { signUpAction } from "@/src/server-actions/signup.action";
+import { signUpAction } from "@/src/server-actions/auth/signup.action";
 import { toast } from "sonner";
 import { redirect } from "next/navigation";
 

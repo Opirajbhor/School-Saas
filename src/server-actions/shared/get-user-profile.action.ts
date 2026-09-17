@@ -1,16 +1,13 @@
 "use server";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
-import { instituteProfile, teachers } from "../db/schema";
-import { currentUser } from "./currentUser.action";
-import { ProfileUpdateType, profileUpdateZod } from "../validation/profile.zod";
-import { parseWithZod, ValidationResult } from "../validation/validator.zod";
-import { requireInstitute } from "./get-user-context.action";
+import { db } from "@/src/db";
+import { instituteProfile, teachers } from "@/src/db/schema";
+import { requireUserContext } from "./get-user-context.action";
 
 // get login institute profile
 export async function getInstituteProfile() {
+  const { instituteId, teacherId } = await requireUserContext();
   try {
-    const { instituteId, teacherId } = await requireInstitute();
     const [institute, teacher] = await Promise.all([
       db.query.instituteProfile.findFirst({
         where: eq(instituteProfile.id, instituteId),
@@ -35,12 +32,11 @@ export async function getInstituteProfile() {
 
 // get login teacher profile
 export async function getLoggedInTeacher() {
-  const { role, userId } = await requireInstitute();
-  console.log(role, userId);
+  const { role, userId } = await requireUserContext();
+  if (role !== "user") {
+    throw new Error("Unauthorized");
+  }
   try {
-    if (role !== "user") {
-      throw new Error("Unauthorized");
-    }
     const teacher = await db.query.teachers.findFirst({
       where: eq(teachers.userId, userId),
     });

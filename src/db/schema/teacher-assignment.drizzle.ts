@@ -16,23 +16,38 @@ export const sectionClassTeachers = pgTable(
 
     instituteId: uuid("institute_id")
       .notNull()
-      .references(() => instituteProfile.id),
+      .references(() => instituteProfile.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
 
     classId: uuid("class_id")
       .notNull()
-      .references(() => classesDrizzle.id),
+      .references(() => classesDrizzle.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
 
     sectionId: uuid("section_id")
       .notNull()
-      .references(() => sectionDrizzle.id),
+      .references(() => sectionDrizzle.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
 
     teacherId: uuid("teacher_id")
       .notNull()
-      .references(() => teachers.id),
+      .references(() => teachers.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
 
     sessionId: uuid("session_id")
       .notNull()
-      .references(() => academicSessions.id),
+      .references(() => academicSessions.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
 
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
@@ -104,8 +119,6 @@ export const sectionClassTeacherRelations = relations(
     }),
   }),
 );
-
-
 
 export const teacherRelations = relations(teachers, ({ many }) => ({
   classTeacherAssignments: many(sectionClassTeachers),

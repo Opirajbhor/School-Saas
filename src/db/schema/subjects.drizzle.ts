@@ -52,19 +52,29 @@ export const subjectAssignSchema = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     instituteId: uuid("institute_id")
       .notNull()
-      .references(() => instituteProfile.id, { onDelete: "cascade" }),
+      .references(() => instituteProfile.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
     sessionId: uuid("session_id")
       .notNull()
-      .references(() => academicSessions.id, { onDelete: "cascade" }),
+      .references(() => academicSessions.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
     classId: uuid("class_id")
       .notNull()
       .references(() => classesDrizzle.id, { onDelete: "cascade" }),
     groupId: uuid("group_id").references(() => groups.id, {
       onDelete: "cascade",
+      onUpdate: "cascade",
     }),
     subjectId: uuid("subject_id")
       .notNull()
-      .references(() => subjectDbSchema.id, { onDelete: "cascade" }),
+      .references(() => subjectDbSchema.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
     subjectType: subjectTypeEnum("subject_type")
       .notNull()
       .default("COMPULSORY"),

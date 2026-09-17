@@ -1,0 +1,1 @@
+ALTER TABLE "institute_profile" ADD COLUMN "status" "student_status" DEFAULT 'ACTIVE' NOT NULL;

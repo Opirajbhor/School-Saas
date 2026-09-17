@@ -1,6 +1,5 @@
 "use server";
 import { db } from "../db";
-import { verifyUser } from "./get-user-context.action";
 import {
   addTeacherType,
   addTeacherZod,
@@ -9,12 +8,11 @@ import {
 } from "../validation/teacher.zod";
 import { teachers } from "../db/schema/teacher.drizzle";
 import { and, eq } from "drizzle-orm";
-import { requireInstitute } from "./get-institute-profile";
 import { parseWithZod } from "../validation/validator.zod";
 import { updateRecord } from "../lib/crud-funtions/server-update-crud";
 import { auth } from "@/auth";
-import { authClient } from "../better-auth/auth-client";
 import { headers } from "next/headers";
+import { requireInstitute } from "./get-institute-profile";
 
 // add teacher
 export async function addTeacher(data: addTeacherType) {
@@ -118,7 +116,7 @@ export async function getTeacherStats() {
         femaleTeachers,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: "Failed to fetch teacher stats",

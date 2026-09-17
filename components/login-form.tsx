@@ -12,9 +12,8 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogInType, logInZod } from "@/src/validation/auth.zod";
-import { loginAction } from "@/src/server-actions/login.action";
 import Link from "next/link";
-import Image from "next/image";
+import { loginAction } from "@/src/server-actions/auth/login.action";
 
 export function LoginForm({
   className,
@@ -30,7 +29,7 @@ export function LoginForm({
 
   const onSubmit = async (data: LogInType) => {
     try {
-      const res = await loginAction(data);
+      await loginAction(data);
     } catch (error) {
       console.error(error);
       throw error;

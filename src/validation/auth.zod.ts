@@ -40,26 +40,41 @@ export const instituteZod = z.object({
     .string()
     .min(10, "English Name is too short")
     .max(200, "English Name is too long"),
-  phone: z
-    .number()
-    .min(11, "Number is too short")
-    .max(11, "Number is too long"),
+  phone: z.string().max(11, "Number is too long"),
 
-  division: z
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name is too long"),
-  district: z
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name is too long"),
-  upazila: z
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name is too long"),
+  logo: z.string().nullable(),
+  division: z.string().min(1, "Division is required"),
+  district: z.string().min(1, "District is required"),
+  upazila: z.string().min(1, "Upazila is required"),
 });
 export type InstituteInput = z.infer<typeof instituteZod>;
 export type InstituteOutput = InstituteInput & {
+  id: string;
+};
+
+// ================ step-3 admin profile ===============
+export const adminProfileZod = z.object({
+  instituteId: z
+    .string()
+    .uuid("Invalid institute ID")
+    .optional()
+    .or(z.literal("")),
+  userId: z.string().nullable().optional(),
+  nameBangla: z.string().trim().min(3, "Bangla name is required").max(100),
+  nameEnglish: z.string().trim().min(3, "English name is required").max(100),
+  designation: z.string().trim().min(3, "Designation is required").max(100),
+  mobile: z
+    .string()
+    .trim()
+    .min(11, "Invalid mobile number")
+    .max(11, "Invalid mobile number"),
+  email: z.string().email("Invalid email address"),
+  photoUrl: z.string().url("Invalid photo URL").optional().or(z.literal("")),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+  status: z.enum(["ACTIVE", "INACTIVE"]),
+});
+export type AdminProfileInput = z.infer<typeof adminProfileZod>;
+export type AdminProfileOutput = AdminProfileInput & {
   id: string;
 };
 

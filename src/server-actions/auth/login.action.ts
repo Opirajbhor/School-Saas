@@ -1,8 +1,8 @@
 "use server";
 import { redirect } from "next/navigation";
-import { LogInType, logInZod } from "../validation/auth.zod";
 import { auth } from "@/auth";
-import { parseWithZod } from "../validation/validator.zod";
+import { LogInType, logInZod } from "@/src/validation/auth.zod";
+import { parseWithZod } from "@/src/validation/validator.zod";
 
 export async function loginAction(data: LogInType) {
   let isSuccesfull: boolean = false;

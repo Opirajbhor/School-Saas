@@ -7,7 +7,7 @@ import { ResultsTable } from "@/components/dashboard/result-table";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { Welcome } from "@/components/dashboard/welcome";
 import { SpinnerCustom } from "@/components/Spinner";
-import { getInstituteProfile } from "@/src/server-actions/get-user-profile.action";
+import { getInstituteProfile } from "@/src/server-actions/shared/get-user-profile.action";
 
 export default async function page() {
   const profile = await getInstituteProfile();

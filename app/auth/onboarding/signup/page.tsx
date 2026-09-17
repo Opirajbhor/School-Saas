@@ -8,7 +8,7 @@ import { FormInput } from "@/components/forms/form-input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus } from "lucide-react";
-import { signUpAction } from "@/src/server-actions/signup.action";
+import { signUpAction } from "@/src/server-actions/auth/signup.action";
 import { authClient } from "@/src/better-auth/auth-client";
 import { useRouter } from "next/navigation";
 

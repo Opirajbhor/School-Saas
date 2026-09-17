@@ -27,7 +27,7 @@ import RedAlert from "@/components/dashboard/alert-notice/red-alert";
 import {
   currentUser,
   sessionUserType,
-} from "@/src/server-actions/currentUser.action";
+} from "@/src/server-actions/auth/currentUser.action";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 
 export default function TabbedUserProfile() {

@@ -14,14 +14,25 @@ import { FormSelect } from "@/components/forms/form-select";
 import bd_divisions from "@/src/data/bd-geo-location/bd-division.json";
 import bd_districts from "@/src/data/bd-geo-location/bd-districts.json";
 import bd_upazilas from "@/src/data/bd-geo-location/bd-upazilas.json";
-export default function InstituteProfilePage() {
-  const router = useRouter();
-  const { data: session } = authClient.useSession();
-  if (session?.session.token) router.push("/dashboard");
+import { useEffect } from "react";
+import { SpinnerCustom } from "@/components/Spinner";
+import { instituteProfileAction } from "@/src/server-actions/auth/signup.action";
+import { toast } from "sonner";
 
+export default function Page() {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  useEffect(() => {
+    if (session?.user.role === "user") {
+      router.push("/dashboard");
+    }
+  }, [session, router]);
+  console.log(session);
   const form = useForm<InstituteInput>({
     resolver: zodResolver(instituteZod),
-    defaultValues: {},
+    defaultValues: {
+      logo: null,
+    },
   });
   const { isSubmitting } = form.formState;
   //   division
@@ -37,16 +48,35 @@ export default function InstituteProfilePage() {
     control: form.control,
     name: "district",
   });
-  console.log(selectedDistrict);
 
   //   upazila
   const upazila = bd_upazilas.upazilas.filter(
     (item) => item.district_id === selectedDistrict,
   );
   const handleCreate = async (data: InstituteInput) => {
-    console.log(data);
+    const divisionName =
+      bd_divisions.divisions.find((d) => d.id === data.division)?.name ?? "";
+    const districtName =
+      bd_districts.districts.find((d) => d.id === data.district)?.name ?? "";
+    const upazilaName =
+      bd_upazilas.upazilas.find((u) => u.id === data.upazila)?.name ?? "";
+
+    const result = await instituteProfileAction({
+      ...data,
+      division: divisionName,
+      district: districtName,
+      upazila: upazilaName,
+    });
+    if (result.success) {
+      // router.push("/auth/onboarding/admin-profile");
+    }
+    if (!result.success) {
+      console.log(result.error);
+      toast.error(result.error || "Error creating institute profile");
+    }
   };
 
+  if (isPending) return <SpinnerCustom />;
   return (
     <div className="flex flex-col p-6">
       {/* Logo */}
@@ -78,6 +108,7 @@ export default function InstituteProfilePage() {
                 label="Institute EIIN"
                 name="eiin"
                 placeholder="e.g., 000000"
+                description={form.formState.errors.eiin?.message}
               />
               {/*----------- bangla name -----------*/}
               <FormInput
@@ -85,6 +116,7 @@ export default function InstituteProfilePage() {
                 label="Institute Bangla Name"
                 name="nameBangla"
                 placeholder="e.g. "
+                description={form.formState.errors.nameBangla?.message}
               />
 
               {/*---------- English Name -----------*/}
@@ -93,52 +125,60 @@ export default function InstituteProfilePage() {
                 label="Institute English Name"
                 name="nameEnglish"
                 placeholder="Enter your Institute English Name"
+                description={form.formState.errors.nameEnglish?.message}
               />
               {/*---------- phone-----------*/}
               <FormInput
                 control={form.control}
                 label="Institute Phone Number"
                 name="phone"
+                type="number"
                 placeholder="Enter your Institute Phone Number"
+                description={form.formState.errors.phone?.message}
               />
               {/*---------- division-----------*/}
-              <FormSelect
-                control={form.control}
-                name="division"
-                label="Division Name"
-                options={
-                  bd_divisions?.divisions.map((item) => ({
-                    label: item.name,
-                    value: item.name,
-                  })) ?? []
-                }
-              />
-              {/*---------- district-----------*/}
-              <FormSelect
-                control={form.control}
-                name="district"
-                label="District Name"
-                disabled={!selectedDivision}
-                options={
-                  districts.map((item) => ({
-                    label: item.name,
-                    value: item.name,
-                  })) ?? []
-                }
-              />
-              {/*---------- upazila-----------*/}
-              <FormSelect
-                control={form.control}
-                name="upazila"
-                label="Upazila Name"
-                disabled={!selectedDivision || !selectedDistrict}
-                options={
-                  upazila.map((item) => ({
-                    label: item.name,
-                    value: item.name,
-                  })) ?? []
-                }
-              />
+              <div className="flex items-center justify-left gap-5">
+                <FormSelect
+                  control={form.control}
+                  name="division"
+                  label="Division Name"
+                  options={
+                    bd_divisions?.divisions.map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    })) ?? []
+                  }
+                  description={form.formState.errors.division?.message}
+                />
+                {/*---------- district-----------*/}
+                <FormSelect
+                  control={form.control}
+                  name="district"
+                  label="District Name"
+                  disabled={!selectedDivision}
+                  options={
+                    districts.map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    })) ?? []
+                  }
+                  description={form.formState.errors.district?.message}
+                />
+                {/*---------- upazila-----------*/}
+                <FormSelect
+                  control={form.control}
+                  name="upazila"
+                  label="Upazila Name"
+                  disabled={!selectedDivision || !selectedDistrict}
+                  options={
+                    upazila.map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    })) ?? []
+                  }
+                  description={form.formState.errors.upazila?.message}
+                />
+              </div>
 
               {/* -------submit button------------- */}
               <Button disabled={isSubmitting} variant="default" type="submit">
