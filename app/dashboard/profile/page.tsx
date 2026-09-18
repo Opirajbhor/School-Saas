@@ -2,74 +2,81 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Key, Lock, User, Shield, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { InstituteOutput } from "@/src/validation/auth.zod";
+import { SpinnerCustom } from "@/components/Spinner";
+import { CiEdit } from "react-icons/ci";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  InsituteProfileUpdateType,
+  insituteProfileUpdateZod,
+} from "@/src/validation/institute-profile.zod";
+import { Spinner } from "@/components/ui/spinner";
+import RedAlert from "@/components/dashboard/alert-notice/red-alert";
+import { sessionUserType } from "@/src/server-actions/auth/currentUser.action";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getInstituteProfile,
   instituteProfileUpdate,
-} from "@/src/server-actions/get-user-profile.action";
-import { useEffect, useState } from "react";
-import { ProfileType } from "@/src/validation/auth.zod";
-import { SpinnerCustom } from "@/components/Spinner";
-import { CiEdit } from "react-icons/ci";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ProfileUpdateType,
-  profileUpdateZod,
-} from "@/src/validation/profile.zod";
-import { toast } from "sonner";
-import { Spinner } from "@/components/ui/spinner";
-import RedAlert from "@/components/dashboard/alert-notice/red-alert";
-import {
-  currentUser,
-  sessionUserType,
-} from "@/src/server-actions/auth/currentUser.action";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+} from "@/src/server-actions/shared/get-user-profile.action";
+import { FormInput } from "@/components/forms/form-input";
+import { authClient } from "@/src/better-auth/auth-client";
 
 export default function TabbedUserProfile() {
-  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [lock, setLock] = useState<boolean>(true);
-  const [sessionUser, SetSessionUser] = useState<sessionUserType>();
+  const { data: user } = authClient.useSession();
+
+  // ------------- query fn ---------------
+  const queryClient = useQueryClient();
+  const { data: profile, isPending } = useQuery<InstituteOutput>({
+    queryKey: ["profile", "institute"],
+    queryFn: async () => {
+      const result = await getInstituteProfile();
+      if (!result) {
+        throw new Error("can not get institute profile");
+      }
+      return result.institute as InstituteOutput;
+    },
+  });
   // update data of profile
-  const form = useForm<ProfileUpdateType>({
-    resolver: zodResolver(profileUpdateZod),
+  const form = useForm<InsituteProfileUpdateType>({
+    resolver: zodResolver(insituteProfileUpdateZod),
     defaultValues: {
-      adminNameBangla: profile?.adminNameBangla,
-      adminNameEnglish: profile?.adminNameEnglish,
-      adminDesignation: profile?.adminDesignation,
-      adminPhone: profile?.adminPhone,
+      nameBangla: profile?.nameBangla ?? "",
+      nameEnglish: profile?.nameEnglish ?? "",
+      eiin: profile?.eiin ?? "",
+      phone: profile?.phone ?? "",
     },
   });
   const { isSubmitting } = form.formState;
 
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        nameBangla: profile.nameBangla,
+        nameEnglish: profile.nameEnglish,
+        eiin: profile.eiin,
+        phone: profile.phone,
+      });
+    }
+  }, [profile, form]);
   //  update button
-  const onSubmit = async (data: ProfileUpdateType) => {
+  const onSubmit = async (data: InsituteProfileUpdateType) => {
     await handleCrudAction(instituteProfileUpdate, data, {
       successMessage: "Updated Successfully",
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["profile", "institute"] });
+      },
     });
+    console.log(data);
   };
 
-  useEffect(() => {
-    async function getProfile() {
-      try {
-        const info = await getInstituteProfile();
-        if (!info) {
-          setProfile(null);
-        }
-        const session = await currentUser();
-        SetSessionUser(session?.user);
-        setProfile(info);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    getProfile();
-  }, []);
-  if (profile === null) {
+  if (!profile || isPending) {
     return <SpinnerCustom />;
   }
   const editButton = () => {
@@ -86,22 +93,20 @@ export default function TabbedUserProfile() {
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-semibold">
-              {profile.instituteNameBangla}
-            </h1>
+            <h1 className="text-2xl font-semibold">{profile?.nameBangla}</h1>
             <p className="text-muted-foreground text-[16px]">
-              {profile.instituteNameEnglish}
+              {profile?.nameEnglish}
             </p>
             <p className="text-muted-foreground mt-2 text-[14px]">
-              {profile.upazila}, {profile.district}, {profile.division} ।
+              {profile?.upazila}, {profile?.district}, {profile?.division} ।
             </p>
           </div>
         </div>
-        {!sessionUser?.emailVerified && (
+        {!user?.user?.emailVerified && (
           <div className="mb-5">
             <RedAlert
               title="Account is not verified!"
-              description={`Please verify your account. ${sessionUser?.email}`}
+              description={`Please verify your account. ${user?.user?.email}`}
             />
           </div>
         )}
@@ -141,50 +146,51 @@ export default function TabbedUserProfile() {
                     <CiEdit /> Edit
                   </Button>
                 </div>
+                <FormProvider {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <FormInput
+                        control={form.control}
+                        name="nameEnglish"
+                        label="Institute English Name"
+                        placeholder="Enter English name"
+                        disabled={lock}
+                        description={form.formState.errors.nameEnglish?.message}
+                      />
+                      <FormInput
+                        control={form.control}
+                        name="nameBangla"
+                        label="Institute Bangla Name"
+                        placeholder="Enter Bangla name"
+                        disabled={lock}
+                        description={form.formState.errors.nameBangla?.message}
+                      />
+                      <FormInput
+                        control={form.control}
+                        name="eiin"
+                        label="Institute EIIN Name"
+                        placeholder="Enter EIIN"
+                        disabled={lock}
+                        description={form.formState.errors.eiin?.message}
+                      />
 
-                <form onSubmit={form.handleSubmit(onSubmit)}>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {/* ---------------- */}
-                    <div className="space-y-2">
-                      <Label>প্রতিষ্ঠান প্রধানের নাম: (বাংলায়)</Label>
-                      <Input
+                      <FormInput
+                        control={form.control}
+                        name="phone"
+                        label="Institute Phone"
+                        placeholder="Enter Phone"
                         disabled={lock}
-                        defaultValue={profile.adminNameBangla}
-                        {...form.register("adminNameBangla")}
+                        description={form.formState.errors.phone?.message}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>প্রতিষ্ঠান প্রধানের নাম: (ইংরেজিতে)</Label>
-                      <Input
-                        disabled={lock}
-                        defaultValue={profile.adminNameEnglish}
-                        {...form.register("adminNameEnglish")}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>প্রতিষ্ঠান প্রধানের পদবী:</Label>
-                      <Input
-                        disabled={lock}
-                        defaultValue={profile.adminDesignation}
-                        {...form.register("adminDesignation")}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>প্রতিষ্ঠান প্রধানের ফোন:</Label>
-                      <Input
-                        disabled={lock}
-                        defaultValue={profile.adminPhone}
-                        {...form.register("adminPhone")}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="mt-6 flex justify-end">
-                    <Button type="submit" disabled={lock}>
-                      {isSubmitting && <Spinner />} Save Changes
-                    </Button>
-                  </div>
-                </form>
+                    <div className="mt-6 flex justify-end">
+                      <Button type="submit" disabled={lock}>
+                        {isSubmitting && <Spinner />} Save Changes
+                      </Button>
+                    </div>
+                  </form>
+                </FormProvider>
               </CardContent>
             </Card>
 

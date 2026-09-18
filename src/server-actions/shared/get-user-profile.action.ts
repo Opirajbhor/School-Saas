@@ -3,6 +3,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@/src/db";
 import { instituteProfile, teachers } from "@/src/db/schema";
 import { requireUserContext } from "./get-user-context.action";
+import {
+  InsituteProfileUpdateType,
+  insituteProfileUpdateZod,
+} from "@/src/validation/institute-profile.zod";
+import { revalidatePath } from "next/cache";
 
 // get login institute profile
 export async function getInstituteProfile() {
@@ -52,44 +57,45 @@ export async function getLoggedInTeacher() {
 }
 
 // institute profile update
-export async function instituteProfileUpdate(
-  data: ProfileUpdateType,
-): Promise<ValidationResult<ProfileUpdateType>> {
-  const session = await currentUser();
-  const userId = await session?.user.id;
-  if (!userId) {
-    return {
-      success: false,
-      error: "Institute not found",
-      details: {},
-    };
-  }
-
-  // parse with zod-----------------
-  const result = parseWithZod(profileUpdateZod, data);
-  if (!result.success) return result;
-  // parse with zod-----------------
-
+export async function instituteProfileUpdate(data: InsituteProfileUpdateType) {
   try {
-    const [updatedProfile] = await db
-      .update(instituteProfile)
-      .set(result.data)
-      .where(eq(instituteProfile.userId, userId))
-      .returning();
+    // 1. Auth — get institute ID from session
+    const { instituteId } = await requireUserContext();
 
-    if (!updatedProfile) {
+    // 2. Validate input
+    const parsed = insituteProfileUpdateZod.safeParse(data);
+    if (!parsed.success) {
       return {
         success: false as const,
-        error: "Profile records could not be found.",
+        error: "Validation failed",
+        details: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    // 3. Update record
+    const [updated] = await db
+      .update(instituteProfile)
+      .set(parsed.data)
+      .where(eq(instituteProfile.id, instituteId))
+      .returning();
+
+    if (!updated) {
+      return {
+        success: false as const,
+        error: "Institute not found",
         details: {},
       };
     }
-    return { success: true as const, data: updatedProfile };
+
+    // 4. Revalidate cached pages
+    revalidatePath("/dashboard/profile");
+
+    return { success: true as const, data: updated };
   } catch (error) {
-    console.error("Database error in instituteProfileUpdate:", error);
+    console.error("instituteProfileUpdate error:", error);
     return {
       success: false as const,
-      error: "Profile records could not be found.",
+      error: error instanceof Error ? error.message : "Something went wrong",
       details: {},
     };
   }

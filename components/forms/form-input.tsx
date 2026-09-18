@@ -22,9 +22,10 @@ type FormInputProps<TFieldValues extends FieldValues> = {
   description?: string;
   disabled?: boolean;
   className?: string;
+  defaultValue?: string;
 } & Omit<
   React.ComponentProps<"input">,
-  "name" | "type" | "value" | "defaultValue" | "onChange" | "onBlur"
+  "name" | "type" | "value" | "onChange" | "onBlur"
 >;
 
 export function FormInput<TFieldValues extends FieldValues>({
@@ -36,6 +37,7 @@ export function FormInput<TFieldValues extends FieldValues>({
   description,
   disabled,
   className,
+  defaultValue,
   ...inputProps
 }: FormInputProps<TFieldValues>) {
   return (
@@ -54,6 +56,7 @@ export function FormInput<TFieldValues extends FieldValues>({
               placeholder={placeholder}
               disabled={disabled}
               value={field.value ?? ""}
+              defaultValue={defaultValue}
             />
           </FormControl>
 
