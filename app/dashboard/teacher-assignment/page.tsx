@@ -1,10 +1,12 @@
-"use client";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubjectTeacherAssign from "./subject-teacher-assign-page";
 import { ClassTeacherAssign } from "./class-teacher-assign-page";
+import { AccessServer } from "@/src/protected-routes/role-access-server";
+import { redirect } from "next/navigation";
 
-export default function Page() {
+export default async function Page() {
+  const { allowed } = await AccessServer("admin");
+  if (!allowed) redirect("/unauthorize");
   return (
     <div>
       <div className="p-3">
