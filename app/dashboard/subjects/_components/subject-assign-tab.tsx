@@ -152,12 +152,12 @@ export function SubjectAssignTab() {
                 name="groupId"
                 label="Group Name"
                 disabled={subType !== "GROUP_BASED"}
-                options={(selectedClassData?.groupClasses ?? []).map(
-                  (item) => ({
-                    label: item.group.name,
-                    value: item.group.id as string,
-                  }),
-                )}
+                options={(selectedClassData?.groupClasses ?? [])
+                  .filter((item) => item?.group.id)
+                  .map((item) => ({
+                    label: item.group?.name,
+                    value: item.groupId,
+                  }))}
               />
 
               {/* --------subjects list-------------- */}

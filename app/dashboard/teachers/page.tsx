@@ -104,7 +104,7 @@ export default function Teacherpage() {
                 <div className="flex items-center gap-3">
                   <Avatar className="size-10">
                     <AvatarImage
-                      src={teacher.photoUrl}
+                      src={teacher.photoUrl ?? ""}
                       alt={teacher.nameEnglish}
                     />
 

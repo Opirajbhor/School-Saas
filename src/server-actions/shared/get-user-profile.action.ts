@@ -51,7 +51,7 @@ export async function getLoggedInTeacher() {
 
     return teacher;
   } catch (error) {
-    console.log("teacher data not found", error);
+    console.error("teacher data not found", error);
     throw new Error("Teacher Data not Found");
   }
 }

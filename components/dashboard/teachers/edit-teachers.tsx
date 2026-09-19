@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { MdEditNote } from "react-icons/md";
 import { toast } from "sonner";
@@ -39,9 +38,9 @@ export default function EditTeachers({ user }: DeleteTeacherProps) {
       designation: user.designation,
       mobile: user.mobile,
       email: user.email,
-      photoUrl: user.photoUrl,
-      gender: user.gender,
-      status: user.status,
+      photoUrl: user?.photoUrl ?? "",
+      gender: user?.gender as "MALE" | "FEMALE" | "OTHER",
+      status: user?.status as "ACTIVE" | "INACTIVE",
     },
   });
   const { isSubmitting } = form.formState;
@@ -81,7 +80,7 @@ export default function EditTeachers({ user }: DeleteTeacherProps) {
             <CardContent className="p-0 h-full flex flex-col">
               <div className="border-b p-6 flex flex-col items-center">
                 <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage src={user.photoUrl} />
+                  <AvatarImage src={user.photoUrl ?? ""} />
                   <AvatarFallback>
                     {user.nameEnglish
                       ?.split(" ")

@@ -22,7 +22,6 @@ const quickActions = [
 ];
 export async function Welcome({ institute, teacher }: ProfileComponentProps) {
   const { nameEnglish } = institute;
-  console.log(teacher);
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div>

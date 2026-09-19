@@ -70,7 +70,6 @@ export default function Page() {
       router.push("/auth/onboarding/admin-profile");
     }
     if (!result.success) {
-      console.log(result.error);
       toast.error(result.error || "Error creating institute profile");
     }
   };

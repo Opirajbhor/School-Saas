@@ -12,60 +12,47 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
 import { postSection } from "@/src/server-actions/classes.action";
 import {
   classesTypeWithId,
+  SectionInputType,
   sectionType,
   sectionZod,
 } from "@/src/validation/classes.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 export default function AddClassSection({
   classData,
-  setClasses,
 }: {
   classData: classesTypeWithId;
-  setClasses: React.Dispatch<
-    React.SetStateAction<classesTypeWithId[] | undefined>
-  >;
 }) {
   const { name, id } = classData;
   const [load, setLoad] = useState(false);
+  const queryClient = useQueryClient();
 
   const [isOpen, setIsOpen] = useState(false);
-  const form = useForm<sectionType>({
+  const form = useForm<SectionInputType>({
     resolver: zodResolver(sectionZod),
     defaultValues: {
-      instituteId: "",
-      userId: "",
-      sessionId: "",
       classId: id,
-      name: "",
     },
   });
-  const addBtn = async (data: sectionType) => {
+  const addBtn = async (data: SectionInputType) => {
     setLoad(true);
-    try {
-      const res = await postSection(data);
-      if (res.success) {
-        toast.success("Section Created Succesfully");
-        setClasses((prev) =>
-          prev?.map((cls) =>
-            cls.id === classData.id
-              ? { ...cls, sections: [...(cls.sections || []), data] }
-              : cls,
-          ),
-        );
-      }
-    } catch (error) {
-      toast.error("Error Creating Section");
-      console.error(error);
-    } finally {
-      setIsOpen(false);
-      setLoad(false);
-    }
+    await handleCrudAction(postSection, data, {
+      successMessage: "Section Created Succesfully",
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["classes", "sections"],
+        });
+      },
+    });
+
+    setIsOpen(false);
+    setLoad(false);
   };
 
   return (

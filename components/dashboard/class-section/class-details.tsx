@@ -21,16 +21,11 @@ import {
 } from "@/src/server-actions/classes.action";
 import { Eye } from "lucide-react";
 import StatusToggleModal from "@/components/modal/status-modal";
+import { useQueryClient } from "@tanstack/react-query";
 
-export function ClassDetails({
-  classData,
-  setClasses,
-}: {
-  classData: classesTypeWithId;
-  setClasses: React.Dispatch<
-    React.SetStateAction<classesTypeWithId[] | undefined>
-  >;
-}) {
+export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
+  const queryClient = useQueryClient();
+
   const { name, status, sessionId, id, sections } = classData;
   return (
     <Sheet>
@@ -86,18 +81,9 @@ export function ClassDetails({
                     id={item.id!}
                     onDelete={deleteSection}
                     onSuccess={() => {
-                      setClasses((prev) =>
-                        prev?.map((cls) =>
-                          cls.id === id
-                            ? {
-                                ...cls,
-                                sections: cls.sections?.filter(
-                                  (s) => s.id !== item.id,
-                                ),
-                              }
-                            : cls,
-                        ),
-                      );
+                      queryClient.invalidateQueries({
+                        queryKey: ["classes", "sections"],
+                      });
                     }}
                   />
                 </div>
@@ -108,24 +94,16 @@ export function ClassDetails({
             <Button className="w-full cursor-pointer mb-3" variant={"outline"}>
               Edit
             </Button>
-            <AddClassSection classData={classData} setClasses={setClasses} />
+            <AddClassSection classData={classData} />
 
             {id && (
               <StatusToggleModal
                 id={id}
                 onDelete={ToggleClassStatus}
                 onSuccess={() => {
-                  setClasses((prev) =>
-                    prev?.map((c) =>
-                      c?.id === id
-                        ? {
-                            ...c,
-                            status:
-                              c.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                          }
-                        : c,
-                    ),
-                  );
+                  queryClient.invalidateQueries({
+                    queryKey: ["classes", "sections"],
+                  });
                 }}
               />
             )}

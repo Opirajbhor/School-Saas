@@ -36,12 +36,13 @@ export type OutputGroupClassType = {
   name: string;
   status: string;
   groupClasses: {
-    class: {
-      id: string;
-      groupId: string;
-      classId: string;
+    id: string;
+    groupId: string;
+    group: {
       name: string;
+      id: string;
     };
+    name: string;
     classId: string;
   }[];
 };

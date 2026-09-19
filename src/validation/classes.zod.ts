@@ -37,13 +37,14 @@ export const sectionZod = z.object({
   classId: z.string({
     message: "class is required",
   }),
+  status: z.enum(statusEnumValues).default("ACTIVE"),
 });
 
-export type sectionTypeWithId = z.infer<typeof sectionZod>;
+export type SectionInputType = z.input<typeof sectionZod>;
 
-export type sectionType = sectionTypeWithId & {
+export type sectionType = SectionInputType & {
   id?: string;
-  status: string;
+  status?: string;
 };
 
 // for classes and nested groups in the server action-------

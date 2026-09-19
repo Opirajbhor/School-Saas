@@ -73,7 +73,6 @@ export default function TabbedUserProfile() {
         queryClient.invalidateQueries({ queryKey: ["profile", "institute"] });
       },
     });
-    console.log(data);
   };
 
   if (!profile || isPending) {

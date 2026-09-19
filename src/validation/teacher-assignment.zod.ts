@@ -4,7 +4,7 @@ import {
   sectionClassTeachers,
   sectionSubjectTeachers,
 } from "../db/schema/teacher-assignment.drizzle";
-import { classesType, sectionType, sectionTypeWithId } from "./classes.zod";
+import { classesType, sectionType } from "./classes.zod";
 import { editTeacherType, Teacherlist } from "./teacher.zod";
 import { OutputSubAssignType, OutputSubjectType } from "./subjects.zod";
 import { outputGroupType } from "./groups.zod";
@@ -35,7 +35,7 @@ export const selectSectionClassTeacherZod =
 
 export type classTeacherType = z.infer<typeof selectSectionClassTeacherZod> & {
   class: classesType;
-  section: sectionTypeWithId;
+  section: sectionType;
   teacher: editTeacherType;
 };
 

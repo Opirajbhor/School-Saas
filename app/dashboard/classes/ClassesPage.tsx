@@ -29,25 +29,26 @@ import {
   classesZod,
 } from "@/src/validation/classes.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function ClassesPage() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [classes, setClasses] = useState<classesTypeWithId[]>();
+  // get classes and sections
+  const queryClient = useQueryClient();
+  const { data: classes = [], isPending } = useQuery<classesTypeWithId[]>({
+    queryKey: ["classes", "sections"],
+    queryFn: async () => {
+      const result = await getClasses();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data as classesTypeWithId[];
+    },
+  });
   const allSections = classes?.flatMap((cls) => cls.sections || []) ?? [];
 
-  // get classes and sections
-  useEffect(() => {
-    async function getlist() {
-      await clientReadAction(getClasses, {
-        onSuccess: (data) => setClasses(data as classesTypeWithId[]),
-        onLoading: setLoading,
-      });
-    }
-    getlist();
-  }, []);
   // RHF
   const form = useForm<classesType>({
     resolver: zodResolver(classesZod),
@@ -61,16 +62,16 @@ export default function ClassesPage() {
   const addBtn = async (data: classesType) => {
     await handleCrudAction(postClasses, data, {
       successMessage: "Class created successfully",
-      onSuccess: (newClass) => {
-        setClasses(
-          (prev) => [...(prev || []), newClass] as classesTypeWithId[],
-        );
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["classes", "sections"],
+        });
         form.reset();
       },
     });
   };
 
-  if (loading) {
+  if (isPending) {
     return <SpinnerCustom />;
   }
   return (
@@ -180,29 +181,16 @@ export default function ClassesPage() {
                         className={`flex items-center justify-end gap-1 transition-opacity`}
                       >
                         <>
-                          <ClassDetails
-                            classData={item}
-                            setClasses={setClasses}
-                          />
+                          <ClassDetails classData={item} />
                           {item?.id && (
                             <StatusToggleModal
                               id={item.id}
                               onDelete={ToggleClassStatus}
                               onSuccess={() => {
                                 form.reset();
-                                setClasses((prev) =>
-                                  prev?.map((c) =>
-                                    c?.id === item.id
-                                      ? {
-                                          ...c,
-                                          status:
-                                            c.status === "ACTIVE"
-                                              ? "INACTIVE"
-                                              : "ACTIVE",
-                                        }
-                                      : c,
-                                  ),
-                                );
+                                queryClient.invalidateQueries({
+                                  queryKey: ["classes", "sections"],
+                                });
                               }}
                             />
                           )}

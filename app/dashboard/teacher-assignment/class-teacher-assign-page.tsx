@@ -63,7 +63,7 @@ export function ClassTeacherAssign() {
     classInfo
       ?.map((item) => ({
         ...item,
-        sections: item.sections.filter(
+        sections: (item?.sections ?? []).filter(
           (sec) => !classTeachers?.some((ct) => sec.id === ct.sectionId),
         ),
       }))
@@ -118,8 +118,10 @@ export function ClassTeacherAssign() {
                 label="Select Class"
                 options={
                   (availableSections ?? [])
-                    .filter((item) => item.id !== undefined)
-                    .filter((item) => item.status === "ACTIVE")
+                    .filter(
+                      (item): item is typeof item & { id: string } =>
+                        item.id !== undefined && item.status === "ACTIVE",
+                    )
                     .map((item) => ({
                       label: item.name,
                       value: item.id,

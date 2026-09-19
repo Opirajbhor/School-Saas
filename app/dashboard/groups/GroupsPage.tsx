@@ -151,9 +151,7 @@ export default function GroupsPage() {
                   render: (item) => (
                     <div>
                       {item.groupClasses.length > 0
-                        ? item?.groupClasses
-                            .map((gc) => gc?.class?.name)
-                            .join(", ")
+                        ? item?.groupClasses.map((gc) => gc?.name).join(", ")
                         : "Not Assigned"}
                     </div>
                   ),
