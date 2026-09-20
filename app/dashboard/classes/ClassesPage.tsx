@@ -2,6 +2,7 @@
 import { ClassDetails } from "@/components/dashboard/class-section/class-details";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { SpinnerCustom } from "@/components/Spinner";
+import { DataTable } from "@/components/table/tanstack/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
 import {
   getClasses,
   postClasses,
@@ -31,8 +31,9 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+
 import { useForm } from "react-hook-form";
+import { columns } from "./_table/columns";
 
 export default function ClassesPage() {
   // get classes and sections
@@ -104,105 +105,13 @@ export default function ClassesPage() {
         </Card>
       </div>
       {/* ....... */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        {/* Data Table Section */}
-        <div className="lg:col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
-          {/* Table Header/Toolbar */}
-          <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-muted/30">
-            <div className="text-lg font-semibold text-foreground flex items-center gap-5">
-              Academic Classes
-              <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                {classes?.length} Classes
-              </Badge>
-            </div>
-          </div>
 
-          {/* Responsive Table Wrapper */}
-          <div className="overflow-x-auto p-5">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
-                    Class Name
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/4">
-                    Status
-                  </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider w-1/6">
-                    Sections
-                  </TableHead>
-
-                  <TableHead className="font-semibold text-muted-foreground uppercase text-xs tracking-wider text-right w-1/6">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {classes?.map((item, i) => (
-                  <TableRow
-                    key={i}
-                    className={`${
-                      item.status === "ACTIVE"
-                        ? "bg-primary/5 hover:bg-primary/10"
-                        : "hover:bg-muted/50"
-                    } transition-colors group`}
-                  >
-                    {/* name */}
-                    <TableCell className="py-3">
-                      <div className={`font-medium $`}>{item.name}</div>
-                    </TableCell>
-                    {/* status */}
-                    <TableCell className="py-3">
-                      <Badge
-                        className={`${item.status === "ACTIVE" ? "bg-green-600" : "bg-gray-400"} border`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full bg-primary/5 hover:bg-primary/10 mr-1.5 inline-block`}
-                        >
-                          *
-                        </span>
-                        {item.status}
-                      </Badge>
-                    </TableCell>
-                    {/* total sections */}
-                    <TableCell className="font-medium flex items-center gap-2 text-foreground py-3">
-                      <Badge variant="secondary">{item.sections?.length}</Badge>
-                      <Badge variant="outline">
-                        {item.sections
-                          ?.slice()
-                          .sort((a, b) => a.name.localeCompare(b.name))
-                          .map((s) => s.name)
-                          .join(", ")}
-                      </Badge>
-                    </TableCell>
-                    {/* actions */}
-                    <TableCell className="text-right py-3">
-                      <div
-                        className={`flex items-center justify-end gap-1 transition-opacity`}
-                      >
-                        <>
-                          <ClassDetails classData={item} />
-                          {item?.id && (
-                            <StatusToggleModal
-                              id={item.id}
-                              onDelete={ToggleClassStatus}
-                              onSuccess={() => {
-                                form.reset();
-                                queryClient.invalidateQueries({
-                                  queryKey: ["classes", "sections"],
-                                });
-                              }}
-                            />
-                          )}
-                        </>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        <div className="lg:col-span-4">
+          <DataTable columns={columns} data={classes} />
         </div>
+        {/* Data Table Section */}
+
         {/* <!--  Add session Form --> */}
         <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">

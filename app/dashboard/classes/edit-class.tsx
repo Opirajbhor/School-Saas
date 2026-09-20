@@ -26,7 +26,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { Controller } from "react-hook-form";
 
 import { Checkbox } from "@/components/ui/checkbox";
-export default function EditSession({
+export default function EditClass({
   session,
   setSessions,
 }: {
@@ -85,7 +85,7 @@ export default function EditSession({
 
         <form
           onSubmit={handleSubmit(onSubmit, (errors) =>
-            console.error("Validation Errors:", errors),
+            console.log("Validation Errors:", errors),
           )}
         >
           <div className="overflow-hidden">

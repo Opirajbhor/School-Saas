@@ -33,6 +33,8 @@ import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
 import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import StatusToggleModal from "@/components/modal/status-modal";
+import { DataTable } from "@/components/table/tanstack/data-table";
+import { columns } from "./_table/columns";
 
 export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,6 +113,8 @@ export default function Page() {
             </div>
           </div>
         </CardHeader>
+        {students && <DataTable columns={columns} data={students} />}
+
         <CardContent className="p-0">
           {/* Table */}
           <div className="overflow-x-auto">
