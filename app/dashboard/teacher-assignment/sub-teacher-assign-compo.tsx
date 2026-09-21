@@ -11,7 +11,7 @@ import {
   subjectTeacherZod,
 } from "@/src/validation/teacher-assignment.zod";
 import { FormSelect } from "@/components/forms/form-select";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { assignSubjectTeacher } from "@/src/server-actions/teacher-assignment.action";
 
 export default function AssingTeacherModal({

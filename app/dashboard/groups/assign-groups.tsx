@@ -18,7 +18,7 @@ import {
   OutputGroupClassType,
 } from "@/src/validation/groups.zod";
 import { assignGroupClasses } from "@/src/server-actions/groups.action";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormCheckboxGroup } from "@/components/forms/form-checkbox-group";

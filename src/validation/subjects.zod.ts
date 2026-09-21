@@ -1,6 +1,6 @@
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { subjectDbSchema } from "../db/schema";
+import { subjectDbSchema } from "../drizzle-DB/schema";
 
 export const religionEnumValues = [
   "ISLAM",

@@ -1,5 +1,5 @@
 import { createUpdateSchema } from "drizzle-zod";
-import { instituteProfile } from "../db/schema";
+import { instituteProfile } from "../drizzle-DB/schema";
 import z from "zod";
 
 export const insituteProfileUpdateZod = createUpdateSchema(instituteProfile);

@@ -1,6 +1,6 @@
 import { InferSelectModel } from "drizzle-orm";
 import { z } from "zod";
-import { teachers } from "../db/schema";
+import { teachers } from "../drizzle-DB/schema";
 
 export const addTeacherZod = z
   .object({

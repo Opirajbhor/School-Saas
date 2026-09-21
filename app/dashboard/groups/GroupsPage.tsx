@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
+import { clientReadAction } from "@/src/server-actions/crud-funtions/client-read-action";
 
 import {
   addGroupZod,

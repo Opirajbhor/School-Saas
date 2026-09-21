@@ -33,9 +33,9 @@ import { Plus, Edit, Calendar, BarChart3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import DeleteModal from "@/components/modal/delete-modal";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+import { clientReadAction } from "@/src/server-actions/crud-funtions/client-read-action";
 import { SpinnerCustom } from "@/components/Spinner";
 import EditSession from "./edit-session";
 

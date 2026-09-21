@@ -1,28 +1,13 @@
 "use client";
-import { ClassDetails } from "@/components/dashboard/class-section/class-details";
-import StatusToggleModal from "@/components/modal/status-modal";
 import { SpinnerCustom } from "@/components/Spinner";
 import { DataTable } from "@/components/table/tanstack/data-table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
-import {
-  getClasses,
-  postClasses,
-  ToggleClassStatus,
-} from "@/src/server-actions/classes.action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
+import { getClasses, postClasses } from "@/src/server-actions/classes.action";
 import {
   classesType,
   classesTypeWithId,
@@ -107,10 +92,10 @@ export default function ClassesPage() {
       {/* ....... */}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        {/* Data Table Section */}
         <div className="lg:col-span-4">
           <DataTable columns={columns} data={classes} />
         </div>
-        {/* Data Table Section */}
 
         {/* <!--  Add session Form --> */}
         <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">

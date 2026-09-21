@@ -19,7 +19,7 @@ import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
 import Title from "@/components/Title";
 import TeacherStats from "@/components/dashboard/teachers/teacher-card";
 import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
-import { clientReadAction } from "@/src/lib/crud-funtions/client-read-action";
+import { clientReadAction } from "@/src/server-actions/crud-funtions/client-read-action";
 import { SpinnerCustom } from "@/components/Spinner";
 
 import { AppTable } from "@/components/table/data-table";

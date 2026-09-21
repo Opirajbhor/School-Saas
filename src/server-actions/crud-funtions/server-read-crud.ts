@@ -1,4 +1,4 @@
-import { db } from "@/src/db";
+import { db } from "@/src/drizzle-DB";
 import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import { eq, SQL, type Column, type Table } from "drizzle-orm";
 

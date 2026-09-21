@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/native-select";
 import { addTeacher } from "@/src/server-actions/teacher.action";
 import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { useQueryClient } from "@tanstack/react-query";
 import { FormInput } from "@/components/forms/form-input";
 import { FormSelect } from "@/components/forms/form-select";

@@ -1,7 +1,7 @@
 import type { PgTable } from "drizzle-orm/pg-core";
 import { AnyColumn, and, eq } from "drizzle-orm";
 import { requireInstitute } from "@/src/server-actions/get-institute-profile";
-import { db } from "@/src/db";
+import { db } from "@/src/drizzle-DB";
 
 export type InstituteTable = PgTable & {
   id: AnyColumn;

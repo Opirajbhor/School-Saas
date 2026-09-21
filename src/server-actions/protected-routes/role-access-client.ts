@@ -1,7 +1,7 @@
 // src/hooks/use-can.ts
 "use client";
 
-import { useSession } from "../better-auth/auth-client";
+import { useSession } from "../../better-auth/auth-client";
 
 type Role = "admin" | "teacher" | "user";
 

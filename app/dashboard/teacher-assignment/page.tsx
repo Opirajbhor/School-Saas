@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubjectTeacherAssign from "./subject-teacher-assign-page";
 import { ClassTeacherAssign } from "./class-teacher-assign-page";
-import { AccessServer } from "@/src/protected-routes/role-access-server";
+import { AccessServer } from "@/src/server-actions/protected-routes/role-access-server";
 import { redirect } from "next/navigation";
 
 export default async function Page() {

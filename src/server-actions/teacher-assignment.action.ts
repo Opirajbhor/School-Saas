@@ -13,28 +13,28 @@ import {
   sectionClassTeacherZod,
   subjectTeacherZod,
 } from "../validation/teacher-assignment.zod";
-import { createRecord } from "../lib/crud-funtions/server-create-crud";
+import { createRecord } from "./crud-funtions/server-create-crud";
 import {
   sectionClassTeachers,
   sectionSubjectTeachers,
-} from "../db/schema/teacher-assignment.drizzle";
+} from "../drizzle-DB/schema/teacher-assignment.drizzle";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
-import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
+import { readMany, readRecord } from "./crud-funtions/server-read-crud";
 import { and, eq } from "drizzle-orm";
-import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
+import { deleteRecord } from "./crud-funtions/server-delete-crud";
 import {
   classesDrizzle,
   groupClasses,
   subjectAssignSchema,
-} from "../db/schema";
+} from "../drizzle-DB/schema";
 import { Teacherlist } from "../validation/teacher.zod";
 import {
   classesTypeWithId,
   ClassWithSectionType,
 } from "../validation/classes.zod";
-import { db } from "../db";
-import { updateRecord } from "../lib/crud-funtions/server-update-crud";
+import { db } from "../drizzle-DB";
+import { updateRecord } from "./crud-funtions/server-update-crud";
 
 // ---------------- class teacher ---------------
 

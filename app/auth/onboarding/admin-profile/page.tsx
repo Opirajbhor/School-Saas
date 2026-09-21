@@ -4,7 +4,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { useQueryClient } from "@tanstack/react-query";
 import { FormInput } from "@/components/forms/form-input";
 import { adminProfileAction } from "@/src/server-actions/auth/signup.action";

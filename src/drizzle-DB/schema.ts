@@ -9,5 +9,5 @@ export * from "./schema/groups.drizzle";
 export * from "./schema/enums-drizzle";
 export * from "./schema/enrollments.drizzle";
 export * from "./schema/teacher-assignment.drizzle";
-
-export * from "../db/relations/drizzleRelation";
+export * from "./schema/audit-logs/auditLogs.drizzle";
+export * from "./relations/drizzleRelation";

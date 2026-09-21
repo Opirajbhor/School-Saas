@@ -1,9 +1,9 @@
 "use server";
-import { db } from "../db";
-import { groupClasses, groups } from "../db/schema/groups.drizzle";
-import { createRecord } from "../lib/crud-funtions/server-create-crud";
-import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
-import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
+import { db } from "../drizzle-DB";
+import { groupClasses, groups } from "../drizzle-DB/schema/groups.drizzle";
+import { createRecord } from "./crud-funtions/server-create-crud";
+import { deleteRecord } from "./crud-funtions/server-delete-crud";
+import { readMany, readRecord } from "./crud-funtions/server-read-crud";
 import {
   addGroupZod,
   AssignGroupClassType,
@@ -11,9 +11,9 @@ import {
   inputGroupType,
 } from "../validation/groups.zod";
 import { and, eq, inArray } from "drizzle-orm";
-import { classesDrizzle } from "../db/schema";
+import { classesDrizzle } from "../drizzle-DB/schema";
 import { requireInstitute } from "./get-institute-profile";
-import { toggleStatus } from "../lib/crud-funtions/server-status.action";
+import { toggleStatus } from "./crud-funtions/server-status.action";
 
 // add
 export async function createGroup(data: inputGroupType) {

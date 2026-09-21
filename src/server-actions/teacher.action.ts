@@ -1,15 +1,15 @@
 "use server";
-import { db } from "../db";
+import { db } from "../drizzle-DB";
 import {
   addTeacherType,
   addTeacherZod,
   editTeacherType,
   Teacherlist,
 } from "../validation/teacher.zod";
-import { teachers } from "../db/schema/teacher.drizzle";
+import { teachers } from "../drizzle-DB/schema/teacher.drizzle";
 import { and, eq } from "drizzle-orm";
 import { parseWithZod } from "../validation/validator.zod";
-import { updateRecord } from "../lib/crud-funtions/server-update-crud";
+import { updateRecord } from "./crud-funtions/server-update-crud";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { requireInstitute } from "./get-institute-profile";

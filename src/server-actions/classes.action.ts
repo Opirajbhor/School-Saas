@@ -7,13 +7,13 @@ import {
   sectionType,
   sectionZod,
 } from "../validation/classes.zod";
-import { classesDrizzle, sectionDrizzle } from "../db/schema/classes.drizzle";
+import { classesDrizzle, sectionDrizzle } from "../drizzle-DB/schema/classes.drizzle";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
-import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
-import { readMany } from "../lib/crud-funtions/server-read-crud";
-import { toggleStatus } from "../lib/crud-funtions/server-status.action";
-import { createRecord } from "../lib/crud-funtions/server-create-crud";
+import { deleteRecord } from "./crud-funtions/server-delete-crud";
+import { readMany } from "./crud-funtions/server-read-crud";
+import { toggleStatus } from "./crud-funtions/server-status.action";
+import { createRecord } from "./crud-funtions/server-create-crud";
 
 // get classes and sections
 export async function getClasses() {

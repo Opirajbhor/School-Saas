@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   sectionClassTeachers,
   sectionSubjectTeachers,
-} from "../db/schema/teacher-assignment.drizzle";
+} from "../drizzle-DB/schema/teacher-assignment.drizzle";
 import { classesType, sectionType } from "./classes.zod";
 import { editTeacherType, Teacherlist } from "./teacher.zod";
 import { OutputSubAssignType, OutputSubjectType } from "./subjects.zod";

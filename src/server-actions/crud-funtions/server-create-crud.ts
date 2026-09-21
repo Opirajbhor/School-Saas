@@ -1,7 +1,9 @@
-import { db } from "@/src/db";
+import { db } from "@/src/drizzle-DB";
 import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { z } from "zod";
+import { auditLogAction } from "../audit-logs/createAuditLog.action";
+import { requireUserContext } from "../shared/get-user-context.action";
 
 type CreateConfig<T extends PgTable> = {
   // Runs before insert. Can check/change data.
@@ -37,7 +39,7 @@ export async function createRecord<T extends PgTable>(
   data: unknown,
 ) {
   try {
-    const profile = await requireInstitute();
+    const { instituteId, userId } = await requireUserContext();
 
     // Validate input first
     const parsed = config.zodSchema.safeParse(data);
@@ -65,9 +67,7 @@ export async function createRecord<T extends PgTable>(
         ...beforeData,
         ...config.additionFields,
 
-        // Always enforce the current institute
-        instituteId: profile.id,
-        userId: profile.userId,
+        instituteId: instituteId,
       };
 
       const [record] = await tx
@@ -83,6 +83,15 @@ export async function createRecord<T extends PgTable>(
           profile,
         });
       }
+      await auditLogAction({
+        instituteId: instituteId,
+        userId: userId,
+        action: "CREATE",
+        entity: "TEACHER",
+        entityId: teacher.id,
+        description: `Created teacher ${teacher.nameEnglish}`,
+        metadata: { after: teacher },
+      });
 
       return {
         success: true as const,
@@ -99,32 +108,3 @@ export async function createRecord<T extends PgTable>(
     };
   }
 }
-
-// // // use case
-// const result = await createRecord(
-//   {
-//     zodSchema: zod Schema Name,
-//     drizzleSchema: drizzle schema name,
-//     beforeCrud: async ({ data }) => {
-//       // Example: check duplicate teacher
-//       // return modified fields if needed
-//       return {
-//         data: data
-//       };
-//     },
-
-//     additionFields: {
-//       status: "ACTIVE",
-//     },
-
-//     afterCrud: async ({ record }) => {
-//       // Optional additional operation
-
-//     },
-//   },
-//   data: data,
-// );
-
-
-
-

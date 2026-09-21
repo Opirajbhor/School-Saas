@@ -1,4 +1,4 @@
-import { db } from "@/src/db";
+import { db } from "@/src/drizzle-DB";
 import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import { and, AnyColumn, eq } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";

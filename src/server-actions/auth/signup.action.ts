@@ -8,13 +8,13 @@ import {
   SignUpType,
   signUpZod,
 } from "../../validation/auth.zod";
-import { instituteProfile } from "../../db/schema/institute-profile-schema.drizzle";
-import { db } from "../../db";
+import { instituteProfile } from "../../drizzle-DB/schema/institute-profile-schema.drizzle";
+import { db } from "../../drizzle-DB";
 import { parseWithZod } from "../../validation/validator.zod";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { teachers, user } from "../../db/schema";
-import { createRecord } from "../../lib/crud-funtions/server-create-crud";
+import { teachers, user } from "../../drizzle-DB/schema";
+import { createRecord } from "../crud-funtions/server-create-crud";
 import { currentUser } from "./currentUser.action";
 import { requireUserContext } from "../shared/get-user-context.action";
 

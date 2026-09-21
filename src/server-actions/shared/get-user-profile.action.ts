@@ -1,7 +1,7 @@
 "use server";
 import { eq } from "drizzle-orm";
-import { db } from "@/src/db";
-import { instituteProfile, teachers } from "@/src/db/schema";
+import { db } from "@/src/drizzle-DB";
+import { instituteProfile, teachers } from "@/src/drizzle-DB/schema";
 import { requireUserContext } from "./get-user-context.action";
 import {
   InsituteProfileUpdateType,

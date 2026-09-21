@@ -2,21 +2,21 @@
 import {
   subjectAssignSchema,
   subjectDbSchema,
-} from "../db/schema/subjects.drizzle";
-import { createRecord } from "../lib/crud-funtions/server-create-crud";
+} from "../drizzle-DB/schema/subjects.drizzle";
+import { createRecord } from "./crud-funtions/server-create-crud";
 import {
   inputSubAssignType,
   InputSubjectType,
   inputSubjectZod,
   RawSubjectAssignment,
 } from "../validation/subjects.zod";
-import { readMany, readRecord } from "../lib/crud-funtions/server-read-crud";
+import { readMany, readRecord } from "./crud-funtions/server-read-crud";
 
 import { eq } from "drizzle-orm";
-import { toggleStatus } from "../lib/crud-funtions/server-status.action";
+import { toggleStatus } from "./crud-funtions/server-status.action";
 import { requireInstitute } from "./get-institute-profile";
 import { getActiveSessionId } from "./academicSession.action";
-import { db } from "../db";
+import { db } from "../drizzle-DB";
 
 // ------------ post a new subject ---------------
 export async function addSubjects(data: InputSubjectType) {

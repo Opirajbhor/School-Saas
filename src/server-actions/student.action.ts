@@ -1,13 +1,13 @@
 "use server";
 import { and, eq } from "drizzle-orm";
-import { db } from "../db";
-import { student } from "../db/schema/student.drizzle";
+import { db } from "../drizzle-DB";
+import { student } from "../drizzle-DB/schema/student.drizzle";
 import { AddStudentType, addStudentZod } from "../validation/student.zod";
-import { academicSessions, groupClasses } from "../db/schema";
-import { enrollments } from "../db/schema/enrollments.drizzle";
+import { academicSessions, groupClasses } from "../drizzle-DB/schema";
+import { enrollments } from "../drizzle-DB/schema/enrollments.drizzle";
 import { requireInstitute } from "./get-institute-profile";
-import { readMany } from "../lib/crud-funtions/server-read-crud";
-import { toggleStatus } from "../lib/crud-funtions/server-status.action";
+import { readMany } from "./crud-funtions/server-read-crud";
+import { toggleStatus } from "./crud-funtions/server-status.action";
 
 // get student
 export async function getStudents() {

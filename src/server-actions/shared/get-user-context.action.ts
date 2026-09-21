@@ -1,8 +1,8 @@
 "use server";
 import { eq } from "drizzle-orm";
 import { currentUser } from "../auth/currentUser.action";
-import { instituteProfile, teachers } from "@/src/db/schema";
-import { db } from "@/src/db";
+import { teachers } from "@/src/drizzle-DB/schema";
+import { db } from "@/src/drizzle-DB";
 import { redirect } from "next/navigation";
 
 // --------get user context -----------

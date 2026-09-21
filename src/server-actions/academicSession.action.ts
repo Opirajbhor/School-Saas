@@ -1,15 +1,15 @@
 "use server";
-import { db } from "../db";
+import { db } from "../drizzle-DB";
 import {
   academicSessionType,
   academicSessionZod,
 } from "../validation/academicSessions.zod";
-import { academicSessions } from "../db/schema/academic-session.drizzle";
+import { academicSessions } from "../drizzle-DB/schema/academic-session.drizzle";
 import { and, eq } from "drizzle-orm";
-import { createRecord } from "../lib/crud-funtions/server-create-crud";
-import { deleteRecord } from "../lib/crud-funtions/server-delete-crud";
-import { readRecord } from "../lib/crud-funtions/server-read-crud";
-import { updateRecord } from "../lib/crud-funtions/server-update-crud";
+import { createRecord } from "./crud-funtions/server-create-crud";
+import { deleteRecord } from "./crud-funtions/server-delete-crud";
+import { readRecord } from "./crud-funtions/server-read-crud";
+import { updateRecord } from "./crud-funtions/server-update-crud";
 
 // post
 export async function createSession(data: academicSessionType) {

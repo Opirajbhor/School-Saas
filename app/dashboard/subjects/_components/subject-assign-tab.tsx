@@ -4,7 +4,7 @@ import { FormSelect } from "@/components/forms/form-select";
 import { SpinnerCustom } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { getActiveClasses } from "@/src/server-actions/classes.action";
 import {
   getAssignSubjects,

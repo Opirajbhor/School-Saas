@@ -1,6 +1,6 @@
 // src/lib/auth/can.ts
 
-import { currentUser } from "../server-actions/auth/currentUser.action";
+import { currentUser } from "../auth/currentUser.action";
 
 type Role = "admin" | "user";
 

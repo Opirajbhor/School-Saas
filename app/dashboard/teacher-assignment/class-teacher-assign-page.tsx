@@ -5,7 +5,7 @@ import { SpinnerCustom } from "@/components/Spinner";
 import { AppTable } from "@/components/table/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { handleCrudAction } from "@/src/lib/crud-funtions/client-post-action";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import {
   assignClassTeacher,
   deleteAssignTeacher,

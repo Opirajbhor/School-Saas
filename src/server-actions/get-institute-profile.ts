@@ -1,8 +1,8 @@
 "use server";
 import { cache } from "react";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
-import { instituteProfile } from "../db/schema";
+import { db } from "../drizzle-DB";
+import { instituteProfile } from "../drizzle-DB/schema";
 import { currentUser } from "./auth/currentUser.action";
 
 // ================Temporary File ===================
