@@ -5,23 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import { clientReadAction } from "@/src/server-actions/crud-funtions/client-read-action";
 
 import {
   addGroupZod,
   inputGroupType,
   OutputGroupClassType,
 } from "@/src/validation/groups.zod";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +55,7 @@ export default function GroupsPage() {
   const { isSubmitting } = form.formState;
   // add button
   const addBtn = async (data: inputGroupType) => {
+    console.log(data);
     await handleCrudAction(createGroup, data, {
       successMessage: "Group Created Successfully",
       onSuccess: () => {

@@ -2,7 +2,6 @@
 import { db } from "../drizzle-DB";
 import { groupClasses, groups } from "../drizzle-DB/schema/groups.drizzle";
 import { createRecord } from "./crud-funtions/server-create-crud";
-import { deleteRecord } from "./crud-funtions/server-delete-crud";
 import { readMany, readRecord } from "./crud-funtions/server-read-crud";
 import {
   addGroupZod,
@@ -11,7 +10,6 @@ import {
   inputGroupType,
 } from "../validation/groups.zod";
 import { and, eq, inArray } from "drizzle-orm";
-import { classesDrizzle } from "../drizzle-DB/schema";
 import { requireInstitute } from "./get-institute-profile";
 import { toggleStatus } from "./crud-funtions/server-status.action";
 
@@ -21,6 +19,7 @@ export async function createGroup(data: inputGroupType) {
     {
       zodSchema: addGroupZod,
       drizzleSchema: groups,
+      entity: "GROUP",
     },
     data,
   );

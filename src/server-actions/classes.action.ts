@@ -7,7 +7,10 @@ import {
   sectionType,
   sectionZod,
 } from "../validation/classes.zod";
-import { classesDrizzle, sectionDrizzle } from "../drizzle-DB/schema/classes.drizzle";
+import {
+  classesDrizzle,
+  sectionDrizzle,
+} from "../drizzle-DB/schema/classes.drizzle";
 import { getActiveSessionId } from "./academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
 import { deleteRecord } from "./crud-funtions/server-delete-crud";
@@ -90,6 +93,7 @@ export async function postClasses(data: classesType) {
       zodSchema: classesZod,
       drizzleSchema: classesDrizzle,
       additionFields: { status: "ACTIVE", sessionId: sessionId },
+      entity: "CLASS",
     },
     data,
   );

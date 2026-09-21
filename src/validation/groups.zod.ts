@@ -1,14 +1,13 @@
 import { z } from "zod";
-import { statusEnumValues } from "./subjects.zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { groups } from "../drizzle-DB/schema";
 
-export const addGroupZod = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Group name is required")
-    .max(50, "Group name must be at most 50 characters"),
-
-  status: z.enum(statusEnumValues),
+// export const addGroupZod = createSelectSchema(groups);
+export const addGroupZod = createInsertSchema(groups).omit({
+  instituteId: true,
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export type inputGroupType = z.infer<typeof addGroupZod>;

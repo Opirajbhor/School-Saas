@@ -1,49 +1,41 @@
 import { db } from "@/src/drizzle-DB";
-import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { auditLogAction } from "../audit-logs/createAuditLog.action";
-import { requireUserContext } from "../shared/get-user-context.action";
+import { auditLogs } from "@/src/drizzle-DB/schema";
+import { InferInsertModel } from "drizzle-orm";
+import { getUserContext } from "../shared/get-user-context.action";
 
-type CreateConfig<T extends PgTable> = {
-  // Runs before insert. Can check/change data.
-  beforeCrud?: (params: {
-    data: T["$inferInsert"];
-    tx: typeof db;
-    profile: Awaited<ReturnType<typeof requireInstitute>>;
-  }) =>
-    | void
-    | Partial<T["$inferInsert"]>
-    | Promise<void | Partial<T["$inferInsert"]>>;
-
-  // Zod validation
+type TableWithId = PgTable & {
+  $inferSelect: { id: string; [key: string]: unknown };
+  $inferInsert: Record<string, unknown>;
+};
+type CreateConfig<T extends TableWithId> = {
   zodSchema: z.ZodType<Partial<T["$inferInsert"]>>;
-
-  // Extra fields to add before insert
   additionFields?: Partial<T["$inferInsert"]>;
-
-  // Runs after successful insert
-  afterCrud?: (params: {
-    record: T["$inferSelect"];
-    tx: typeof db;
-    profile: Awaited<ReturnType<typeof requireInstitute>>;
-  }) => void | Promise<void>;
-
-  // Drizzle table
   drizzleSchema: T;
+  entity: (typeof auditLogs.$inferInsert)["entity"];
+  describe?: (record: T["$inferSelect"]) => string;
 };
 
 // server create function
-export async function createRecord<T extends PgTable>(
+export async function createRecord<T extends TableWithId>(
   config: CreateConfig<T>,
   data: unknown,
 ) {
   try {
-    const { instituteId, userId } = await requireUserContext();
+    const ctx = await getUserContext();
+
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session foundF",
+        details: {},
+      };
+    }
+    const { userId, teacherId, instituteId } = ctx;
 
     // Validate input first
     const parsed = config.zodSchema.safeParse(data);
-
     if (!parsed.success) {
       return {
         success: false as const,
@@ -53,44 +45,30 @@ export async function createRecord<T extends PgTable>(
     }
 
     return await db.transaction(async (tx) => {
-      // Allow custom checks/modifications before insert
-      const beforeData = config.beforeCrud
-        ? await config.beforeCrud({
-            data: parsed.data,
-            tx: db,
-            profile,
-          })
-        : undefined;
-
       const insertData = {
         ...parsed.data,
-        ...beforeData,
         ...config.additionFields,
-
-        instituteId: instituteId,
-      };
+        instituteId,
+      } as InferInsertModel<typeof config.drizzleSchema>;
 
       const [record] = await tx
         .insert(config.drizzleSchema)
         .values(insertData)
         .returning();
 
-      // Run custom logic after successful insert
-      if (config.afterCrud) {
-        await config.afterCrud({
-          record,
-          tx: db,
-          profile,
-        });
+      if (!record) {
+        throw new Error("Insert failed");
       }
-      await auditLogAction({
-        instituteId: instituteId,
-        userId: userId,
+      // Run custom logic after successful insert
+      // audit logs
+      await tx.insert(auditLogs).values({
+        instituteId,
+        userId,
         action: "CREATE",
-        entity: "TEACHER",
-        entityId: teacher.id,
-        description: `Created teacher ${teacher.nameEnglish}`,
-        metadata: { after: teacher },
+        entity: config.entity,
+        entityId: (record as { id: string }).id,
+        description: config.describe?.(record) ?? `Created ${config.entity}`,
+        metadata: { after: record, teacherId },
       });
 
       return {

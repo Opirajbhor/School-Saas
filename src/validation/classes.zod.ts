@@ -1,19 +1,10 @@
 import { z } from "zod";
 import { statusEnumValues } from "./subjects.zod";
 import { outputGroupType } from "./groups.zod";
+import { createSelectSchema } from "drizzle-zod";
+import { classesDrizzle } from "../drizzle-DB/schema";
 
-export const classesZod = z.object({
-  instituteId: z
-    .string()
-    .uuid("Invalid institute ID")
-    .optional()
-    .or(z.literal("")),
-  name: z.string().trim().min(1, "class name is required").max(100),
-  sessionId: z.string({
-    message: "Session is required",
-  }),
-  status: z.enum(statusEnumValues).default("ACTIVE"),
-});
+export const classesZod = createSelectSchema(classesDrizzle);
 
 export type classesType = z.input<typeof classesZod>;
 
@@ -25,11 +16,6 @@ export type classesTypeWithId = classesType & {
 
 // section
 export const sectionZod = z.object({
-  instituteId: z
-    .string()
-    .uuid("Invalid institute ID")
-    .optional()
-    .or(z.literal("")),
   name: z.string().trim().min(1, "section name is required").max(100),
   sessionId: z.string({
     message: "Session is required",
