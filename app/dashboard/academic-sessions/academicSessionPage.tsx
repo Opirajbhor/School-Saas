@@ -21,7 +21,7 @@ import {
   createSession,
   deleteSessions,
   getSessions,
-} from "@/src/server-actions/academicSession.action";
+} from "@/app/dashboard/academic-sessions/_actions/academicSession.action";
 import {
   academicSessionType,
   academicSessionZod,

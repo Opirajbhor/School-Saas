@@ -13,17 +13,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import { postSection } from "@/src/server-actions/classes.action";
 import {
   classesTypeWithId,
   SectionInputType,
-  sectionType,
   sectionZod,
 } from "@/src/validation/classes.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { postSection } from "../_actions/classes.action";
 export default function AddClassSection({
   classData,
 }: {

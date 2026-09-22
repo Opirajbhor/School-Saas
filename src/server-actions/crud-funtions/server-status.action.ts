@@ -1,8 +1,9 @@
 import { db } from "@/src/drizzle-DB";
-import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import { and, eq, Table } from "drizzle-orm";
 import { DeleteConfig, InstituteTable } from "./server-delete-crud";
 import { PgColumn } from "drizzle-orm/pg-core";
+import { getUserContext } from "../shared/get-user-context.action";
+import { createAuditLog } from "../audit-logs/createAuditLog.action";
 
 type StatusTable = InstituteTable & {
   id: PgColumn;
@@ -15,42 +16,63 @@ export async function toggleStatus<T extends StatusTable>(
   id: string,
 ) {
   try {
-    const profile = await requireInstitute();
-    const table = config.drizzleSchema;
+    const ctx = await getUserContext();
 
-    const [record] = await db
-      .select()
-      .from(table as Table)
-      .where(and(eq(table.id, id), eq(table.instituteId, profile.id)))
-      .limit(1);
-
-    if (!record) {
+    if (!ctx) {
       return {
         success: false as const,
-        error: "Record not found",
+        error: "No User session foundF",
         details: {},
       };
     }
+    const { userId, instituteId } = ctx;
 
-    const newStatus =
-      typeof record.status === "boolean"
-        ? !record.status
-        : record.status === "ACTIVE"
-          ? "INACTIVE"
-          : "ACTIVE";
+    const table = config.drizzleSchema;
 
-    const [updated] = await db
-      .update(table)
-      .set({
-        status: newStatus,
-      } as Partial<T["$inferInsert"]>)
-      .where(and(eq(table.id, id), eq(table.instituteId, profile.id)))
-      .returning();
+    return await db.transaction(async (tx) => {
+      const [record] = await tx
+        .select()
+        .from(table as Table)
+        .where(and(eq(table.id, id), eq(table.instituteId, instituteId)))
+        .limit(1);
 
-    return {
-      success: true as const,
-      data: updated,
-    };
+      if (!record) {
+        return {
+          success: false as const,
+          error: "Record not found",
+          details: {},
+        };
+      }
+
+      const newStatus =
+        typeof record.status === "boolean"
+          ? !record.status
+          : record.status === "ACTIVE"
+            ? "INACTIVE"
+            : "ACTIVE";
+
+      const [updated] = await tx
+        .update(table)
+        .set({
+          status: newStatus,
+        } as Partial<T["$inferInsert"]>)
+        .where(and(eq(table.id, id), eq(table.instituteId, instituteId)))
+        .returning();
+
+      // ====== audit logs ==========
+      await createAuditLog(tx, {
+        instituteId,
+        userId,
+        action: "STATUS_CHANGED",
+        entity: config.entity,
+        entityId: (record as { id: string }).id,
+      });
+
+      return {
+        success: true as const,
+        data: updated,
+      };
+    });
   } catch (error) {
     console.error("Status toggle failed:", error);
 

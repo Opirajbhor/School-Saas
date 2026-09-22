@@ -1,16 +1,9 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  boolean,
-  text,
-  index,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, boolean, index } from "drizzle-orm/pg-core";
 import { unique } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { timestamps } from "./enums-drizzle";
 import { classesDrizzle } from "./classes.drizzle";
-import { relations } from "drizzle-orm";
 
 export const academicSessions = pgTable(
   "academic_sessions",

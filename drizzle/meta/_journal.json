@@ -372,6 +372,20 @@
       "when": 1790002993435,
       "tag": "0052_past_silhouette",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1790086032096,
+      "tag": "0053_unique_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1790090691918,
+      "tag": "0054_dazzling_roughhouse",
+      "breakpoints": true
     }
   ]
 }

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import { getClasses, postClasses } from "@/src/server-actions/classes.action";
 import {
   classesType,
   classesTypeWithId,
@@ -19,6 +18,7 @@ import { Plus } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { columns } from "./_table/columns";
+import { getClasses, postClasses } from "./_actions/classes.action";
 
 export default function ClassesPage() {
   // get classes and sections

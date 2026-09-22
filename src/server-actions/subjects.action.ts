@@ -15,7 +15,7 @@ import { readMany, readRecord } from "./crud-funtions/server-read-crud";
 import { eq } from "drizzle-orm";
 import { toggleStatus } from "./crud-funtions/server-status.action";
 import { requireInstitute } from "./get-institute-profile";
-import { getActiveSessionId } from "./academicSession.action";
+import { getActiveSessionId } from "../../app/dashboard/academic-sessions/_actions/academicSession.action";
 import { db } from "../drizzle-DB";
 
 // ------------ post a new subject ---------------

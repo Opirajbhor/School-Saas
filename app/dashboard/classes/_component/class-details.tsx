@@ -13,15 +13,13 @@ import {
 } from "@/components/ui/sheet";
 
 import { classesTypeWithId } from "@/src/validation/classes.zod";
-import AddClassSection from "./add-section";
 import DeleteModal from "@/components/modal/delete-modal";
-import {
-  deleteSection,
-  ToggleClassStatus,
-} from "@/src/server-actions/classes.action";
+
 import { Eye } from "lucide-react";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
+import { deleteSection, ToggleClassStatus } from "../_actions/classes.action";
+import AddClassSection from "./add-section";
 
 export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
   const queryClient = useQueryClient();

@@ -1,9 +1,9 @@
 "use server";
 import { cache } from "react";
 import { eq } from "drizzle-orm";
-import { db } from "../drizzle-DB";
-import { instituteProfile } from "../drizzle-DB/schema";
-import { currentUser } from "./auth/currentUser.action";
+import { instituteProfile } from "@/src/drizzle-DB/schema";
+import { db } from "@/src/drizzle-DB";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 
 // ================Temporary File ===================
 
@@ -18,12 +18,15 @@ type VerifyUserResult =
     };
 
 export const verifyUser = cache(async (): Promise<VerifyUserResult> => {
-  const session = await currentUser();
-  const userId = session?.user?.id;
-  if (!userId) {
-    console.warn("No active session found.");
-    return { success: false, error: "Unauthorized" };
+  const ctx = await getUserContext();
+
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session foundF",
+    };
   }
+  const { userId } = ctx;
   try {
     const profile = await db.query.instituteProfile.findFirst({
       where: eq(instituteProfile.userId, userId),

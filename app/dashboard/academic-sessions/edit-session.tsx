@@ -20,7 +20,7 @@ import {
   academicSessionZod,
   sessionList,
 } from "@/src/validation/academicSessions.zod";
-import { updateSessions } from "@/src/server-actions/academicSession.action";
+import { updateSessions } from "@/app/dashboard/academic-sessions/_actions/academicSession.action";
 import { toast } from "sonner";
 import { Dispatch, SetStateAction, useState } from "react";
 import { Controller } from "react-hook-form";

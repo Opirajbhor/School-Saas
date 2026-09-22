@@ -1,0 +1,1 @@
+ALTER TYPE "public"."audit_entity" ADD VALUE 'ASSIGNED_CLASS_TO_GROUP';

@@ -3,23 +3,13 @@
 import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { createColumnHelper } from "@tanstack/react-table";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import { ClassDetails } from "@/components/dashboard/class-section/class-details";
+import { ClassDetails } from "@/app/dashboard/classes/_component/class-details";
 import StatusToggleModal from "@/components/modal/status-modal";
-import { ToggleClassStatus } from "@/src/server-actions/classes.action";
+
 import { useQueryClient } from "@tanstack/react-query";
+import { ToggleClassStatus } from "../_actions/classes.action";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<DataTableFeatures, classesTypeWithId>();

@@ -17,7 +17,7 @@ import {
   assignGroupClassZod,
   OutputGroupClassType,
 } from "@/src/validation/groups.zod";
-import { assignGroupClasses } from "@/src/server-actions/groups.action";
+import { assignGroupClasses } from "@/app/dashboard/groups/_actions/groups.action";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

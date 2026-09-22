@@ -1,9 +1,12 @@
 import { db } from "@/src/drizzle-DB";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { auditLogs } from "@/src/drizzle-DB/schema";
 import { InferInsertModel } from "drizzle-orm";
 import { getUserContext } from "../shared/get-user-context.action";
+import {
+  AuditEntity,
+  createAuditLog,
+} from "../audit-logs/createAuditLog.action";
 
 type TableWithId = PgTable & {
   $inferSelect: { id: string; [key: string]: unknown };
@@ -13,7 +16,7 @@ type CreateConfig<T extends TableWithId> = {
   zodSchema: z.ZodType<Partial<T["$inferInsert"]>>;
   additionFields?: Partial<T["$inferInsert"]>;
   drizzleSchema: T;
-  entity: (typeof auditLogs.$inferInsert)["entity"];
+  entity: AuditEntity;
   describe?: (record: T["$inferSelect"]) => string;
 };
 
@@ -32,7 +35,7 @@ export async function createRecord<T extends TableWithId>(
         details: {},
       };
     }
-    const { userId, teacherId, instituteId } = ctx;
+    const { userId,  instituteId } = ctx;
 
     // Validate input first
     const parsed = config.zodSchema.safeParse(data);
@@ -59,16 +62,13 @@ export async function createRecord<T extends TableWithId>(
       if (!record) {
         throw new Error("Insert failed");
       }
-      // Run custom logic after successful insert
-      // audit logs
-      await tx.insert(auditLogs).values({
+      // =========audit logs==========
+      await createAuditLog(tx, {
         instituteId,
         userId,
-        action: "CREATE",
+        action: "CREATED",
         entity: config.entity,
         entityId: (record as { id: string }).id,
-        description: config.describe?.(record) ?? `Created ${config.entity}`,
-        metadata: { after: record, teacherId },
       });
 
       return {

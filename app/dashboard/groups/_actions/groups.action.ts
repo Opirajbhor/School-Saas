@@ -1,39 +1,29 @@
 "use server";
-import { db } from "../drizzle-DB";
-import { groupClasses, groups } from "../drizzle-DB/schema/groups.drizzle";
-import { createRecord } from "./crud-funtions/server-create-crud";
-import { readMany, readRecord } from "./crud-funtions/server-read-crud";
+import { db } from "../../../../src/drizzle-DB";
+import {
+  groupClasses,
+  groups,
+} from "../../../../src/drizzle-DB/schema/groups.drizzle";
+import { createRecord } from "../../../../src/server-actions/crud-funtions/server-create-crud";
+import {
+  readMany,
+  readRecord,
+} from "../../../../src/server-actions/crud-funtions/server-read-crud";
 import {
   addGroupZod,
   AssignGroupClassType,
   assignGroupClassZod,
   inputGroupType,
-} from "../validation/groups.zod";
+} from "../../../../src/validation/groups.zod";
 import { and, eq, inArray } from "drizzle-orm";
-import { requireInstitute } from "./get-institute-profile";
-import { toggleStatus } from "./crud-funtions/server-status.action";
+import { toggleStatus } from "../../../../src/server-actions/crud-funtions/server-status.action";
+import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 
-// add
-export async function createGroup(data: inputGroupType) {
-  return await createRecord(
-    {
-      zodSchema: addGroupZod,
-      drizzleSchema: groups,
-      entity: "GROUP",
-    },
-    data,
-  );
-}
 // get
 export async function getGroups() {
   return readRecord({ drizzleSchema: groups });
 }
-
-// toggle status
-export async function toggleGroup(id: string) {
-  return toggleStatus({ drizzleSchema: groups }, id);
-}
-
 // // get group classes
 export async function getGroupClasses() {
   try {
@@ -68,6 +58,23 @@ export async function getGroupClasses() {
   }
 }
 
+// add
+export async function createGroup(data: inputGroupType) {
+  return await createRecord(
+    {
+      zodSchema: addGroupZod,
+      drizzleSchema: groups,
+      entity: "GROUP",
+    },
+    data,
+  );
+}
+
+// toggle status
+export async function toggleGroup(id: string) {
+  return toggleStatus({ drizzleSchema: groups, entity: "GROUP" }, id);
+}
+
 // --------group assignments-----------------
 // get active class items from group assignments
 export async function getActiveAssignClasses() {
@@ -98,7 +105,17 @@ export async function getActiveAssignClasses() {
 
 // assign to class
 export async function assignGroupClasses(data: AssignGroupClassType) {
-  const institute = await requireInstitute();
+  const ctx = await getUserContext();
+
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session foundF",
+      details: {},
+    };
+  }
+  const { userId, instituteId } = ctx;
+
   const validation = assignGroupClassZod.safeParse(data);
   if (!validation.success) {
     return {
@@ -117,7 +134,7 @@ export async function assignGroupClasses(data: AssignGroupClassType) {
         .set({ status: "INACTIVE" })
         .where(
           and(
-            eq(groupClasses.instituteId, institute.id),
+            eq(groupClasses.instituteId, instituteId),
             eq(groupClasses.groupId, groupId),
           ),
         );
@@ -126,7 +143,7 @@ export async function assignGroupClasses(data: AssignGroupClassType) {
       const existingAssignments = await tx.query.groupClasses.findMany({
         where: and(
           eq(groupClasses.groupId, groupId),
-          eq(groupClasses.instituteId, institute.id),
+          eq(groupClasses.instituteId, instituteId),
         ),
       });
 
@@ -143,7 +160,7 @@ export async function assignGroupClasses(data: AssignGroupClassType) {
             and(
               inArray(groupClasses.classId, classIds),
               eq(groupClasses.groupId, groupId),
-              eq(groupClasses.instituteId, institute.id),
+              eq(groupClasses.instituteId, instituteId),
             ),
           );
       }
@@ -156,17 +173,28 @@ export async function assignGroupClasses(data: AssignGroupClassType) {
           newClassIds.map((classId) => ({
             groupId,
             classId,
-            instituteId: institute.id,
+            instituteId,
             status: "ACTIVE" as const,
           })),
         );
       }
 
+      // =========audit logs==========
+      for (const item of newClassIds) {
+        await createAuditLog(tx, {
+          instituteId,
+          userId,
+          action: "CREATED",
+          entity: "ASSIGNED_CLASS_TO_GROUP",
+          entityId: item,
+          metadata: { groupId },
+        });
+      }
       // Return all active items
       return await tx.query.groupClasses.findMany({
         where: and(
           eq(groupClasses.groupId, groupId),
-          eq(groupClasses.instituteId, institute.id),
+          eq(groupClasses.instituteId, instituteId),
           eq(groupClasses.status, "ACTIVE"),
         ),
       });

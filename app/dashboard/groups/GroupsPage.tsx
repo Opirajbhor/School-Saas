@@ -21,7 +21,7 @@ import {
   createGroup,
   getGroupClasses,
   toggleGroup,
-} from "@/src/server-actions/groups.action";
+} from "@/app/dashboard/groups/_actions/groups.action";
 
 import AssignGroups from "./assign-groups";
 import { Plus } from "lucide-react";

@@ -18,7 +18,7 @@ import {
   sectionClassTeachers,
   sectionSubjectTeachers,
 } from "../drizzle-DB/schema/teacher-assignment.drizzle";
-import { getActiveSessionId } from "./academicSession.action";
+import { getActiveSessionId } from "../../app/dashboard/academic-sessions/_actions/academicSession.action";
 import { requireInstitute } from "./get-institute-profile";
 import { readMany, readRecord } from "./crud-funtions/server-read-crud";
 import { and, eq } from "drizzle-orm";

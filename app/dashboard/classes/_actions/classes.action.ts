@@ -1,22 +1,19 @@
 "use server";
-import { and, eq } from "drizzle-orm";
+import { classesDrizzle, sectionDrizzle } from "@/src/drizzle-DB/schema";
+import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
+import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import {
   classesType,
   classesTypeWithId,
   classesZod,
   sectionType,
   sectionZod,
-} from "../validation/classes.zod";
-import {
-  classesDrizzle,
-  sectionDrizzle,
-} from "../drizzle-DB/schema/classes.drizzle";
-import { getActiveSessionId } from "./academicSession.action";
-import { requireInstitute } from "./get-institute-profile";
-import { deleteRecord } from "./crud-funtions/server-delete-crud";
-import { readMany } from "./crud-funtions/server-read-crud";
-import { toggleStatus } from "./crud-funtions/server-status.action";
-import { createRecord } from "./crud-funtions/server-create-crud";
+} from "@/src/validation/classes.zod";
+import { and, eq } from "drizzle-orm";
+import { getActiveSessionId } from "../../academic-sessions/_actions/academicSession.action";
+import { createRecord } from "@/src/server-actions/crud-funtions/server-create-crud";
+import { deleteRecord } from "@/src/server-actions/crud-funtions/server-delete-crud";
+import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
 
 // get classes and sections
 export async function getClasses() {
@@ -44,6 +41,38 @@ export async function getClasses() {
   }
 }
 
+// ------------------get only active Classes----------------
+export async function getActiveClasses() {
+  try {
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db, instituteId }) =>
+        db.query.classesDrizzle.findMany({
+          where: and(
+            eq(classesDrizzle.instituteId, instituteId),
+            eq(classesDrizzle.status, "ACTIVE"),
+          ),
+          with: {
+            groupClasses: {
+              with: {
+                group: true,
+              },
+            },
+          },
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
+}
 // --------------------single class and section ------------
 export async function getClassAndSection({
   classId,
@@ -104,42 +133,10 @@ export async function ToggleClassStatus(id: string) {
   return toggleStatus(
     {
       drizzleSchema: classesDrizzle,
+      entity: "CLASS",
     },
     id,
   );
-}
-
-// ------------------get only active Classes----------------
-export async function getActiveClasses() {
-  try {
-    const result = await readMany({
-      drizzleSchema: classesDrizzle,
-      query: ({ db, instituteId }) =>
-        db.query.classesDrizzle.findMany({
-          where: and(
-            eq(classesDrizzle.instituteId, instituteId),
-            eq(classesDrizzle.status, "ACTIVE"),
-          ),
-          with: {
-            groupClasses: {
-              with: {
-                group: true,
-              },
-            },
-          },
-        }),
-    });
-    return {
-      success: true as const,
-      data: result.data,
-    };
-  } catch (error) {
-    return {
-      success: false as const,
-      error: String(error),
-      details: {},
-    };
-  }
 }
 
 // -------------------- section -----------------------
@@ -153,6 +150,7 @@ export async function postSection(data: sectionType) {
       zodSchema: sectionZod,
       drizzleSchema: sectionDrizzle,
       additionFields: { status: "ACTIVE", sessionId: sessionId },
+      entity: "SECTION",
     },
     data,
   );
@@ -163,6 +161,7 @@ export async function deleteSection(id: string) {
   return deleteRecord(
     {
       drizzleSchema: sectionDrizzle,
+      entity: "SECTION",
     },
     id,
   );

@@ -1,7 +1,12 @@
 import type { PgTable } from "drizzle-orm/pg-core";
 import { AnyColumn, and, eq } from "drizzle-orm";
-import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import { db } from "@/src/drizzle-DB";
+import { getUserContext } from "../shared/get-user-context.action";
+import { auditLogs } from "@/src/drizzle-DB/schema";
+import {
+  AuditEntity,
+  createAuditLog,
+} from "../audit-logs/createAuditLog.action";
 
 export type InstituteTable = PgTable & {
   id: AnyColumn;
@@ -10,6 +15,8 @@ export type InstituteTable = PgTable & {
 
 export type DeleteConfig<T extends InstituteTable> = {
   drizzleSchema: T;
+  entity: AuditEntity;
+  describe?: (record: T["$inferSelect"]) => string;
 };
 
 export async function deleteRecord<T extends InstituteTable>(
@@ -17,30 +24,49 @@ export async function deleteRecord<T extends InstituteTable>(
   id: string,
 ) {
   try {
-    const profile = await requireInstitute();
+    const ctx = await getUserContext();
 
-    const [record] = await db
-      .delete(config.drizzleSchema)
-      .where(
-        and(
-          eq(config.drizzleSchema.id, id),
-          eq(config.drizzleSchema.instituteId, profile.id),
-        ),
-      )
-      .returning();
-
-    if (!record) {
+    if (!ctx) {
       return {
         success: false as const,
-        error: "Record not found",
+        error: "No User session foundF",
         details: {},
       };
     }
+    const { userId, instituteId } = ctx;
 
-    return {
-      success: true as const,
-      data: record,
-    };
+    return await db.transaction(async (tx) => {
+      const [record] = await tx
+        .delete(config.drizzleSchema)
+        .where(
+          and(
+            eq(config.drizzleSchema.id, id),
+            eq(config.drizzleSchema.instituteId, instituteId),
+          ),
+        )
+        .returning();
+
+      if (!record) {
+        return {
+          success: false as const,
+          error: "Record not found",
+          details: {},
+        };
+      }
+      // ====== audit logs ==========
+      await createAuditLog(tx, {
+        instituteId,
+        userId,
+        action: "DELETED",
+        entity: config.entity,
+        entityId: (record as { id: string }).id,
+      });
+
+      return {
+        success: true as const,
+        data: record,
+      };
+    });
   } catch (error) {
     console.error("Delete failed:", error);
 
@@ -51,13 +77,3 @@ export async function deleteRecord<T extends InstituteTable>(
     };
   }
 }
-
-// use case
-// export async function deleteSession(id: string) {
-//   return deleteRecord(
-//     {
-//       drizzleSchema: academicSessions,
-//     },
-//     id,
-//   );
-// }

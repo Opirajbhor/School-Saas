@@ -14,28 +14,28 @@ import { instituteProfile, user } from "@/src/drizzle-DB/schema";
 // ─── Enums ─────────────────────────────────────
 
 export const auditActionEnum = pgEnum("audit_action", [
-  "CREATE",
-  "UPDATE",
-  "STATUS_CHANGE",
-  "DELETE",
-  "LOGIN",
+  "CREATED",
+  "UPDATED",
+  "STATUS_CHANGED",
+  "DELETED",
+  "LOGGED_IN",
 ]);
 
 export const auditEntityEnum = pgEnum("audit_entity", [
+  "SESSION",
   "STUDENT",
   "TEACHER",
   "CLASS",
   "SECTION",
   "GROUP",
   "SUBJECT",
-  "SUBJECT_ASSIGNMENT",
-  "ENROLLMENT",
+  "ASSIGNED_SUBJECT",
   "EXAM",
   "EXAM_SUBJECT",
   "MARK",
   "RESULT",
+  "ASSIGNED_CLASS_TO_GROUP",
 ]);
-
 
 // ─── Audit Logs ────────────────────────────────
 export const auditLogs = pgTable(
