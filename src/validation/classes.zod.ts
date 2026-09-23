@@ -1,12 +1,15 @@
 import { z } from "zod";
 import { statusEnumValues } from "./subjects.zod";
 import { outputGroupType } from "./groups.zod";
-import { createSelectSchema } from "drizzle-zod";
+import { createInsertSchema } from "drizzle-zod";
 import { classesDrizzle } from "../drizzle-DB/schema";
 
-export const classesZod = createSelectSchema(classesDrizzle);
+export const classesZod = createInsertSchema(classesDrizzle).omit({
+  instituteId: true,
+  sessionId: true,
+});
 
-export type classesType = z.input<typeof classesZod>;
+export type classesType = z.infer<typeof classesZod>;
 
 export type classesTypeWithId = classesType & {
   id?: string;

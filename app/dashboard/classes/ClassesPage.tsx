@@ -40,13 +40,11 @@ export default function ClassesPage() {
     resolver: zodResolver(classesZod),
     defaultValues: {
       status: "ACTIVE",
-      sessionId: "session-id",
     },
   });
   const { isSubmitting } = form.formState;
   // add class button
   const addBtn = async (data: classesType) => {
-    console.log(data);
     await handleCrudAction(postClasses, data, {
       successMessage: "Class created successfully",
       onSuccess: () => {

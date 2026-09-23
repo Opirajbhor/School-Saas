@@ -25,8 +25,8 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
-import { editTeacher } from "@/src/server-actions/teacher.action";
 import { useQueryClient } from "@tanstack/react-query";
+import { editTeacher } from "@/app/dashboard/teachers/_actions/teacher.action";
 
 export default function EditTeachers({ user }: DeleteTeacherProps) {
   const form = useForm<editTeacherType>({

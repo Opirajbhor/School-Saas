@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,10 +11,6 @@ import {
   AddStudentType,
   addStudentZod,
 } from "@/src/validation/student.zod";
-import {
-  addStudent,
-  getAcademicInfo,
-} from "@/src/server-actions/student.action";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -24,6 +20,7 @@ import { FormInput } from "@/components/forms/form-input";
 import { FormTextarea } from "@/components/forms/form-textarea";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { addStudent, getAcademicInfo } from "../_actions/student.action";
 
 const randomId = Math.floor(Math.random() * 100) + 1;
 

@@ -10,7 +10,7 @@ import {
   assignClassTeacher,
   deleteAssignTeacher,
   getassignedClassTeachers,
-} from "@/src/server-actions/teacher-assignment.action";
+} from "@/app/dashboard/teacher-assignment/_actions/teacher-assignment.action";
 import {
   InputClassTeacherType,
   sectionClassTeacherZod,
@@ -19,9 +19,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchData } from "@/src/tanstackQuery/queryReturnDataFn";
-import { getClasses } from "@/src/server-actions/classes.action";
-import { getTeacher } from "@/src/server-actions/teacher.action";
 import { useState } from "react";
+import { getClasses } from "../classes/_actions/classes.action";
+import { getTeacher } from "../teachers/_actions/teacher.action";
 
 export function ClassTeacherAssign() {
   const [selectedSub, setSelectedSub] = useState<string[]>([]);

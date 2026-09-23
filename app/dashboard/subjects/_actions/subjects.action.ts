@@ -1,22 +1,23 @@
 "use server";
+
+import { db } from "@/src/drizzle-DB";
+import { subjectAssignSchema, subjectDbSchema } from "@/src/drizzle-DB/schema";
+import { createRecord } from "@/src/server-actions/crud-funtions/server-create-crud";
 import {
-  subjectAssignSchema,
-  subjectDbSchema,
-} from "../drizzle-DB/schema/subjects.drizzle";
-import { createRecord } from "./crud-funtions/server-create-crud";
+  readMany,
+  readRecord,
+} from "@/src/server-actions/crud-funtions/server-read-crud";
+import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import {
   inputSubAssignType,
   InputSubjectType,
   inputSubjectZod,
   RawSubjectAssignment,
-} from "../validation/subjects.zod";
-import { readMany, readRecord } from "./crud-funtions/server-read-crud";
-
+} from "@/src/validation/subjects.zod";
 import { eq } from "drizzle-orm";
-import { toggleStatus } from "./crud-funtions/server-status.action";
-import { requireInstitute } from "./get-institute-profile";
-import { getActiveSessionId } from "../../app/dashboard/academic-sessions/_actions/academicSession.action";
-import { db } from "../drizzle-DB";
+import { getActiveSessionId } from "../../academic-sessions/_actions/academicSession.action";
+import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 
 // ------------ post a new subject ---------------
 export async function addSubjects(data: InputSubjectType) {
@@ -25,6 +26,7 @@ export async function addSubjects(data: InputSubjectType) {
       zodSchema: inputSubjectZod,
       drizzleSchema: subjectDbSchema,
       additionFields: { status: "ACTIVE" },
+      entity: "SUBJECT",
     },
     data,
   );
@@ -40,6 +42,7 @@ export async function ToggleSubjectStatus(id: string) {
   return toggleStatus(
     {
       drizzleSchema: subjectDbSchema,
+      entity: "SUBJECT",
     },
     id,
   );
@@ -58,24 +61,32 @@ export async function subjectAssignment(data: inputSubAssignType) {
         details: {},
       };
     }
+    const ctx = await getUserContext();
 
-    const profile = await requireInstitute();
-    const sessionId = await getActiveSessionId(profile.id);
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session foundF",
+        details: {},
+      };
+    }
+    const { userId, instituteId } = ctx;
+    const session = await getActiveSessionId();
 
-    if (!sessionId) {
+    if (!session.success) {
       return {
         success: false as const,
         error: "No active academic session found",
         details: {},
       };
     }
-
+    const sessionId = session.data;
     // If any subject assignment fails, ALL assignments are rolled back.
-    const results = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       return Promise.all(
-        subjectIds.map((subjectId) => {
+        subjectIds.map(async (subjectId) => {
           const payload = {
-            instituteId: profile.id,
+            instituteId,
             sessionId,
             classId: rest.classId,
             groupId: rest.groupId,
@@ -83,7 +94,18 @@ export async function subjectAssignment(data: inputSubAssignType) {
             subjectId,
             status: "ACTIVE" as const,
           };
-          return tx.insert(subjectAssignSchema).values(payload).returning();
+          const [data] = await tx
+            .insert(subjectAssignSchema)
+            .values(payload)
+            .returning();
+          // =========audit logs==========
+          await createAuditLog(tx, {
+            instituteId,
+            userId,
+            action: "CREATED",
+            entity: "ASSIGNED_SUBJECT",
+            entityId: data.id,
+          });
         }),
       );
     });
@@ -95,7 +117,6 @@ export async function subjectAssignment(data: inputSubAssignType) {
     };
   } catch (err) {
     console.error("Subject assignment failed:", err);
-
     return {
       success: false as const,
       error: "Failed to assign subjects",
@@ -159,6 +180,7 @@ export async function ToggleAssignSubjectStatus(id: string) {
   return toggleStatus(
     {
       drizzleSchema: subjectAssignSchema,
+      entity: "ASSIGNED_SUBJECT",
     },
     id,
   );

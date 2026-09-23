@@ -5,11 +5,7 @@ import { SpinnerCustom } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import { getActiveClasses } from "@/src/server-actions/classes.action";
-import {
-  getAssignSubjects,
-  subjectAssignment,
-} from "@/src/server-actions/subjects.action";
+
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import {
   inputSubAssignType,
@@ -22,6 +18,11 @@ import { Plus } from "lucide-react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { SubjectAssignTable } from "./assigned-subject-table";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getActiveClasses } from "../../classes/_actions/classes.action";
+import {
+  getAssignSubjects,
+  subjectAssignment,
+} from "../_actions/subjects.action";
 
 export function SubjectAssignTab() {
   // --------------query ------------------

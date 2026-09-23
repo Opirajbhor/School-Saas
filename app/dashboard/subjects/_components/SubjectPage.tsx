@@ -4,11 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import {
-  addSubjects,
-  getSubjects,
-  ToggleSubjectStatus,
-} from "@/src/server-actions/subjects.action";
+
 import {
   InputSubjectType,
   inputSubjectZod,
@@ -27,6 +23,11 @@ import { AppTable } from "@/components/table/data-table";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormCheckbox } from "@/components/forms/form-checkbox";
+import {
+  addSubjects,
+  getSubjects,
+  ToggleSubjectStatus,
+} from "../_actions/subjects.action";
 
 export default function SubjectPage() {
   const [selectedSub, setSelectedSub] = useState<string[]>([]);

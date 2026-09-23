@@ -1,6 +1,4 @@
 "use server";
-import { getTeacher } from "./teacher.action";
-import { getClassAndSection, getClasses } from "./classes.action";
 import {
   ClassSectionType,
   classSubjectGroupType,
@@ -8,33 +6,37 @@ import {
   classTeacherType,
   InputClassTeacherType,
   InputSubjectTeacherType,
-  OutputClassTeacherType,
   OutputSubjectTeacher,
   sectionClassTeacherZod,
   subjectTeacherZod,
-} from "../validation/teacher-assignment.zod";
-import { createRecord } from "./crud-funtions/server-create-crud";
+} from "../../../../src/validation/teacher-assignment.zod";
+import { createRecord } from "../../../../src/server-actions/crud-funtions/server-create-crud";
 import {
   sectionClassTeachers,
   sectionSubjectTeachers,
-} from "../drizzle-DB/schema/teacher-assignment.drizzle";
-import { getActiveSessionId } from "../../app/dashboard/academic-sessions/_actions/academicSession.action";
-import { requireInstitute } from "./get-institute-profile";
-import { readMany, readRecord } from "./crud-funtions/server-read-crud";
+} from "../../../../src/drizzle-DB/schema/teacher-assignment.drizzle";
+import { getActiveSessionId } from "../../academic-sessions/_actions/academicSession.action";
 import { and, eq } from "drizzle-orm";
-import { deleteRecord } from "./crud-funtions/server-delete-crud";
+import { deleteRecord } from "../../../../src/server-actions/crud-funtions/server-delete-crud";
 import {
   classesDrizzle,
   groupClasses,
   subjectAssignSchema,
-} from "../drizzle-DB/schema";
-import { Teacherlist } from "../validation/teacher.zod";
+} from "../../../../src/drizzle-DB/schema";
+import { Teacherlist } from "../../../../src/validation/teacher.zod";
 import {
   classesTypeWithId,
   ClassWithSectionType,
-} from "../validation/classes.zod";
-import { db } from "../drizzle-DB";
-import { updateRecord } from "./crud-funtions/server-update-crud";
+} from "../../../../src/validation/classes.zod";
+import { db } from "../../../../src/drizzle-DB";
+import { updateRecord } from "../../../../src/server-actions/crud-funtions/server-update-crud";
+import {
+  getClassAndSection,
+  getClasses,
+} from "../../classes/_actions/classes.action";
+import { getTeacher } from "../../teachers/_actions/teacher.action";
+import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 
 // ---------------- class teacher ---------------
 
@@ -63,13 +65,21 @@ export async function getClassWithTeacher() {
 
 // --------- assign class Teacher --------------
 export async function assignClassTeacher(data: InputClassTeacherType) {
-  const profile = await requireInstitute();
-  const activeSessionId = await getActiveSessionId(profile.id);
+  const activeSessionId = await getActiveSessionId();
+  if (!activeSessionId.success) {
+    return {
+      success: false as const,
+      error: "failed to get active academic session",
+      details: {},
+    };
+  }
+  const sessionId = activeSessionId.success && activeSessionId.data;
   const newId = await createRecord(
     {
       zodSchema: sectionClassTeacherZod,
       drizzleSchema: sectionClassTeachers,
-      additionFields: { status: "ACTIVE", sessionId: activeSessionId },
+      additionFields: { status: "ACTIVE", sessionId },
+      entity: "TEACHER",
     },
     data,
   );
@@ -143,6 +153,7 @@ export async function deleteAssignTeacher(id: string) {
   return deleteRecord(
     {
       drizzleSchema: sectionClassTeachers,
+      entity: "TEACHER",
     },
     id,
   );
@@ -188,16 +199,34 @@ export async function getActiveClassesSection() {
 
 // --------- assign new subject Teacher --------------
 export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
-  const profile = await requireInstitute();
-  const activeSessionId = await getActiveSessionId(profile.id);
+  const ctx = await getUserContext();
+
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session foundF",
+      details: {},
+    };
+  }
+  const { instituteId } = ctx;
+  const activeSessionId = await getActiveSessionId();
+  if (!activeSessionId.success) {
+    return {
+      success: false as const,
+      error: "failed to get active academic session",
+      details: {},
+    };
+  }
+  const sessionId = activeSessionId.success && activeSessionId.data;
+
   try {
     const checkData = await db
       .select()
       .from(sectionSubjectTeachers)
       .where(
         and(
-          eq(sectionSubjectTeachers.instituteId, profile.id),
-          eq(sectionSubjectTeachers.sessionId, activeSessionId),
+          eq(sectionSubjectTeachers.instituteId, instituteId),
+          eq(sectionSubjectTeachers.sessionId, sessionId),
           eq(sectionSubjectTeachers.sectionId, data.sectionId),
           eq(sectionSubjectTeachers.subjectId, data.subjectId),
         ),
@@ -218,6 +247,7 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
         {
           drizzleSchema: sectionSubjectTeachers,
           zodSchema: subjectTeacherZod,
+          entity: "TEACHER",
         },
         existing.id,
         data,
@@ -233,7 +263,8 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
       {
         zodSchema: subjectTeacherZod,
         drizzleSchema: sectionSubjectTeachers,
-        additionFields: { status: "ACTIVE", sessionId: activeSessionId },
+        additionFields: { status: "ACTIVE", sessionId },
+        entity: "TEACHER",
       },
       data,
     );

@@ -1,22 +1,35 @@
 "use server";
-import { db } from "../drizzle-DB";
+
+import { and, eq } from "drizzle-orm";
+
+import { auth } from "@/auth";
+import { headers } from "next/headers";
 import {
   addTeacherType,
   addTeacherZod,
   editTeacherType,
+  editTeacherZod,
   Teacherlist,
-} from "../validation/teacher.zod";
-import { teachers } from "../drizzle-DB/schema/teacher.drizzle";
-import { and, eq } from "drizzle-orm";
-import { parseWithZod } from "../validation/validator.zod";
-import { updateRecord } from "./crud-funtions/server-update-crud";
-import { auth } from "@/auth";
-import { headers } from "next/headers";
-import { requireInstitute } from "./get-institute-profile";
+} from "@/src/validation/teacher.zod";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
+import { parseWithZod } from "@/src/validation/validator.zod";
+import { teachers } from "@/src/drizzle-DB/schema";
+import { db } from "@/src/drizzle-DB";
+import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
+import { updateRecord } from "@/src/server-actions/crud-funtions/server-update-crud";
+import { deleteRecord } from "@/src/server-actions/crud-funtions/server-delete-crud";
 
 // add teacher
 export async function addTeacher(data: addTeacherType) {
-  const profile = await requireInstitute();
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session found",
+      details: {},
+    };
+  }
+  const { instituteId, userId } = ctx;
   // parse with zod-----------------
   const validatedFields = parseWithZod(addTeacherZod, data);
   if (!validatedFields.success) return validatedFields;
@@ -31,22 +44,31 @@ export async function addTeacher(data: addTeacherType) {
         role: "user",
       },
     });
-    if (!newUser.user) {
+    if (!newUser?.user) {
       return {
         success: false as const,
-        error: "Failed to create teacher account due to a database failure.",
+        error: "Failed to create account",
         details: {},
       };
     }
     const dbTxn = await db.transaction(async (tx) => {
-      await tx
+      const [teacher] = await tx
         .insert(teachers)
         .values({
           ...validatedFields.data,
-          instituteId: profile.id,
+          instituteId,
           userId: newUser.user.id,
         })
         .returning();
+
+      // =========audit logs==========
+      await createAuditLog(tx, {
+        instituteId,
+        userId,
+        action: "CREATED",
+        entity: "TEACHER",
+        entityId: teacher.id,
+      });
     });
     return {
       success: true as const,
@@ -63,11 +85,18 @@ export async function addTeacher(data: addTeacherType) {
 }
 // getTeacher
 export async function getTeacher() {
-  const { id } = await requireInstitute();
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session found",
+    };
+  }
+  const { instituteId } = ctx;
 
   try {
     const data = await db.query.teachers.findMany({
-      where: eq(teachers.instituteId, id),
+      where: eq(teachers.instituteId, instituteId),
     });
 
     return {
@@ -86,7 +115,14 @@ export async function getTeacher() {
 
 // get teacher stats
 export async function getTeacherStats() {
-  const { id } = await requireInstitute();
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session found",
+    };
+  }
+  const { instituteId: id } = ctx;
 
   try {
     const [totalTeachers, activeTeachers, maleTeachers, femaleTeachers] =
@@ -126,80 +162,27 @@ export async function getTeacherStats() {
 
 // delete teacher
 export async function deleteTeacher(teacherId: string) {
-  const { id } = await requireInstitute();
-
-  try {
-    // find teacher
-    const teacher = await db.query.teachers.findFirst({
-      where: and(eq(teachers.id, teacherId), eq(teachers.instituteId, id)),
-    });
-    if (!teacher) {
-      return {
-        success: false,
-        error: "Teacher not found.",
-      };
-    }
-    await db
-      .delete(teachers)
-      .where(and(eq(teachers.id, teacherId), eq(teachers.instituteId, id)));
-    return {
-      success: true,
-      message: "Teacher deleted successfully.",
-    };
-  } catch (error) {
-    console.error("Delete teacher error:", error);
-
-    return {
-      success: false,
-      error: "Failed to delete teacher.",
-    };
-  }
-}
-
-// update Sessions
-export async function editTeacher(id: string, data: editTeacherType) {
-  return updateRecord(
+  return await deleteRecord(
     {
       drizzleSchema: teachers,
-      zodSchema: addTeacherZod,
+      entity: "TEACHER",
     },
-    id,
-    data,
+    teacherId,
   );
 }
 
 // edit teacher
-export async function editTeachers(data: editTeacherType) {
-  const { id } = await requireInstitute();
 
-  try {
-    // find teacher
-    const teacher = await db.query.teachers.findFirst({
-      where: and(eq(teachers.id, data.id), eq(teachers.instituteId, id)),
-    });
-    if (!teacher) {
-      return {
-        success: false,
-        error: "Teacher not found.",
-      };
-    }
-    await db
-      .update(teachers)
-      .set({
-        ...data,
-      })
-      .where(and(eq(teachers.id, data.id), eq(teachers.instituteId, id)))
-      .returning();
-    return {
-      success: true,
-      message: "Teacher updated successfully.",
-    };
-  } catch (error) {
-    console.error("edit teacher error:", error);
+export async function editTeacher(id: string, data: editTeacherType) {
+  console.log("------updating-----------");
 
-    return {
-      success: false,
-      error: "Failed to edit teacher info.",
-    };
-  }
+  return await updateRecord(
+    {
+      drizzleSchema: teachers,
+      zodSchema: editTeacherZod,
+      entity: "TEACHER",
+    },
+    id,
+    data,
+  );
 }

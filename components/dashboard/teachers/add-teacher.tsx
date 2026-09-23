@@ -10,24 +10,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { addTeacherType, addTeacherZod } from "@/src/validation/teacher.zod";
-import { FieldDescription } from "@/components/ui/field";
 
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
-import { addTeacher } from "@/src/server-actions/teacher.action";
 import { Spinner } from "@/components/ui/spinner";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { useQueryClient } from "@tanstack/react-query";
 import { FormInput } from "@/components/forms/form-input";
-import { FormSelect } from "@/components/forms/form-select";
+import { addTeacher } from "@/app/dashboard/teachers/_actions/teacher.action";
 
 export default function AddTeacher() {
   const [open, setOpen] = useState(false);

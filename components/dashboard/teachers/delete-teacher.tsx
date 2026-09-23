@@ -1,5 +1,6 @@
 "use client";
 
+import { deleteTeacher } from "@/app/dashboard/teachers/_actions/teacher.action";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { deleteTeacher } from "@/src/server-actions/teacher.action";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangleIcon } from "lucide-react";
@@ -31,7 +31,7 @@ export default function DeleteTeacher({ user }: DeleteTeacherProps) {
     setLoad(true);
     const result = await deleteTeacher(user.id);
     if (result.success) {
-      toast.success(result.message);
+      toast.success("deleted succesfully");
       queryClient.invalidateQueries({
         queryKey: ["teachers"],
       });

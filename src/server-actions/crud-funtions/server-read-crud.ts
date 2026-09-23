@@ -1,6 +1,6 @@
 import { db } from "@/src/drizzle-DB";
-import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import { eq, SQL, type Column, type Table } from "drizzle-orm";
+import { getUserContext } from "../shared/get-user-context.action";
 
 // 1. Define a generic constraint for tables that have 'id' and 'instituteId'
 export type TableWithInstitute = Table & {
@@ -15,13 +15,20 @@ export async function readRecord<T extends TableWithInstitute>(
   config: ReadConfig<T>,
 ) {
   try {
-    const profile = await requireInstitute();
+    const ctx = await getUserContext();
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session foundF",
+      };
+    }
+    const { instituteId } = ctx;
     const table = config.drizzleSchema;
 
     const record = await db
       .select()
       .from(table as Table) // Pass table instead of config.drizzleSchema
-      .where(eq(table.instituteId, profile.id));
+      .where(eq(table.instituteId, instituteId));
 
     if (!record) {
       return {
@@ -60,12 +67,19 @@ export async function readMany<T extends TableWithInstitute>(
   const table = config.drizzleSchema;
 
   try {
-    const profile = await requireInstitute();
+    const ctx = await getUserContext();
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session foundF",
+      };
+    }
+    const { instituteId } = ctx;
 
     if (config.query) {
       const records = await config.query({
         db,
-        instituteId: profile.id,
+        instituteId,
       });
 
       return {
@@ -77,7 +91,7 @@ export async function readMany<T extends TableWithInstitute>(
     const records = await db
       .select()
       .from(table as Table)
-      .where(config.where ?? eq(table.instituteId, profile.id));
+      .where(config.where ?? eq(table.instituteId, instituteId));
 
     return {
       success: true as const,

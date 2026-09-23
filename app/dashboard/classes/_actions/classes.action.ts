@@ -1,7 +1,6 @@
 "use server";
 import { classesDrizzle, sectionDrizzle } from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
-import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import {
   classesType,
   classesTypeWithId,
@@ -115,13 +114,21 @@ export async function getClassAndSection({
 
 // post class
 export async function postClasses(data: classesType) {
-  const profile = await requireInstitute();
-  const sessionId = await getActiveSessionId(profile?.id);
+  const { data: sessionId } = await getActiveSessionId();
+  console.log(sessionId, "sessionId");
+  if (typeof sessionId !== "string") {
+    return {
+      success: false as const,
+      error: "No Academic Session found",
+      details: { field: ["message"] },
+    };
+  }
+  console.log(sessionId, "0-----------0");
   return createRecord(
     {
       zodSchema: classesZod,
       drizzleSchema: classesDrizzle,
-      additionFields: { status: "ACTIVE", sessionId: sessionId },
+      additionFields: { status: "ACTIVE", sessionId },
       entity: "CLASS",
     },
     data,
@@ -142,14 +149,21 @@ export async function ToggleClassStatus(id: string) {
 // -------------------- section -----------------------
 // post section
 export async function postSection(data: sectionType) {
-  const profile = await requireInstitute();
-  const sessionId = await getActiveSessionId(profile?.id);
+  const sessionId = await getActiveSessionId();
+
+  if (typeof sessionId !== "string") {
+    return {
+      success: false as const,
+      error: "no Academic session Found",
+      details: {},
+    };
+  }
 
   return createRecord(
     {
       zodSchema: sectionZod,
       drizzleSchema: sectionDrizzle,
-      additionFields: { status: "ACTIVE", sessionId: sessionId },
+      additionFields: { status: "ACTIVE", sessionId },
       entity: "SECTION",
     },
     data,

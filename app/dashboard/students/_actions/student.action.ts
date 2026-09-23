@@ -1,13 +1,11 @@
 "use server";
+import { academicSessions, enrollments, groupClasses, student } from "@/src/drizzle-DB/schema";
+import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
+import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
 import { and, eq } from "drizzle-orm";
-import { db } from "../drizzle-DB";
-import { student } from "../drizzle-DB/schema/student.drizzle";
-import { AddStudentType, addStudentZod } from "../validation/student.zod";
-import { academicSessions, groupClasses } from "../drizzle-DB/schema";
-import { enrollments } from "../drizzle-DB/schema/enrollments.drizzle";
-import { requireInstitute } from "./get-institute-profile";
-import { readMany } from "./crud-funtions/server-read-crud";
-import { toggleStatus } from "./crud-funtions/server-status.action";
+import { requireInstitute } from "../../profile/_actions/get-institute-profile";
+import { db } from "@/src/drizzle-DB";
+import { AddStudentType, addStudentZod } from "@/src/validation/student.zod";
 
 // get student
 export async function getStudents() {
@@ -45,6 +43,7 @@ export async function ToggleStudentStatus(id: string) {
   return toggleStatus(
     {
       drizzleSchema: enrollments,
+      entity: "STUDENT",
     },
     id,
   );

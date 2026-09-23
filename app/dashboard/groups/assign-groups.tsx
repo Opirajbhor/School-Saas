@@ -10,8 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { getClasses } from "@/src/server-actions/classes.action";
-import { classesTypeWithId } from "@/src/validation/classes.zod";
 import {
   AssignGroupClassType,
   assignGroupClassZod,
@@ -23,6 +21,8 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormCheckboxGroup } from "@/components/forms/form-checkbox-group";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { classesTypeWithId } from "@/src/validation/classes.zod";
+import { getClasses } from "../classes/_actions/classes.action";
 
 export default function AssignGroups({
   group,

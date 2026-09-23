@@ -40,6 +40,7 @@ export async function updateRecord<
     const { userId, instituteId } = ctx;
 
     const parsed = config.zodSchema.safeParse(data);
+
     if (!parsed.success) {
       return {
         success: false as const,
@@ -47,11 +48,14 @@ export async function updateRecord<
         details: parsed.error.flatten().fieldErrors,
       };
     }
+    console.log("step-1 parsed");
 
     const updateData = {
       ...parsed.data,
       ...config.additionFields,
     };
+    console.log("step-2 all Data");
+
     return await db.transaction(async (tx) => {
       const [record] = await db
         .update(config.drizzleSchema)
@@ -71,6 +75,7 @@ export async function updateRecord<
           details: {},
         };
       }
+      console.log("step-3 updated");
 
       // ====== audit logs ==========
       await createAuditLog(tx, {
@@ -80,6 +85,9 @@ export async function updateRecord<
         entity: config.entity,
         entityId: (record as { id: string }).id,
       });
+      console.log("step-4 audit log");
+
+      console.log(record);
 
       return {
         success: true as const,

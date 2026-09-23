@@ -24,17 +24,15 @@ import { useState } from "react";
 import { cn } from "@/utils/utils";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { StudentEnrollment } from "@/src/validation/student.zod";
-import {
-  getStudents,
-  ToggleStudentStatus,
-} from "@/src/server-actions/student.action";
+
 import Link from "next/link";
 import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
-import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { columns } from "./_table/columns";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getStudents, ToggleStudentStatus } from "./_actions/student.action";
 
 export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);

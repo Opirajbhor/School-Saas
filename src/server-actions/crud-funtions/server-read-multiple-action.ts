@@ -1,7 +1,7 @@
 import { db } from "@/src/drizzle-DB";
-import { requireInstitute } from "@/src/server-actions/get-institute-profile";
 import { eq, InferSelectModel } from "drizzle-orm";
 import { PgColumn, PgTable } from "drizzle-orm/pg-core";
+import { getUserContext } from "../shared/get-user-context.action";
 
 type TableWithInstitute = PgTable & {
   instituteId: PgColumn;
@@ -29,7 +29,14 @@ export async function readMultipleRecords<
   const TConfigs extends readonly TableConfig[],
 >(configs: TConfigs) {
   try {
-    const profile = await requireInstitute();
+    const ctx = await getUserContext();
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session foundF",
+      };
+    }
+    const { instituteId } = ctx;
 
     const results = await Promise.allSettled(
       configs.map(async ({ key, drizzleSchema }) => {
@@ -37,7 +44,7 @@ export async function readMultipleRecords<
           const records = await db
             .select()
             .from(drizzleSchema)
-            .where(eq(drizzleSchema.instituteId, profile.id));
+            .where(eq(drizzleSchema.instituteId, instituteId));
           return { key, data: records };
         }
 
@@ -59,7 +66,7 @@ export async function readMultipleRecords<
       success: true as const,
       data: dataMap,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false as const,
       error: "Failed to fetch records",

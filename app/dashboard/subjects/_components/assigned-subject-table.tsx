@@ -3,10 +3,10 @@
 import StatusToggleModal from "@/components/modal/status-modal";
 import { AppTable } from "@/components/table/data-table";
 import { Badge } from "@/components/ui/badge";
-import { ToggleAssignSubjectStatus } from "@/src/server-actions/subjects.action";
 import { OutputSubAssignType } from "@/src/validation/subjects.zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
+import { ToggleAssignSubjectStatus } from "../_actions/subjects.action";
 
 export function SubjectAssignTable() {
   const [selectedSub, setSelectedSub] = useState<string[]>([]);

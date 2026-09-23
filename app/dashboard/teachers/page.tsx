@@ -7,10 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/utils/utils";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";
-import {
-  getTeacher,
-  getTeacherStats,
-} from "@/src/server-actions/teacher.action";
+
 import {
   Teacherlist,
   TeacherStatsResponse,
@@ -19,11 +16,11 @@ import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
 import Title from "@/components/Title";
 import TeacherStats from "@/components/dashboard/teachers/teacher-card";
 import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
-import { clientReadAction } from "@/src/server-actions/crud-funtions/client-read-action";
 import { SpinnerCustom } from "@/components/Spinner";
 
 import { AppTable } from "@/components/table/data-table";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { getTeacher, getTeacherStats } from "./_actions/teacher.action";
 
 export default function Teacherpage() {
   const [currentPage, setCurrentPage] = useState(1);

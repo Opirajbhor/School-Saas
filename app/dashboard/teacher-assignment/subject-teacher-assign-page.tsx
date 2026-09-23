@@ -7,19 +7,17 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getActiveClassesSection,
   getSingleClassSubjects,
-} from "@/src/server-actions/teacher-assignment.action";
+} from "@/app/dashboard/teacher-assignment/_actions/teacher-assignment.action";
 import { fetchData } from "@/src/tanstackQuery/queryReturnDataFn";
 import { ClassWithSectionType } from "@/src/validation/classes.zod";
 
 import {
   classSubjectGroupType,
   classSubjectGroupZod,
-  InputSubjectTeacherType,
-  subjectTeacherZod,
 } from "@/src/validation/teacher-assignment.zod";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import AssingTeacherModal from "./sub-teacher-assign-compo";
