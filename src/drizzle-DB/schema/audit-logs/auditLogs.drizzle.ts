@@ -31,6 +31,7 @@ export const auditEntityEnum = pgEnum("audit_entity", [
   "SUBJECT",
   "ASSIGNED_SUBJECT",
   "EXAM",
+  "EXAM_MARK_TYPES",
   "EXAM_SUBJECT",
   "MARK",
   "RESULT",

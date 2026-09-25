@@ -1,12 +1,19 @@
-import { pgTable, uuid, varchar, unique } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  unique,
+  integer,
+  decimal,
+} from "drizzle-orm/pg-core";
 import { instituteProfile } from "../institute-profile-schema.drizzle";
 import { statusEnum, timestamps } from "../enums-drizzle";
 
 /* -------------------------
-   Exam Mark Types
+   Exam Mark Ranges
 -------------------------- */
 
-export const examGradeScales = pgTable(
+export const examGradeRangeDrizzle = pgTable(
   "exam_grade_scales",
   {
     id: uuid("id").defaultRandom().primaryKey(),
@@ -18,6 +25,13 @@ export const examGradeScales = pgTable(
       }),
 
     name: varchar("name", { length: 100 }).notNull(),
+    minMark: integer("min_mark").notNull(),
+    maxMark: integer("max_mark").notNull(),
+
+    GPA: decimal("GPA", {
+      precision: 4,
+      scale: 2,
+    }).notNull(),
 
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
@@ -26,6 +40,9 @@ export const examGradeScales = pgTable(
     unique("exam_grade_scales_institute_name_unique").on(
       table.instituteId,
       table.name,
+      table.maxMark,
+      table.minMark,
+      table.GPA,
     ),
   ],
 );

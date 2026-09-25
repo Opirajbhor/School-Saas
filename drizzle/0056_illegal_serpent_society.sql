@@ -1,0 +1,2 @@
+ALTER TABLE "exam_grade_scales" DROP CONSTRAINT "exam_grade_scales_institute_name_unique";--> statement-breakpoint
+ALTER TABLE "exam_grade_scales" ADD CONSTRAINT "exam_grade_scales_institute_name_unique" UNIQUE("institute_id","name","max_mark","min_mark","GPA");

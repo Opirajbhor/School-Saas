@@ -1,0 +1,1 @@
+ALTER TYPE "public"."audit_entity" ADD VALUE 'EXAM_MARK_TYPES' BEFORE 'EXAM_SUBJECT';
