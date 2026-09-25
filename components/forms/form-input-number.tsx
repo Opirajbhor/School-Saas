@@ -18,7 +18,6 @@ type FormInputProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>;
   name: FieldPath<TFieldValues>;
   label: string;
-  type?: React.ComponentProps<"input">["type"];
   placeholder?: string;
   description?: string;
   disabled?: boolean;
@@ -29,11 +28,10 @@ type FormInputProps<TFieldValues extends FieldValues> = {
   "name" | "type" | "value" | "onChange" | "onBlur"
 >;
 
-export function FormInput<TFieldValues extends FieldValues>({
+export function FormInputNumber<TFieldValues extends FieldValues>({
   control,
   name,
   label,
-  type = "text",
   placeholder,
   description,
   disabled,
@@ -54,11 +52,17 @@ export function FormInput<TFieldValues extends FieldValues>({
               <Input
                 {...inputProps}
                 {...field}
-                type={type}
+                type="number"
                 placeholder={placeholder}
                 disabled={disabled}
                 value={field.value ?? ""}
                 defaultValue={defaultValue}
+                onChange={(e) => {
+                  field.onChange(
+                    e.target.value === "" ? undefined : Number(e.target.value),
+                  );
+                  return;
+                }}
               />
             </FormControl>
 

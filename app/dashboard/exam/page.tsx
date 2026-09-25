@@ -11,10 +11,16 @@ export default async function Page() {
     <div>
       <div>
         <Link
-          className="card flex items-center gap-2 p-10 border-1"
+          className="card flex items-center gap-2 p-10 border"
           href={"/dashboard/exam/mark-types"}
         >
           Go To Mark Types <ArrowBigRight />
+        </Link>
+        <Link
+          className="card flex items-center gap-2 p-10 border"
+          href={"/dashboard/exam/grade-ranges"}
+        >
+          Go To Grade Range <ArrowBigRight />
         </Link>
       </div>
     </div>

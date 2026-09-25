@@ -1,0 +1,1 @@
+ALTER TYPE "public"."audit_entity" ADD VALUE 'EXAM_GRADE_RANGE' BEFORE 'EXAM_SUBJECT';
