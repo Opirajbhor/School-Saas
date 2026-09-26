@@ -12,6 +12,12 @@ export default async function Page() {
       <div>
         <Link
           className="card flex items-center gap-2 p-10 border"
+          href={"/dashboard/exam/create"}
+        >
+          Go To Exam Create <ArrowBigRight />
+        </Link>
+        <Link
+          className="card flex items-center gap-2 p-10 border"
           href={"/dashboard/exam/mark-types"}
         >
           Go To Mark Types <ArrowBigRight />

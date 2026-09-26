@@ -3,16 +3,52 @@ import { createRecord } from "@/src/server-actions/crud-funtions/server-create-c
 import {
   examGradeRangeZod,
   examMarkTypesZod,
+  examZod,
   InputExamGradeRangeType,
   InputExamMarkTypes,
+  InputExamType,
 } from "../_schema/exam.zod";
 import {
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
+  exams,
 } from "@/src/drizzle-DB/schema";
 import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
 import { revalidatePath } from "next/cache";
 
+//===================  exam ===============
+// post exam
+export async function postExam(data: InputExamType) {
+  const result = await createRecord(
+    {
+      zodSchema: examZod,
+      drizzleSchema: exams,
+      additionFields: { status: "ACTIVE" },
+      entity: "EXAM",
+    },
+    data,
+  );
+  if (result.success) {
+    revalidatePath("/dashboard/exam/create");
+  }
+  return result;
+}
+// toggle status
+export async function ToggleExamStatus(id: string) {
+  const result = await toggleStatus(
+    {
+      drizzleSchema: exams,
+      entity: "EXAM",
+    },
+    id,
+  );
+  if (result.success) {
+    revalidatePath("/dashboard/exam/create");
+  }
+  return result;
+}
+
+//=================  exam mark types ==============
 //======== post exam mark types ========
 export async function postMarkTypes(data: InputExamMarkTypes) {
   const result = await createRecord(
@@ -45,7 +81,8 @@ export async function ToggleExamtypeStatus(id: string) {
   return result;
 }
 
-//======== post exam mark types ========
+//========================= post exam Grade Ranges ======================
+//======== post exam Grade Ranges ========
 export async function postGradeRange(data: InputExamGradeRangeType) {
   const result = await createRecord(
     {

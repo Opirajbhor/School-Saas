@@ -12,5 +12,6 @@ export * from "./schema/teacher-assignment.drizzle";
 export * from "./schema/audit-logs/auditLogs.drizzle";
 export * from "./schema/exam-managment/exam-grade-range.drizzle";
 export * from "./schema/exam-managment/exam-mark-types.drizzle";
+export * from "./schema/exam-managment/exam.drizzle";
 
 export * from "./relations/drizzleRelation";

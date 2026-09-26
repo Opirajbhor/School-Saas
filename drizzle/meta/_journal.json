@@ -414,6 +414,13 @@
       "when": 1790357612944,
       "tag": "0058_damp_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1790433927856,
+      "tag": "0059_skinny_chimera",
+      "breakpoints": true
     }
   ]
 }

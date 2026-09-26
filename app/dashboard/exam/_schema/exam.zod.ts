@@ -1,12 +1,26 @@
 import {
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
+  exams,
 } from "@/src/drizzle-DB/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import z from "zod";
 
+//=========== exam create ==========
+
+export const examZod = createInsertSchema(exams, {
+  name: (schema) => schema.min(1, { error: "name  is required" }),
+}).omit({
+  instituteId: true,
+});
+export type InputExamType = z.infer<typeof examZod>;
+export const outputExamZod = createSelectSchema(exams);
+export type OutputExamType = z.infer<typeof outputExamZod>;
+
 //=========== exam mark type ==========
-export const examMarkTypesZod = createInsertSchema(examMarkTypesDrizzle).omit({
+export const examMarkTypesZod = createInsertSchema(examMarkTypesDrizzle, {
+  name: (schema) => schema.min(1, { error: "name  is required" }),
+}).omit({
   instituteId: true,
 });
 export type InputExamMarkTypes = z.infer<typeof examMarkTypesZod>;
