@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { postExam } from "../_actions/exam.action";
 import { FormProvider, useForm } from "react-hook-form";
+import { FormDatePicker } from "@/components/forms/form-date-picker";
 
 export const ExamCreate = () => {
   // -------------- form -------------------
@@ -22,6 +23,7 @@ export const ExamCreate = () => {
 
   // add button
   const addBtn = async (data: InputExamType) => {
+  
     await handleCrudAction(postExam, data, {
       successMessage: "Exam Created Successfully",
       onSuccess: () => {
@@ -47,6 +49,30 @@ export const ExamCreate = () => {
               type="text"
               name="name"
               placeholder="e.g., Half-Yearly, Annual"
+            />
+            {/* ------- Start Date ----------- */}
+
+            <FormDatePicker
+              control={form.control}
+              name="startDate"
+              label="Exam Start Date"
+              placeholder="Select date"
+            />
+            {/* ------- End Date ----------- */}
+
+            <FormDatePicker
+              control={form.control}
+              name="endDate"
+              label="Exam End Date"
+              placeholder="Select date"
+            />
+            {/* ------- End Date ----------- */}
+
+            <FormDatePicker
+              control={form.control}
+              name="publishDate"
+              label="Result Publish Date"
+              placeholder="Select date"
             />
 
             {/* ---------STATUS-------- */}

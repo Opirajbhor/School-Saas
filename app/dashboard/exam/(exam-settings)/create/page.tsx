@@ -8,6 +8,7 @@ import { exams } from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { SpinnerCustom } from "@/components/Spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { and, eq } from "drizzle-orm";
 
 export default async function Page() {
   const { allowed } = await AccessServer("admin");
@@ -15,7 +16,19 @@ export default async function Page() {
 
   const examGrades = await readMany({
     drizzleSchema: exams,
+    query: ({ db, instituteId }) =>
+      db.query.exams.findMany({
+        where: and(eq(exams.instituteId, instituteId)),
+        with: {
+          assignClasses: {
+            with: {
+              class: true,
+            },
+          },
+        },
+      }),
   });
+  console.log(examGrades);
   if (!examGrades.success) {
     return <SpinnerCustom />;
   }

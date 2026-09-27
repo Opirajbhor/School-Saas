@@ -24,6 +24,39 @@ export const ExamCreateColumn = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
+  columnHelper.accessor("startDate", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Start Date" />
+    ),
+    filterFn: "includesString",
+    cell: ({ row }) => {
+      const date = row.getValue<Date>("startDate");
+      if (!date) return "—";
+      return new Intl.DateTimeFormat("en-GB").format(date);
+    },
+  }),
+  columnHelper.accessor("endDate", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="End Date" />
+    ),
+    filterFn: "includesString",
+    cell: ({ row }) => {
+      const date = row.getValue<Date>("endDate");
+      if (!date) return "—";
+      return new Intl.DateTimeFormat("en-GB").format(date);
+    },
+  }),
+  columnHelper.accessor("publishDate", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Result Publish Date" />
+    ),
+    filterFn: "includesString",
+    cell: ({ row }) => {
+      const date = row.getValue<Date>("publishDate");
+      if (!date) return "—";
+      return new Intl.DateTimeFormat("en-GB").format(date);
+    },
+  }),
 
   columnHelper.accessor("status", {
     header: ({ column }) => (

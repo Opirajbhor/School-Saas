@@ -421,6 +421,20 @@
       "when": 1790433927856,
       "tag": "0059_skinny_chimera",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790522818019,
+      "tag": "0060_whole_bloodstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1790524291570,
+      "tag": "0061_brave_robbie_robertson",
+      "breakpoints": true
     }
   ]
 }

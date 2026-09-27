@@ -1,4 +1,11 @@
-import { pgTable, uuid, text, unique, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  unique,
+  index,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 export const exams = pgTable(
   "exams",
@@ -10,6 +17,17 @@ export const exams = pgTable(
       .references(() => instituteProfile.id, { onDelete: "cascade" }),
 
     name: text("name").notNull(),
+    startDate: timestamp("start_date", {
+      withTimezone: true,
+    }).notNull(),
+
+    endDate: timestamp("end_date", {
+      withTimezone: true,
+    }).notNull(),
+
+    publishDate: timestamp("publish_date", {
+      withTimezone: true,
+    }),
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
   },
@@ -23,9 +41,11 @@ export const exams = pgTable(
 import { relations } from "drizzle-orm";
 import { instituteProfile } from "../institute-profile-schema.drizzle";
 import { statusEnum, timestamps } from "../enums-drizzle";
-export const examsRelations = relations(exams, ({ one }) => ({
+import { examClasses } from "./exam-assign.drizzle";
+export const examsRelations = relations(exams, ({ one, many }) => ({
   institute: one(instituteProfile, {
     fields: [exams.instituteId],
     references: [instituteProfile.id],
   }),
+  assignClasses: many(examClasses),
 }));
