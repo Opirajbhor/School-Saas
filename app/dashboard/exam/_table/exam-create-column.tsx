@@ -8,6 +8,7 @@ import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import { OutputExamType } from "../_schema/exam.zod";
 import { ToggleExamStatus } from "../_actions/exam.action";
+import ExamAssignToClass from "../_component/exam-assign-class";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<DataTableFeatures, OutputExamType>();
@@ -46,6 +47,7 @@ export const ExamCreateColumn = columnHelper.columns([
       return new Intl.DateTimeFormat("en-GB").format(date);
     },
   }),
+
   columnHelper.accessor("publishDate", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Result Publish Date" />
@@ -76,6 +78,14 @@ export const ExamCreateColumn = columnHelper.columns([
           {status}
         </span>
       );
+    },
+  }),
+  columnHelper.display({
+    header: "Classes",
+    id: "classes",
+    cell: ({ row }) => {
+      const item = row.original;
+      return <ExamAssignToClass {...item} />;
     },
   }),
   columnHelper.display({

@@ -4,7 +4,7 @@ import { index, pgTable, unique, uuid } from "drizzle-orm/pg-core";
 import { instituteProfile } from "../institute-profile-schema.drizzle";
 import { exams } from "./exam.drizzle";
 import { classesDrizzle } from "../classes.drizzle";
-import { timestamps } from "../enums-drizzle";
+import { statusEnum, timestamps } from "../enums-drizzle";
 import { relations } from "drizzle-orm";
 
 export const examClasses = pgTable(
@@ -29,6 +29,7 @@ export const examClasses = pgTable(
       .references(() => classesDrizzle.id, {
         onDelete: "cascade",
       }),
+    status: statusEnum("status").notNull().default("ACTIVE"),
 
     ...timestamps,
   },

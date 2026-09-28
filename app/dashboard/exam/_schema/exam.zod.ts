@@ -1,4 +1,5 @@
 import {
+  examClasses,
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
   exams,
@@ -16,6 +17,15 @@ export const examZod = createInsertSchema(exams, {
 export type InputExamType = z.infer<typeof examZod>;
 export const outputExamZod = createSelectSchema(exams);
 export type OutputExamType = z.infer<typeof outputExamZod>;
+//=========== exam assign to class ==========
+
+export const examAssignZod = z.object({
+  examId: z.uuid("Invalid exam id"),
+  classId: z.array(z.uuid("Invalid class id")),
+});
+export type InputExamAssignType = z.infer<typeof examAssignZod>;
+export const outputExamAssignZod = createSelectSchema(examClasses);
+export type OutputExamAssignType = z.infer<typeof outputExamAssignZod>;
 
 //=========== exam mark type ==========
 export const examMarkTypesZod = createInsertSchema(examMarkTypesDrizzle, {

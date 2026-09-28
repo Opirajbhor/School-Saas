@@ -37,6 +37,7 @@ export const auditEntityEnum = pgEnum("audit_entity", [
   "MARK",
   "RESULT",
   "ASSIGNED_CLASS_TO_GROUP",
+  "ASSIGNED_CLASS_TO_EXAM",
 ]);
 
 // ─── Audit Logs ────────────────────────────────

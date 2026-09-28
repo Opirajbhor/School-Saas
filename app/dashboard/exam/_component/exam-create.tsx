@@ -23,7 +23,6 @@ export const ExamCreate = () => {
 
   // add button
   const addBtn = async (data: InputExamType) => {
-  
     await handleCrudAction(postExam, data, {
       successMessage: "Exam Created Successfully",
       onSuccess: () => {

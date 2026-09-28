@@ -435,6 +435,20 @@
       "when": 1790524291570,
       "tag": "0061_brave_robbie_robertson",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1790617051234,
+      "tag": "0062_warm_silvermane",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790617548245,
+      "tag": "0063_great_blockbuster",
+      "breakpoints": true
     }
   ]
 }
