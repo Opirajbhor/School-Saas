@@ -152,7 +152,7 @@ export async function assignExamClasses(data: InputExamAssignType) {
         ),
       });
     });
-
+    revalidatePath("/dashboard/exam/create");
     return {
       success: true as const,
       data: result,

@@ -16,7 +16,15 @@ export const examZod = createInsertSchema(exams, {
 });
 export type InputExamType = z.infer<typeof examZod>;
 export const outputExamZod = createSelectSchema(exams);
-export type OutputExamType = z.infer<typeof outputExamZod>;
+export type OutputExamType = z.infer<typeof outputExamZod> & {
+  assignClasses: {
+    classId: string;
+    status: string;
+    class: {
+      name: string;
+    };
+  }[];
+};
 //=========== exam assign to class ==========
 
 export const examAssignZod = z.object({

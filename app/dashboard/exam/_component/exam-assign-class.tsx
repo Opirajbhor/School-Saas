@@ -10,11 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  AssignGroupClassType,
-  assignGroupClassZod,
-} from "@/src/validation/groups.zod";
-import { assignGroupClasses } from "@/app/dashboard/groups/_actions/groups.action";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,8 +52,9 @@ export default function ExamAssignToClass(exam: OutputExamType) {
     control: form.control,
     name: "classId",
   });
-
+  console.log(selectedClasses);
   const handleSubmit = async (data: InputExamAssignType) => {
+    console.log("submit--data", data);
     await handleCrudAction(assignExamClasses, data, {
       successMessage: "Classes Assigned Successfully",
       onSuccess: () => {
@@ -78,11 +74,14 @@ export default function ExamAssignToClass(exam: OutputExamType) {
   const handleOpenChange = (value: boolean) => {
     setOpen(value);
     if (value) {
+      const activeClassIds = exam.assignClasses
+        .filter((item) => item.status === "ACTIVE")
+        .map((item) => item.classId);
+
       form.reset({
         examId: exam.id,
-        classId: exam.assignClasses.map((item) => item.classId),
+        classId: activeClassIds,
       });
-
       return;
     }
     form.reset({

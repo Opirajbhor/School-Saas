@@ -85,7 +85,18 @@ export const ExamCreateColumn = columnHelper.columns([
     id: "classes",
     cell: ({ row }) => {
       const item = row.original;
-      return <ExamAssignToClass {...item} />;
+      return (
+        <div className="flex flex-wrap gap-1">
+          {item.assignClasses
+            ?.filter((c) => c.status === "ACTIVE")
+            .map((c) => (
+              <p key={c.classId} className="text-xs">
+                {c.class?.name ?? "—"}
+                {","}
+              </p>
+            ))}
+        </div>
+      );
     },
   }),
   columnHelper.display({
@@ -93,7 +104,12 @@ export const ExamCreateColumn = columnHelper.columns([
     id: "actions",
     cell: ({ row }) => {
       const item = row.original;
-      return <ActionsCell item={item} />;
+      return (
+        <div className="flex items-center gap-2">
+          <ExamAssignToClass {...item} />
+          <ActionsCell item={item} />
+        </div>
+      );
     },
   }),
 ]);
