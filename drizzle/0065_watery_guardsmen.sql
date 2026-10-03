@@ -1,0 +1,1 @@
+ALTER TABLE "academic_sessions" RENAME COLUMN "is_active" TO "status";

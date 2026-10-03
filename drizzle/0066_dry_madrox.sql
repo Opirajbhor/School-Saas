@@ -1,0 +1,1 @@
+ALTER TABLE "academic_sessions" DROP CONSTRAINT "academic_sessions_institute_year_unique";

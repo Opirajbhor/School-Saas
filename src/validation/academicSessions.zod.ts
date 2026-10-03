@@ -1,17 +1,7 @@
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-export const academicSessionZod = z.object({
-  instituteId: z
-    .string()
-    .uuid("Invalid institute ID")
-    .optional()
-    .or(z.literal("")),
-  userId: z.string().nullable().optional(),
-
-  year: z.string().trim().min(4, "Year is required").max(100),
-  isActive: z.boolean({
-    message: "Status is required",
-  }),
-});
+import { academicSessions } from "../drizzle-DB/schema";
+export const academicSessionZod = createInsertSchema(academicSessions);
 
 export type academicSessionType = z.infer<typeof academicSessionZod>;
 

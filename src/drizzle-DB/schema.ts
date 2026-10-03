@@ -14,5 +14,3 @@ export * from "./schema/exam-managment/exam-grade-range.drizzle";
 export * from "./schema/exam-managment/exam-mark-types.drizzle";
 export * from "./schema/exam-managment/exam.drizzle";
 export * from "./schema/exam-managment/exam-assign.drizzle";
-
-export * from "./relations/drizzleRelation";

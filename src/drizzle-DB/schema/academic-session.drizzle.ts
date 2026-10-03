@@ -1,36 +1,18 @@
-import { pgTable, uuid, varchar, boolean, index } from "drizzle-orm/pg-core";
-import { unique } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { instituteProfile } from "./institute-profile-schema.drizzle";
-import { timestamps } from "./enums-drizzle";
+import { statusEnum, timestamps } from "./enums-drizzle";
 import { classesDrizzle } from "./classes.drizzle";
 
-export const academicSessions = pgTable(
-  "academic_sessions",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, {
-        onDelete: "cascade",
-      }),
-    year: varchar("year", {
-      length: 20,
-    }).notNull(),
-    isActive: boolean("is_active").notNull().default(false),
-    ...timestamps,
-  },
-  // unique constrain
-  (table) => [
-    unique("academic_sessions_institute_year_unique").on(
-      table.instituteId,
-      table.year,
-    ),
-    // index
+export const academicSessions = pgTable("academic_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
 
-    index("academic_sessions_institute_idx").on(table.instituteId),
-  ],
-);
+  year: varchar("year", {
+    length: 20,
+  }).notNull(),
+  status: statusEnum("status").notNull().default("ACTIVE"),
+
+  ...timestamps,
+});
 
 export const academicSessionsRelations = relations(
   academicSessions,
