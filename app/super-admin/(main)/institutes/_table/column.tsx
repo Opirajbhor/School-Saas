@@ -7,6 +7,11 @@ import { cn } from "@/utils/utils";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import { InsituteProfileUpdateType } from "@/src/validation/institute-profile.zod";
+import {
+  changeStatusInstitute,
+  deleteInstitute,
+} from "../_actions/institute.action";
+import DeleteModal from "@/components/modal/delete-modal";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<
@@ -80,17 +85,28 @@ function ActionsCell({ item }: { item: InsituteProfileUpdateType }) {
 
   return (
     <div className="flex gap-2">
-      {/* {item?.id && (
+      {item?.id && (
         <StatusToggleModal
           id={item.id}
-          onDelete={}
+          onDelete={changeStatusInstitute}
           onSuccess={() => {
             queryClient.invalidateQueries({
               queryKey: ["classes", "sections"],
             });
           }}
         />
-      )} */}
+      )}
+      {item?.id && item.status === "INACTIVE" && (
+        <DeleteModal
+          id={item.id}
+          onDelete={deleteInstitute}
+          onSuccess={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["classes", "sections"],
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

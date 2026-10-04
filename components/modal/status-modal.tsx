@@ -11,9 +11,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { AlertTriangleIcon, Trash } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { toast } from "sonner";
+import { GrStatusInfo } from "react-icons/gr";
 
 interface StatusModalProps {
   id: string;
@@ -25,7 +25,7 @@ interface StatusModalProps {
   onError?: (error: unknown) => void;
   successMessage?: string;
   errorMessage?: string;
-  variant?: "destructive" | "default" | "outline";
+  variant?: "outline";
   buttonText?: string;
   loadingText?: string;
   className?: string;
@@ -41,7 +41,7 @@ export default function StatusToggleModal({
   onError,
   successMessage = "Changed Successfully",
   errorMessage = "Error Changing",
-  variant = "destructive",
+  variant = "outline",
   buttonText = "",
   loadingText = "Changing...",
   className = "",
@@ -70,7 +70,8 @@ export default function StatusToggleModal({
       <DialogTrigger asChild>
         {trigger || (
           <Button className={`${className}`} variant={variant}>
-            <Trash className="h-4 w-4" />
+            <GrStatusInfo className="h-4 w-4 text-yellow-600" />
+
             {buttonText}
           </Button>
         )}
@@ -78,7 +79,7 @@ export default function StatusToggleModal({
       <DialogContent className={`sm:max-w-lg `}>
         <div className="flex items-start space-x-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
-            <AlertTriangleIcon className="h-6 w-6 text-red-600" />
+            <GrStatusInfo className="h-6 w-6 text-yellow-600" />
           </div>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>

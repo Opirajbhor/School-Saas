@@ -1,43 +1,30 @@
 "use server";
-
-import { and, eq } from "drizzle-orm";
-import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
-import { readRecord } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { academicSessions } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import {
   academicSessionType,
   academicSessionZod,
 } from "@/src/validation/academicSessions.zod";
-import { createRecord } from "@/src/server-actions/crud-funtions/server-create-crud";
-import { updateRecord } from "@/src/server-actions/crud-funtions/server-update-crud";
-import { deleteRecord } from "@/src/server-actions/crud-funtions/server-delete-crud";
 import { revalidatePath } from "next/cache";
+import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
+import { eq } from "drizzle-orm";
 
+// create session
 export async function createAcademicSession(data: academicSessionType) {
-  const validated = academicSessionZod.safeParse(data);
-  if (!validated.success) {
-    return {
-      success: false as const,
-      error: "Validation failed",
-      details: validated.error.flatten().fieldErrors,
-    };
-  }
-
   try {
     const result = await db.transaction(async (tx) => {
-      // If this session is active → deactivate others first
-      if (validated.data) {
+      if (data) {
         await tx.update(academicSessions).set({ status: "INACTIVE" });
       }
 
-      const [session] = await tx
-        .insert(academicSessions)
-        .values({
-          ...validated.data,
-          status: "ACTIVE",
-        })
-        .returning();
+      const session = await CreateSuperAdmin(
+        {
+          drizzleSchema: academicSessions,
+          zodSchema: academicSessionZod,
+          additionFields: {},
+        },
+        data,
+      );
 
       return session;
     });
@@ -55,26 +42,51 @@ export async function createAcademicSession(data: academicSessionType) {
   }
 }
 
-// update Sessions
-export async function updateSessions(id: string, data: academicSessionType) {
-  return updateRecord(
-    {
-      drizzleSchema: academicSessions,
-      zodSchema: academicSessionZod,
-      entity: "SESSION",
-    },
-    id,
-    data,
-  );
+// change status of Session
+export async function changeStatusSession(id: string) {
+  try {
+    const result = await db.transaction(async (tx) => {
+      await tx.update(academicSessions).set({ status: "INACTIVE" });
+
+      return await tx
+        .update(academicSessions)
+        .set({ status: "ACTIVE" })
+        .where(eq(academicSessions.id, id))
+        .returning();
+    });
+    revalidatePath("/super-admin/academic-sessions");
+    revalidatePath("/dashboard/academic-sessions");
+    return { success: true as const, data: result };
+  } catch (error) {
+    console.error("createAcademicSession failed:", error);
+
+    return {
+      success: false as const,
+      error: "Failed to create session",
+      details: {},
+    };
+  }
 }
 
 // delete session
-export async function deleteSessions(id: string) {
-  return deleteRecord(
-    {
-      drizzleSchema: academicSessions,
-      entity: "SESSION",
-    },
-    id,
-  );
+export async function deleteSession(id: string) {
+  try {
+    const result = await db.transaction(async (tx) => {
+      return await tx
+        .delete(academicSessions)
+        .where(eq(academicSessions.id, id))
+        .returning();
+    });
+    revalidatePath("/super-admin/academic-sessions");
+    revalidatePath("/dashboard/academic-sessions");
+    return { success: true as const, data: result };
+  } catch (error) {
+    console.error("createAcademicSession failed:", error);
+
+    return {
+      success: false as const,
+      error: "Failed to create session",
+      details: {},
+    };
+  }
 }

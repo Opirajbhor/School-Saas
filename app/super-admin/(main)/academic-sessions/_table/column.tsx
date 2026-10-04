@@ -7,6 +7,11 @@ import { cn } from "@/utils/utils";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import { academicSessionType } from "@/src/validation/academicSessions.zod";
+import {
+  changeStatusSession,
+  deleteSession,
+} from "../_actions/academicSession.action";
+import DeleteModal from "@/components/modal/delete-modal";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<
@@ -68,17 +73,29 @@ function ActionsCell({ item }: { item: academicSessionType }) {
 
   return (
     <div className="flex gap-2">
-      {/* {item?.id && (
+      {item?.id && item.status === "ACTIVE" && (
         <StatusToggleModal
           id={item.id}
-          onDelete={}
+          onDelete={changeStatusSession}
           onSuccess={() => {
             queryClient.invalidateQueries({
               queryKey: ["classes", "sections"],
             });
           }}
         />
-      )} */}
+      )}
+      {item?.id && item.status === "INACTIVE" && (
+        <DeleteModal
+          id={item.id}
+          onDelete={deleteSession}
+          onSuccess={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["classes", "sections"],
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
+

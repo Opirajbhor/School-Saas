@@ -470,6 +470,13 @@
       "when": 1791015992648,
       "tag": "0066_dry_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1791121004000,
+      "tag": "0067_rare_leader",
+      "breakpoints": true
     }
   ]
 }

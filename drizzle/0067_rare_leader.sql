@@ -1,0 +1,1 @@
+ALTER TABLE "academic_sessions" ADD CONSTRAINT "academic_sessions_year_unique" UNIQUE("year");
