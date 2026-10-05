@@ -30,7 +30,6 @@ export default async function Page() {
             data={sessions as academicSessionType[]}
           />
         </div>
-        {/* create session */}
       </div>
     </div>
   );

@@ -16,9 +16,9 @@ export const subjectDbSchema = pgTable(
   "subjects",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, { onDelete: "cascade" }),
+    instituteId: uuid("institute_id").references(() => instituteProfile.id, {
+      onDelete: "cascade",
+    }),
     name: text("name").notNull(),
     code: text("code").notNull(),
     shortName: text("short_name").notNull(),

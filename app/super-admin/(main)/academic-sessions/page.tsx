@@ -15,16 +15,14 @@ export default async function Page() {
         </h1>
         <div className="flex items-center justify-center">
           <div>
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-              {/* Data Table Section */}
-              <div>
-                <DataTable
-                  columns={SessionColumn}
-                  data={sessions as academicSessionType[]}
-                />
-              </div>
-              {/* create session */}
+            {/* Data Table Section */}
+            <div>
+              <DataTable
+                columns={SessionColumn}
+                data={sessions as academicSessionType[]}
+              />
             </div>
+            {/* create session */}
             <CreateAcademicSession />
           </div>
         </div>

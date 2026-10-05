@@ -6,28 +6,21 @@ import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-head
 import { cn } from "@/utils/utils";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
-import { academicSessionType } from "@/src/validation/academicSessions.zod";
-import {
-  changeStatusSession,
-  deleteSession,
-} from "../_actions/academicSession.action";
 import DeleteModal from "@/components/modal/delete-modal";
+import { outputGroupType } from "@/src/validation/groups.zod";
+import { changeStatusGroups, deleteGroups } from "../_actions/groups.action";
 
-// Use `accessor` for data columns and `display` for columns without one.
-const columnHelper = createColumnHelper<
-  DataTableFeatures,
-  academicSessionType
->();
+const columnHelper = createColumnHelper<DataTableFeatures, outputGroupType>();
 
-export const SessionColumn = columnHelper.columns([
+export const GroupsColumn = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
     cell: ({ row }) => row.index + 1,
   }),
-  columnHelper.accessor("year", {
+  columnHelper.accessor("name", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Session Year" />
+      <DataTableColumnHeader column={column} title="Groups Name" />
     ),
     filterFn: "includesString",
   }),
@@ -68,7 +61,7 @@ export const SessionColumn = columnHelper.columns([
 ]);
 
 //===== actions ====
-function ActionsCell({ item }: { item: academicSessionType }) {
+function ActionsCell({ item }: { item: outputGroupType }) {
   const queryClient = useQueryClient();
 
   return (
@@ -76,10 +69,10 @@ function ActionsCell({ item }: { item: academicSessionType }) {
       {item?.id && (
         <StatusToggleModal
           id={item.id}
-          onDelete={changeStatusSession}
+          onDelete={changeStatusGroups}
           onSuccess={() => {
             queryClient.invalidateQueries({
-              queryKey: ["classes", "sections"],
+              queryKey: ["Groups", "sections"],
             });
           }}
         />
@@ -87,10 +80,10 @@ function ActionsCell({ item }: { item: academicSessionType }) {
       {item?.id && item.status === "INACTIVE" && (
         <DeleteModal
           id={item.id}
-          onDelete={deleteSession}
+          onDelete={deleteGroups}
           onSuccess={() => {
             queryClient.invalidateQueries({
-              queryKey: ["classes", "sections"],
+              queryKey: ["Groups", "sections"],
             });
           }}
         />

@@ -4,11 +4,7 @@ import { outputGroupType } from "./groups.zod";
 import { createInsertSchema } from "drizzle-zod";
 import { classesDrizzle } from "../drizzle-DB/schema";
 
-export const classesZod = createInsertSchema(classesDrizzle).omit({
-  instituteId: true,
-  sessionId: true,
-});
-
+export const classesZod = createInsertSchema(classesDrizzle);
 export type classesType = z.infer<typeof classesZod>;
 
 export type classesTypeWithId = classesType & {

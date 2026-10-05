@@ -1,43 +1,16 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  createSession,
-  deleteSessions,
-  getSessions,
-} from "@/app/dashboard/academic-sessions/_actions/academicSession.action";
 import {
   academicSessionType,
   academicSessionZod,
-  sessionList,
 } from "@/src/validation/academicSessions.zod";
 import { Input } from "@base-ui/react/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Edit, Calendar, BarChart3 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import DeleteModal from "@/components/modal/delete-modal";
-import { clientReadAction } from "@/src/server-actions/crud-funtions/client-read-action";
-import { SpinnerCustom } from "@/components/Spinner";
-import EditSession from "./edit-session";
 import { createAcademicSession } from "./_actions/academicSession.action";
 
 export default function CreateAcademicSession() {

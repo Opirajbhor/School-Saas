@@ -14,12 +14,9 @@ export const classesDrizzle = pgTable(
   "classes",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, { onDelete: "cascade" }),
-    sessionId: uuid("session_id")
-      .notNull()
-      .references(() => academicSessions.id, { onDelete: "cascade" }),
+    instituteId: uuid("institute_id").references(() => instituteProfile.id, {
+      onDelete: "cascade",
+    }),
     name: text("name").notNull(),
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
@@ -28,13 +25,10 @@ export const classesDrizzle = pgTable(
   (table) => [
     unique("classes_institute_session_name_unique").on(
       table.instituteId,
-      table.sessionId,
       table.name,
     ),
     // index
-
     index("classes_institute_idx").on(table.instituteId),
-    index("classes_session_idx").on(table.sessionId),
   ],
 );
 
@@ -67,12 +61,7 @@ export const sectionDrizzle = pgTable(
 );
 
 // Class Relation-----------------
-export const classesRelations = relations(classesDrizzle, ({ one, many }) => ({
-  session: one(academicSessions, {
-    fields: [classesDrizzle.sessionId],
-    references: [academicSessions.id],
-  }),
-
+export const classesRelations = relations(classesDrizzle, ({ many }) => ({
   sections: many(sectionDrizzle),
   groupClasses: many(groupClasses),
 }));

@@ -477,6 +477,27 @@
       "when": 1791121004000,
       "tag": "0067_rare_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1791213666801,
+      "tag": "0068_outstanding_violations",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1791214925567,
+      "tag": "0069_strong_magma",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1791216881886,
+      "tag": "0070_strange_hemingway",
+      "breakpoints": true
     }
   ]
 }

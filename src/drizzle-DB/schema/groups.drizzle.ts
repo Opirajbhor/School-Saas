@@ -1,13 +1,5 @@
 import { relations } from "drizzle-orm";
-import {
-  boolean,
-  index,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-  unique,
-} from "drizzle-orm/pg-core";
+import { index, pgTable, text, uuid, unique } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { statusEnum, timestamps } from "./enums-drizzle";
 import { classesDrizzle } from "./classes.drizzle";
@@ -17,12 +9,10 @@ export const groups = pgTable(
   "groups",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
+    instituteId: uuid("institute_id").references(() => instituteProfile.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
     name: text("name").notNull(),
     status: statusEnum("status").notNull().default("ACTIVE"),
 
