@@ -4,7 +4,9 @@ import { DataTableFeatures } from "@/components/table/tanstack/data-table-featur
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import { OutputExamType } from "../_schema/exam.zod";
+import StatusToggleModal from "@/components/modal/status-modal";
+import { OutputExamType } from "@/app/dashboard/exam/_schema/exam.zod";
+import { ToggleExamStatus } from "../_actions/exam.action";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<DataTableFeatures, OutputExamType>();
@@ -42,23 +44,28 @@ export const ExamCreateColumn = columnHelper.columns([
       );
     },
   }),
+
   columnHelper.display({
-    header: "Classes",
-    id: "classes",
+    header: "Actions",
+    id: "actions",
     cell: ({ row }) => {
       const item = row.original;
       return (
-        <div className="flex flex-wrap gap-1">
-          {item.assignClasses
-            ?.filter((c) => c.status === "ACTIVE")
-            .map((c) => (
-              <p key={c.classId} className="text-xs">
-                {c.class?.name ?? "—"}
-                {","}
-              </p>
-            ))}
+        <div className="flex items-center gap-2">
+          <ActionsCell item={item} />
         </div>
       );
     },
   }),
 ]);
+
+//===== actions ====
+function ActionsCell({ item }: { item: OutputExamType }) {
+  return (
+    <div className="flex gap-2">
+      {item?.id && (
+        <StatusToggleModal id={item.id} onDelete={ToggleExamStatus} />
+      )}
+    </div>
+  );
+}

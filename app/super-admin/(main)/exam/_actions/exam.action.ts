@@ -10,13 +10,99 @@ import {
 import {
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
+  exams,
 } from "@/src/drizzle-DB/schema";
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
 import { db } from "@/src/drizzle-DB";
 import { eq, isNull } from "drizzle-orm";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
+import {
+  examZod,
+  InputExamType,
+  OutputExamType,
+} from "@/app/dashboard/exam/_schema/exam.zod";
 
+// =============== Exam ================
+export async function getDefaultExams() {
+  try {
+    const result = await readMany({
+      drizzleSchema: exams,
+      query: ({ db }) =>
+        db.query.exams.findMany({
+          where: isNull(exams.instituteId),
+          orderBy: (exams, { asc }) => [asc(exams.createdAt)],
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data as OutputExamType[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
+}
+
+// post exam
+export async function postExams(data: InputExamType) {
+  try {
+    const result = await CreateSuperAdmin(
+      {
+        drizzleSchema: exams,
+        zodSchema: examZod,
+        additionFields: {},
+      },
+      data,
+    );
+
+    revalidatePath("/super-admn/exam/create");
+    revalidatePath("/dashboard/exam/create");
+
+    return { success: true as const, data: result };
+  } catch (error) {
+    console.error("create exam failed:", error);
+
+    return {
+      success: false as const,
+      error: "Failed to create exam",
+      details: {},
+    };
+  }
+}
+
+export async function ToggleExamStatus(id: string) {
+  try {
+    const result = await db.transaction(async (tx) => {
+      const current = await tx.query.exams.findFirst({
+        where: eq(exams.id, id),
+        columns: { status: true },
+      });
+
+      if (!current) throw new Error("Not found");
+
+      return await tx
+        .update(exams)
+        .set({ status: current.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" })
+        .where(eq(exams.id, id))
+        .returning();
+    });
+    revalidatePath("/super-admn/exam/create");
+    revalidatePath("/dashboard/exam/create");
+    return { success: true as const, data: result };
+  } catch (error) {
+    console.error("change exam  status failed:", error);
+
+    return {
+      success: false as const,
+      error: "change exam status failed",
+      details: {},
+    };
+  }
+}
 //=================  exam mark types ==============
 
 // get Default exam mark types

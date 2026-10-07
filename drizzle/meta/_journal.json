@@ -505,6 +505,13 @@
       "when": 1791387764446,
       "tag": "0071_flimsy_screwball",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1791389143299,
+      "tag": "0072_dashing_maelstrom",
+      "breakpoints": true
     }
   ]
 }

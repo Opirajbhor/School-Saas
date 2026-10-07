@@ -1,33 +1,16 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  unique,
-  index,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, unique, index } from "drizzle-orm/pg-core";
 
 export const exams = pgTable(
   "exams",
   {
     id: uuid("id").defaultRandom().primaryKey(),
 
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, { onDelete: "cascade" }),
+    instituteId: uuid("institute_id").references(() => instituteProfile.id, {
+      onDelete: "cascade",
+    }),
 
     name: text("name").notNull(),
-    startDate: timestamp("start_date", {
-      withTimezone: true,
-    }).notNull(),
 
-    endDate: timestamp("end_date", {
-      withTimezone: true,
-    }).notNull(),
-
-    publishDate: timestamp("publish_date", {
-      withTimezone: true,
-    }),
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
   },

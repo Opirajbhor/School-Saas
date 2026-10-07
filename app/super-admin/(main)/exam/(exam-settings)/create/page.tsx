@@ -1,39 +1,17 @@
-import { redirect } from "next/navigation";
-import { AccessServer } from "@/src/server-actions/protected-routes/role-access-server";
 import { DataTable } from "@/components/table/tanstack/data-table";
-import { OutputExamType } from "../../_schema/exam.zod";
-import { ExamCreateColumn } from "../../_table/exam-create-column";
-import { exams } from "@/src/drizzle-DB/schema";
-import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { SpinnerCustom } from "@/components/Spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { eq, isNull, or } from "drizzle-orm";
+import { getDefaultExams } from "../../_actions/exam.action";
+import { ExamCreateColumn } from "../../_table/exam-create-column";
+import { OutputExamType } from "@/app/dashboard/exam/_schema/exam.zod";
+import { ExamCreate } from "../../_component/exam-create";
 
 export default async function Page() {
-  const { allowed } = await AccessServer("admin");
-  if (!allowed) redirect("/unauthorize");
-
-  const result = await readMany({
-    drizzleSchema: exams,
-    query: ({ db, instituteId }) =>
-      db.query.exams.findMany({
-        where: or(
-          isNull(exams.instituteId),
-          eq(exams.instituteId, instituteId),
-        ),
-        with: {
-          assignClasses: {
-            with: {
-              class: true,
-            },
-          },
-        },
-      }),
-  });
+  const result = await getDefaultExams();
   if (!result.success) {
     return <SpinnerCustom />;
   }
-  const examData = result.data;
+  const examGrades = result.data;
   return (
     <div>
       <div>
@@ -54,8 +32,11 @@ export default async function Page() {
                 <div className="lg:col-span-4">
                   <DataTable
                     columns={ExamCreateColumn}
-                    data={examData as OutputExamType[]}
+                    data={examGrades as OutputExamType[]}
                   />
+                </div>
+                <div>
+                  <ExamCreate />
                 </div>
               </div>
             </TabsContent>
