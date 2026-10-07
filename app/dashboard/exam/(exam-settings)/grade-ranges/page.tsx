@@ -6,7 +6,7 @@ import { examGradeRangeDrizzle } from "@/src/drizzle-DB/schema";
 import { SpinnerCustom } from "@/components/Spinner";
 import { OutputExamGradeRangeType } from "../../_schema/exam.zod";
 import { ExamGradeRangeColumn } from "../../_table/exam-graderange-columns";
-import ExamGradeRangeComponent from "../../_component/exam-graderanges";
+import { eq, isNull, or } from "drizzle-orm";
 
 export default async function Page() {
   const { allowed } = await AccessServer("admin");
@@ -14,6 +14,14 @@ export default async function Page() {
 
   const examGrades = await readMany({
     drizzleSchema: examGradeRangeDrizzle,
+    query: ({ db, instituteId }) =>
+      db.query.examGradeRangeDrizzle.findMany({
+        where: or(
+          isNull(examGradeRangeDrizzle.instituteId),
+          eq(examGradeRangeDrizzle.instituteId, instituteId),
+        ),
+        orderBy: (groups, { asc }) => [asc(groups.createdAt)],
+      }),
   });
   if (!examGrades.success) {
     return <SpinnerCustom />;
@@ -31,9 +39,6 @@ export default async function Page() {
                 columns={ExamGradeRangeColumn}
                 data={examGrades?.data as OutputExamGradeRangeType[]}
               />
-            </div>
-            <div>
-              <ExamGradeRangeComponent />
             </div>
           </div>
         </div>

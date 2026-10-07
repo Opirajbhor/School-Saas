@@ -25,6 +25,7 @@ export const inputSubjectZod = createInsertSchema(subjectDbSchema).omit({
 export type InputSubjectType = z.infer<typeof inputSubjectZod>;
 export type OutputSubjectType = InputSubjectType & {
   id: string;
+  instituteId: string | null;
 };
 
 // --------------subject assign zod validation----------------

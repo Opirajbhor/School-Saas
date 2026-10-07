@@ -1,16 +1,21 @@
 "use client";
 
 import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
-import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import { ClassDetails } from "@/app/dashboard/classes/_component/class-details";
+import StatusToggleModal from "@/components/modal/status-modal";
+import { useQueryClient } from "@tanstack/react-query";
+import { OutputExamGradeRangeType } from "../_schema/exam.zod";
+import { ToggleGradeRangeStatus } from "../_actions/exam.action";
 
 // Use `accessor` for data columns and `display` for columns without one.
-const columnHelper = createColumnHelper<DataTableFeatures, classesTypeWithId>();
+const columnHelper = createColumnHelper<
+  DataTableFeatures,
+  OutputExamGradeRangeType
+>();
 
-export const columns = columnHelper.columns([
+export const ExamGradeRangeColumn = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
@@ -22,11 +27,22 @@ export const columns = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
-  columnHelper.accessor("sections.name", {
+  columnHelper.accessor("minMark", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Sections" />
+      <DataTableColumnHeader column={column} title="Minimum Mark" />
     ),
   }),
+  columnHelper.accessor("maxMark", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Maximum Mark" />
+    ),
+  }),
+  columnHelper.accessor("GPA", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="GPA" />
+    ),
+  }),
+
   columnHelper.accessor("status", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
@@ -58,10 +74,22 @@ export const columns = columnHelper.columns([
 ]);
 
 //===== actions ====
-function ActionsCell({ item }: { item: classesTypeWithId }) {
+function ActionsCell({ item }: { item: OutputExamGradeRangeType }) {
+  const queryClient = useQueryClient();
+
   return (
     <div className="flex gap-2">
-      <ClassDetails classData={item} />
+      {item?.id && (
+        <StatusToggleModal
+          id={item.id}
+          onDelete={ToggleGradeRangeStatus}
+          onSuccess={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["classes", "sections"],
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,14 +1,12 @@
 "use client";
 
 import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
-import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import { ClassDetails } from "@/app/dashboard/classes/_component/class-details";
+import { OutputSubjectType } from "@/src/validation/subjects.zod";
 
-// Use `accessor` for data columns and `display` for columns without one.
-const columnHelper = createColumnHelper<DataTableFeatures, classesTypeWithId>();
+const columnHelper = createColumnHelper<DataTableFeatures, OutputSubjectType>();
 
 export const columns = columnHelper.columns([
   columnHelper.display({
@@ -22,10 +20,24 @@ export const columns = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
-  columnHelper.accessor("sections.name", {
+  columnHelper.accessor("code", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Sections" />
+      <DataTableColumnHeader column={column} title="Code" />
     ),
+  }),
+  columnHelper.accessor("shortName", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Short Name" />
+    ),
+  }),
+  columnHelper.accessor("instituteId", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Provider" />
+    ),
+    cell: ({ getValue }) => {
+      const status = getValue<string | null>();
+      return <span>{status ? "Default" : "Custom"}</span>;
+    },
   }),
   columnHelper.accessor("status", {
     header: ({ column }) => (
@@ -47,21 +59,4 @@ export const columns = columnHelper.columns([
       );
     },
   }),
-  columnHelper.display({
-    header: "Actions",
-    id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return <ActionsCell item={item} />;
-    },
-  }),
 ]);
-
-//===== actions ====
-function ActionsCell({ item }: { item: classesTypeWithId }) {
-  return (
-    <div className="flex gap-2">
-      <ClassDetails classData={item} />
-    </div>
-  );
-}

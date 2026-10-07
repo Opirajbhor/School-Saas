@@ -34,6 +34,11 @@ export default async function SuperAdminLayout({
       link: "/super-admin/subjects",
       icon: <MdSubject />,
     },
+    {
+      name: "Exam",
+      link: "/super-admin/exam",
+      icon: <MdSubject />,
+    },
   ];
 
   return (

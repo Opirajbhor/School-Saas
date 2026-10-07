@@ -2,12 +2,40 @@
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import {
   InputSubjectType,
   inputSubjectZod,
+  OutputSubjectType,
 } from "@/src/validation/subjects.zod";
 import { subjectDbSchema } from "@/src/drizzle-DB/schema";
+import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
+
+// get Default Subjects
+export async function getDefaultSubjects() {
+  try {
+    const result = await readMany({
+      drizzleSchema: subjectDbSchema,
+      query: ({ db }) =>
+        db.query.subjectDbSchema.findMany({
+          where: isNull(subjectDbSchema.instituteId),
+          orderBy: (subjectDbSchema, { asc }) => [
+            asc(subjectDbSchema.createdAt),
+          ],
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data as OutputSubjectType[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
+}
 
 // create subjects
 export async function createAcademicsubjects(data: InputSubjectType) {

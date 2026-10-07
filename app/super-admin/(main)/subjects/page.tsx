@@ -1,15 +1,16 @@
-import { db } from "@/src/drizzle-DB";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { OutputSubjectType } from "@/src/validation/subjects.zod";
 import { subjectsColumn } from "./_table/column";
 import CreateSubject from "./createSubject";
-import { isNull } from "drizzle-orm";
-import { subjectDbSchema } from "@/src/drizzle-DB/schema";
+import { SpinnerCustom } from "@/components/Spinner";
+import { getDefaultSubjects } from "./_actions/subjects.action";
 
 export default async function Page() {
-  const subjects = await db.query.subjectDbSchema.findMany({
-    where: isNull(subjectDbSchema.instituteId),
-  });
+  const result = await getDefaultSubjects();
+  if (!result.success) {
+    return <SpinnerCustom />;
+  }
+  const subjects = result.data;
   return (
     <div>
       <div>

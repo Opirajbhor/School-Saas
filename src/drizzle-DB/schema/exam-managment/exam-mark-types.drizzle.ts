@@ -11,11 +11,9 @@ export const examMarkTypesDrizzle = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
 
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, {
-        onDelete: "cascade",
-      }),
+    instituteId: uuid("institute_id").references(() => instituteProfile.id, {
+      onDelete: "cascade",
+    }),
 
     name: varchar("name", { length: 50 }).notNull(),
     status: statusEnum("status").notNull().default("ACTIVE"),

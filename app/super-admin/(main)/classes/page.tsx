@@ -1,11 +1,16 @@
-import { db } from "@/src/drizzle-DB";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { ClassesColumn } from "./_table/column";
 import { classesType } from "@/src/validation/classes.zod";
 import CreateClasses from "./CreateClasses";
+import { getDefaultClasses } from "./_actions/classes.action";
+import { SpinnerCustom } from "@/components/Spinner";
 
 export default async function Page() {
-  const classes = await db.query.classesDrizzle.findMany();
+  const result = await getDefaultClasses();
+  if (!result.success) {
+    return <SpinnerCustom />;
+  }
+  const classes = result.data;
   return (
     <div>
       <div>

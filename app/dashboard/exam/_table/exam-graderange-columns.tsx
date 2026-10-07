@@ -1,13 +1,9 @@
 "use client";
-
 import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import StatusToggleModal from "@/components/modal/status-modal";
-import { useQueryClient } from "@tanstack/react-query";
 import { OutputExamGradeRangeType } from "../_schema/exam.zod";
-import { ToggleGradeRangeStatus } from "../_actions/exam.action";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<
@@ -63,33 +59,4 @@ export const ExamGradeRangeColumn = columnHelper.columns([
       );
     },
   }),
-  columnHelper.display({
-    header: "Actions",
-    id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return <ActionsCell item={item} />;
-    },
-  }),
 ]);
-
-//===== actions ====
-function ActionsCell({ item }: { item: OutputExamGradeRangeType }) {
-  const queryClient = useQueryClient();
-
-  return (
-    <div className="flex gap-2">
-      {item?.id && (
-        <StatusToggleModal
-          id={item.id}
-          onDelete={ToggleGradeRangeStatus}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["classes", "sections"],
-            });
-          }}
-        />
-      )}
-    </div>
-  );
-}

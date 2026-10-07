@@ -3,21 +3,19 @@
 import { db } from "@/src/drizzle-DB";
 import { subjectAssignSchema, subjectDbSchema } from "@/src/drizzle-DB/schema";
 import { createRecord } from "@/src/server-actions/crud-funtions/server-create-crud";
-import {
-  readMany,
-  readRecord,
-} from "@/src/server-actions/crud-funtions/server-read-crud";
+import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import {
   inputSubAssignType,
   InputSubjectType,
   inputSubjectZod,
+  OutputSubjectType,
   RawSubjectAssignment,
 } from "@/src/validation/subjects.zod";
-import { eq } from "drizzle-orm";
-import { getActiveSessionId } from "../../academic-sessions/_actions/academicSession.action";
+import { eq, isNull, or } from "drizzle-orm";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
+import { getActiveSession } from "../../academic-sessions/_actions/session.action";
 
 // ------------ post a new subject ---------------
 export async function addSubjects(data: InputSubjectType) {
@@ -33,8 +31,33 @@ export async function addSubjects(data: InputSubjectType) {
 }
 
 // ------------get all the subjects------------------
+
 export async function getSubjects() {
-  return await readRecord({ drizzleSchema: subjectDbSchema });
+  try {
+    const result = await readMany({
+      drizzleSchema: subjectDbSchema,
+      query: ({ db, instituteId }) =>
+        db.query.subjectDbSchema.findMany({
+          where: or(
+            isNull(subjectDbSchema.instituteId),
+            eq(subjectDbSchema.instituteId, instituteId),
+          ),
+          orderBy: (subjectDbSchema, { asc }) => [
+            asc(subjectDbSchema.createdAt),
+          ],
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data as OutputSubjectType[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
 }
 
 //------------- toogle subject Status -----------------
@@ -71,23 +94,22 @@ export async function subjectAssignment(data: inputSubAssignType) {
       };
     }
     const { userId, instituteId } = ctx;
-    const session = await getActiveSessionId();
-
-    if (!session.success) {
+    const session = await getActiveSession();
+    if (!session) {
       return {
         success: false as const,
-        error: "No active academic session found",
-        details: {},
+        error: "No Academic Session found",
+        details: { field: ["message"] },
       };
     }
-    const sessionId = session.data;
+    const { id } = session;
     // If any subject assignment fails, ALL assignments are rolled back.
     await db.transaction(async (tx) => {
       return Promise.all(
         subjectIds.map(async (subjectId) => {
           const payload = {
             instituteId,
-            sessionId,
+            sessionId: id,
             classId: rest.classId,
             groupId: rest.groupId,
             subjectType: rest.subjectType,

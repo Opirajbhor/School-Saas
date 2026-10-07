@@ -3,8 +3,37 @@ import { classesDrizzle } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
-import { eq } from "drizzle-orm";
-import { classesType, classesZod } from "@/src/validation/classes.zod";
+import { eq, isNull } from "drizzle-orm";
+import {
+  classesType,
+  classesTypeWithId,
+  classesZod,
+} from "@/src/validation/classes.zod";
+import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
+
+// get Default Classes
+export async function getDefaultClasses() {
+  try {
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db }) =>
+        db.query.classesDrizzle.findMany({
+          where: isNull(classesDrizzle.instituteId),
+          orderBy: (classesDrizzle, { asc }) => [asc(classesDrizzle.createdAt)],
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data as classesTypeWithId[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
+}
 
 // create Class
 export async function createAcademicClass(data: classesType) {

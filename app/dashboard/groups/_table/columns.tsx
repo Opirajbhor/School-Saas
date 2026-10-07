@@ -1,14 +1,13 @@
 "use client";
 
 import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
-import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import { ClassDetails } from "@/app/dashboard/classes/_component/class-details";
+import { outputGroupType } from "@/src/validation/groups.zod";
 
 // Use `accessor` for data columns and `display` for columns without one.
-const columnHelper = createColumnHelper<DataTableFeatures, classesTypeWithId>();
+const columnHelper = createColumnHelper<DataTableFeatures, outputGroupType>();
 
 export const columns = columnHelper.columns([
   columnHelper.display({
@@ -22,11 +21,7 @@ export const columns = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
-  columnHelper.accessor("sections.name", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Sections" />
-    ),
-  }),
+
   columnHelper.accessor("status", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
@@ -47,21 +42,4 @@ export const columns = columnHelper.columns([
       );
     },
   }),
-  columnHelper.display({
-    header: "Actions",
-    id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return <ActionsCell item={item} />;
-    },
-  }),
 ]);
-
-//===== actions ====
-function ActionsCell({ item }: { item: classesTypeWithId }) {
-  return (
-    <div className="flex gap-2">
-      <ClassDetails classData={item} />
-    </div>
-  );
-}

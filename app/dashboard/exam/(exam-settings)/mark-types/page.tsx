@@ -6,7 +6,7 @@ import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { examMarkTypesDrizzle } from "@/src/drizzle-DB/schema";
 import { SpinnerCustom } from "@/components/Spinner";
 import { OutputExamMarkTypes } from "../../_schema/exam.zod";
-import ExamMarkTypeComponent from "../../_component/exam-marktypes";
+import { eq, isNull, or } from "drizzle-orm";
 
 export default async function Page() {
   const { allowed } = await AccessServer("admin");
@@ -14,7 +14,16 @@ export default async function Page() {
 
   const examTypes = await readMany({
     drizzleSchema: examMarkTypesDrizzle,
+    query: ({ db, instituteId }) =>
+      db.query.examMarkTypesDrizzle.findMany({
+        where: or(
+          isNull(examMarkTypesDrizzle.instituteId),
+          eq(examMarkTypesDrizzle.instituteId, instituteId),
+        ),
+        orderBy: (groups, { asc }) => [asc(groups.createdAt)],
+      }),
   });
+
   if (!examTypes.success) {
     return <SpinnerCustom />;
   }
@@ -31,9 +40,6 @@ export default async function Page() {
                 columns={ExamMarkTypeColumn}
                 data={examTypes?.data as OutputExamMarkTypes[]}
               />
-            </div>
-            <div>
-              <ExamMarkTypeComponent />
             </div>
           </div>
         </div>

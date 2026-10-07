@@ -14,15 +14,42 @@ import {
   AssignGroupClassType,
   assignGroupClassZod,
   inputGroupType,
+  outputGroupType,
 } from "../../../../src/validation/groups.zod";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { toggleStatus } from "../../../../src/server-actions/crud-funtions/server-status.action";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 
 // get
-export async function getGroups() {
+export async function getGroupss() {
   return readRecord({ drizzleSchema: groups });
+}
+
+export async function getGroups() {
+  try {
+    const result = await readMany({
+      drizzleSchema: groups,
+      query: ({ db, instituteId }) =>
+        db.query.groups.findMany({
+          where: or(
+            isNull(groups.instituteId),
+            eq(groups.instituteId, instituteId),
+          ),
+          orderBy: (groups, { asc }) => [asc(groups.createdAt)],
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data as outputGroupType[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
 }
 // // get group classes
 export async function getGroupClasses() {

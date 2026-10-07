@@ -1,74 +1,16 @@
-"use client";
 import { SpinnerCustom } from "@/components/Spinner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-
-import {
-  addGroupZod,
-  inputGroupType,
-  OutputGroupClassType,
-} from "@/src/validation/groups.zod";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  createGroup,
-  getGroupClasses,
-  toggleGroup,
-} from "@/app/dashboard/groups/_actions/groups.action";
+import { getGroups } from "./_actions/groups.action";
+import { DataTable } from "@/components/table/tanstack/data-table";
+import { columns } from "./_table/columns";
 
-import AssignGroups from "./assign-groups";
-import { Plus } from "lucide-react";
-import StatusModal from "@/components/modal/status-toggle-modal";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AppTable } from "@/components/table/data-table";
-
-export default function GroupsPage() {
-  const [selectedSub, setSelectedSub] = useState<string[]>([]);
-
-  // ------------- query fn ---------------
-  const queryClient = useQueryClient();
-  const { data: groups = [], isPending } = useQuery<OutputGroupClassType[]>({
-    queryKey: ["groups"],
-    queryFn: async () => {
-      const result = await getGroupClasses();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data as OutputGroupClassType[];
-    },
-  });
-
-  const activegroups = groups?.filter((item) => item.status === "ACTIVE");
-  const form = useForm<inputGroupType>({
-    resolver: zodResolver(addGroupZod),
-    defaultValues: {
-      status: "ACTIVE",
-    },
-  });
-  const { isSubmitting } = form.formState;
-  // add button
-  const addBtn = async (data: inputGroupType) => {
-    console.log(data);
-    await handleCrudAction(createGroup, data, {
-      successMessage: "Group Created Successfully",
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["groups"],
-        });
-      },
-    });
-  };
-
-  if (isPending) {
+export default async function GroupsPage() {
+  const result = await getGroups();
+  if (!result.success) {
     return <SpinnerCustom />;
   }
+  const groups = result.data;
   return (
     <div className="max-w-7xl lg:w-full mx-auto p-6">
       {/* Page Header */}
@@ -90,12 +32,6 @@ export default function GroupsPage() {
             <h2 className="mt-2 text-3xl font-bold">{groups?.length}</h2>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">Total Active Groups</p>
-            <h2 className="mt-2 text-3xl font-bold">{activegroups?.length}</h2>
-          </CardContent>
-        </Card>
       </div>
       {/* ....... */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
@@ -112,105 +48,12 @@ export default function GroupsPage() {
           </div>
 
           {/* Responsive Table Wrapper */}
-          <div className="overflow-x-auto p-2">
-            <AppTable
-              data={groups ?? []}
-              searchable
-              searchPlaceholder="Search Assigned Subjects..."
-              searchKeys={["status", "name"]}
-              selectable
-              selectedIds={selectedSub}
-              onSelectionChange={setSelectedSub}
-              toolbar={<></>}
-              columns={[
-                {
-                  key: "name",
-                  label: "Group Name",
-                },
-
-                {
-                  key: "status",
-                  label: "Status",
-                  render: (item) =>
-                    item.status === "ACTIVE" ? (
-                      <Badge variant="default">ACTIVE</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">INACTIVE</span>
-                    ),
-                },
-                {
-                  key: "classes",
-                  label: "Assigned Classes",
-                  render: (item) => (
-                    <div>
-                      {item.groupClasses.length > 0
-                        ? item?.groupClasses.map((gc) => gc?.name).join(", ")
-                        : "Not Assigned"}
-                    </div>
-                  ),
-                },
-
-                {
-                  key: "actions",
-                  label: "Actions",
-                  render: (item) => (
-                    <div className="flex items-center  gap-3">
-                      {item.status === "ACTIVE" && (
-                        <AssignGroups group={item} />
-                      )}
-                      <StatusModal
-                        id={item.id}
-                        onStatus={toggleGroup}
-                        onSuccess={() => {
-                          queryClient.invalidateQueries({
-                            queryKey: ["groups"],
-                          });
-                        }}
-                      />
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </div>
-        </div>
-        {/* <!--  Add Group Form --> */}
-        <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
-            Add Group
-          </h3>
-
-          {/* add Group form */}
-          <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
-            {/* name */}
-            <div>
-              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                Group Name
-              </Label>
-              <Input
-                {...form.register("name", {
-                  required: "Group name is required",
-                })}
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="e.g., Bangla 1st Paper"
-              />
-              {form.formState.errors.name && (
-                <p className="mt-1 text-sm text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+            {/* Data Table Section */}
+            <div className="lg:col-span-4">
+              <DataTable columns={columns} data={groups} />
             </div>
-
-            <Button disabled={isSubmitting} variant="default" type="submit">
-              {isSubmitting ? (
-                <Spinner className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="mr-2 h-4 w-4" />
-              )}
-              Add Group
-            </Button>
-          </form>
+          </div>
         </div>
       </div>
     </div>

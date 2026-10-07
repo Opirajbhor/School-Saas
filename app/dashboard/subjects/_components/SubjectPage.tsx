@@ -12,26 +12,20 @@ import {
 } from "@/src/validation/subjects.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { SubjectAssignTab } from "./subject-assign-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormInput } from "@/components/forms/form-input";
 import { FormSelect } from "@/components/forms/form-select";
-import { AppTable } from "@/components/table/data-table";
-import StatusToggleModal from "@/components/modal/status-modal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormCheckbox } from "@/components/forms/form-checkbox";
-import {
-  addSubjects,
-  getSubjects,
-  ToggleSubjectStatus,
-} from "../_actions/subjects.action";
+import { addSubjects, getSubjects } from "../_actions/subjects.action";
+import { DataTable } from "@/components/table/tanstack/data-table";
+import { columns } from "../_table/columns";
 
 export default function SubjectPage() {
-  const [selectedSub, setSelectedSub] = useState<string[]>([]);
-
   // ------------- query fn ---------------
   const queryClient = useQueryClient();
   const { data: subjects = [], isPending } = useQuery<OutputSubjectType[]>({
@@ -45,7 +39,6 @@ export default function SubjectPage() {
     },
   });
   const activeSubjects = subjects?.filter((item) => item.status === "ACTIVE");
-
   // -------------- form -------------------
   const form = useForm<InputSubjectType>({
     resolver: zodResolver(inputSubjectZod),
@@ -139,72 +132,12 @@ export default function SubjectPage() {
               </div>
 
               {/*---------- Responsive Table Wrapper -------------*/}
-
-              <AppTable
-                data={subjects ?? []}
-                searchable
-                searchPlaceholder="Search Subjects..."
-                searchKeys={["name", "code", "shortName"]}
-                selectable
-                selectedIds={selectedSub}
-                onSelectionChange={setSelectedSub}
-                toolbar={
-                  <>
-                    <Button variant="outline">Export</Button>
-                  </>
-                }
-                columns={[
-                  {
-                    key: "name",
-                    label: "Subject Name",
-                  },
-
-                  {
-                    key: "shortName",
-                    label: "Short Name",
-                  },
-
-                  {
-                    key: "code",
-                    label: "Subject Code",
-                  },
-
-                  {
-                    key: "religion",
-                    label: "Religion",
-                  },
-
-                  {
-                    key: "status",
-                    label: "Status",
-                    render: (item) =>
-                      item.status === "ACTIVE" ? (
-                        <Badge variant="default">ACTIVE</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">INACTIVE</span>
-                      ),
-                  },
-
-                  {
-                    key: "actions",
-                    label: "Actions",
-                    render: (item) => (
-                      <div className="flex gap-2">
-                        <StatusToggleModal
-                          id={item.id}
-                          onDelete={ToggleSubjectStatus}
-                          onSuccess={() => {
-                            form.reset();
-                            queryClient.invalidateQueries({
-                              queryKey: ["subjects"],
-                            });
-                          }}
-                        />
-                      </div>
-                    ),
-                  },
-                ]}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+                {/* Data Table Section */}
+                <div className="lg:col-span-4">
+                  <DataTable columns={columns} data={subjects} />
+                </div>
+              </div>
             </div>
             {/* <!-- --------- Add subject Form -------------> */}
             <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">

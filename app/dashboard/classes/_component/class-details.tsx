@@ -11,20 +11,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import DeleteModal from "@/components/modal/delete-modal";
-
 import { Eye } from "lucide-react";
-import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
-import { deleteSection, ToggleClassStatus } from "../_actions/classes.action";
+import { deleteSection } from "../_actions/classes.action";
 import AddClassSection from "./add-section";
 
 export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
   const queryClient = useQueryClient();
 
-  const { name, status, sessionId, id, sections } = classData;
+  const { name, status, sessionId, sections } = classData;
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -89,22 +86,7 @@ export function ClassDetails({ classData }: { classData: classesTypeWithId }) {
           </div>
 
           <div>
-            <Button className="w-full cursor-pointer mb-3" variant={"outline"}>
-              Edit
-            </Button>
             <AddClassSection classData={classData} />
-
-            {id && (
-              <StatusToggleModal
-                id={id}
-                onDelete={ToggleClassStatus}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({
-                    queryKey: ["classes", "sections"],
-                  });
-                }}
-              />
-            )}
           </div>
         </div>
 
