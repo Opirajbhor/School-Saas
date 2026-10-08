@@ -1,5 +1,4 @@
 "use server";
-import { db } from "../../../../src/drizzle-DB";
 import {
   groupClasses,
   groups,
@@ -11,15 +10,11 @@ import {
 } from "../../../../src/server-actions/crud-funtions/server-read-crud";
 import {
   addGroupZod,
-  AssignGroupClassType,
-  assignGroupClassZod,
   inputGroupType,
   outputGroupType,
 } from "../../../../src/validation/groups.zod";
-import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { toggleStatus } from "../../../../src/server-actions/crud-funtions/server-status.action";
-import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
-import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 
 // get
 export async function getGroupss() {
@@ -125,117 +120,6 @@ export async function getActiveAssignClasses() {
     return {
       success: false as const,
       error: "failed to fetch data",
-      details: {},
-    };
-  }
-}
-
-// assign to class
-export async function assignGroupClasses(data: AssignGroupClassType) {
-  const ctx = await getUserContext();
-
-  if (!ctx) {
-    return {
-      success: false as const,
-      error: "No User session foundF",
-      details: {},
-    };
-  }
-  const { userId, instituteId } = ctx;
-
-  const validation = assignGroupClassZod.safeParse(data);
-  if (!validation.success) {
-    return {
-      success: false as const,
-      error: "Invalid data",
-      details: validation.error.flatten().fieldErrors,
-    };
-  }
-  const { groupId, classIds } = validation.data;
-
-  try {
-    const result = await db.transaction(async (tx) => {
-      // 1. Deactivate all existing classes in the group
-      await tx
-        .update(groupClasses)
-        .set({ status: "INACTIVE" })
-        .where(
-          and(
-            eq(groupClasses.instituteId, instituteId),
-            eq(groupClasses.groupId, groupId),
-          ),
-        );
-
-      // Get existing assignments to determine which are new
-      const existingAssignments = await tx.query.groupClasses.findMany({
-        where: and(
-          eq(groupClasses.groupId, groupId),
-          eq(groupClasses.instituteId, instituteId),
-        ),
-      });
-
-      const existingClassIdSet = new Set(
-        existingAssignments.map((item) => item.classId),
-      );
-
-      // Reactivate existing classes
-      if (classIds.length > 0) {
-        await tx
-          .update(groupClasses)
-          .set({ status: "ACTIVE" })
-          .where(
-            and(
-              inArray(groupClasses.classId, classIds),
-              eq(groupClasses.groupId, groupId),
-              eq(groupClasses.instituteId, instituteId),
-            ),
-          );
-      }
-
-      // Create new class assignments
-      const newClassIds = classIds.filter((id) => !existingClassIdSet.has(id));
-
-      if (newClassIds.length > 0) {
-        await tx.insert(groupClasses).values(
-          newClassIds.map((classId) => ({
-            groupId,
-            classId,
-            instituteId,
-            status: "ACTIVE" as const,
-          })),
-        );
-      }
-
-      // =========audit logs==========
-      for (const item of newClassIds) {
-        await createAuditLog(tx, {
-          instituteId,
-          userId,
-          action: "CREATED",
-          entity: "ASSIGNED_CLASS_TO_GROUP",
-          entityId: item,
-          metadata: { groupId },
-        });
-      }
-      // Return all active items
-      return await tx.query.groupClasses.findMany({
-        where: and(
-          eq(groupClasses.groupId, groupId),
-          eq(groupClasses.instituteId, instituteId),
-          eq(groupClasses.status, "ACTIVE"),
-        ),
-      });
-    });
-
-    return {
-      success: true as const,
-      data: result,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      success: false as const,
-      error: "failed to update group assignment",
       details: {},
     };
   }

@@ -4,10 +4,12 @@ import { DataTableFeatures } from "@/components/table/tanstack/data-table-featur
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import { outputGroupType } from "@/src/validation/groups.zod";
+import { OutputGroupClassType } from "@/src/validation/groups.zod";
 
-// Use `accessor` for data columns and `display` for columns without one.
-const columnHelper = createColumnHelper<DataTableFeatures, outputGroupType>();
+const columnHelper = createColumnHelper<
+  DataTableFeatures,
+  OutputGroupClassType
+>();
 
 export const columns = columnHelper.columns([
   columnHelper.display({
@@ -21,6 +23,20 @@ export const columns = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
+  columnHelper.accessor(
+    (row) =>
+      row.groupClasses
+        ?.map((gc) => gc.class?.name)
+        .filter(Boolean)
+        .join(", ") ?? "",
+    {
+      id: "assignClasses",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Assign Classes" />
+      ),
+      filterFn: "includesString",
+    },
+  ),
 
   columnHelper.accessor("status", {
     header: ({ column }) => (

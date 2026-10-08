@@ -1,22 +1,27 @@
-import { db } from "@/src/drizzle-DB";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { GroupsColumn } from "./_table/column";
-import { outputGroupType } from "@/src/validation/groups.zod";
+import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import CreateGroups from "./CreateGroups";
+import { getDefaultGroupClasses } from "./_actions/groups.action";
+import { SpinnerCustom } from "@/components/Spinner";
 
 export default async function Page() {
-  const Groups = await db.query.groups.findMany();
+  const result = await getDefaultGroupClasses();
+  if (!result.success) {
+    return <SpinnerCustom />;
+  }
+  const groups = result.data;
   return (
     <div>
       <div>
-        <h1 className="text-center my-5">All Groups List ({Groups.length})</h1>
+        <h1 className="text-center my-5">All Groups List ({groups.length})</h1>
         <div className="flex items-center justify-center">
           <div>
             {/* Data Table Section */}
             <div>
               <DataTable
                 columns={GroupsColumn}
-                data={Groups as outputGroupType[]}
+                data={groups as OutputGroupClassType[]}
               />
             </div>
             <CreateGroups />

@@ -15,14 +15,14 @@ import {
   assignGroupClassZod,
   OutputGroupClassType,
 } from "@/src/validation/groups.zod";
-import { assignGroupClasses } from "@/app/dashboard/groups/_actions/groups.action";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormCheckboxGroup } from "@/components/forms/form-checkbox-group";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
-import { getClasses } from "../classes/_actions/classes.action";
+import { getDefaultClasses } from "../classes/_actions/classes.action";
+import { assignGroupClasses } from "./_actions/groups.action";
 
 export default function AssignGroups({
   group,
@@ -35,7 +35,7 @@ export default function AssignGroups({
   const { data: classes = [] } = useQuery<classesTypeWithId[]>({
     queryKey: ["page-groups", "classes"],
     queryFn: async () => {
-      const result = await getClasses();
+      const result = await getDefaultClasses();
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -62,7 +62,7 @@ export default function AssignGroups({
       successMessage: "Classes Assigned Successfully",
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: ["groups"],
+          queryKey: ["page-groups", "classes"],
         });
         form.reset({
           groupId: group.id,
@@ -79,7 +79,7 @@ export default function AssignGroups({
     if (value) {
       form.reset({
         groupId: group.id,
-        classIds: group.groupClasses.map((item) => item.classId),
+        classIds: group.groupClasses.map((item) => item.class.id),
       });
 
       return;

@@ -15,7 +15,6 @@ import {
   sectionClassTeachers,
   sectionSubjectTeachers,
 } from "../../../../src/drizzle-DB/schema/teacher-assignment.drizzle";
-import { getActiveSessionId } from "../../academic-sessions/_actions/academicSession.action";
 import { and, eq } from "drizzle-orm";
 import { deleteRecord } from "../../../../src/server-actions/crud-funtions/server-delete-crud";
 import {
@@ -37,6 +36,7 @@ import {
 import { getTeacher } from "../../teachers/_actions/teacher.action";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
+import { getActiveSession } from "../../academic-sessions/_actions/session.action";
 
 // ---------------- class teacher ---------------
 
@@ -65,20 +65,20 @@ export async function getClassWithTeacher() {
 
 // --------- assign class Teacher --------------
 export async function assignClassTeacher(data: InputClassTeacherType) {
-  const activeSessionId = await getActiveSessionId();
-  if (!activeSessionId.success) {
+  const session = await getActiveSession();
+  if (!session) {
     return {
       success: false as const,
-      error: "failed to get active academic session",
-      details: {},
+      error: "No Academic Session found",
+      details: { field: ["message"] },
     };
   }
-  const sessionId = activeSessionId.success && activeSessionId.data;
+  const { id } = session;
   const newId = await createRecord(
     {
       zodSchema: sectionClassTeacherZod,
       drizzleSchema: sectionClassTeachers,
-      additionFields: { status: "ACTIVE", sessionId },
+      additionFields: { status: "ACTIVE", id },
       entity: "TEACHER",
     },
     data,
@@ -209,16 +209,15 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
     };
   }
   const { instituteId } = ctx;
-  const activeSessionId = await getActiveSessionId();
-  if (!activeSessionId.success) {
+  const session = await getActiveSession();
+  if (!session) {
     return {
       success: false as const,
-      error: "failed to get active academic session",
-      details: {},
+      error: "No Academic Session found",
+      details: { field: ["message"] },
     };
   }
-  const sessionId = activeSessionId.success && activeSessionId.data;
-
+  const { id } = session;
   try {
     const checkData = await db
       .select()
@@ -226,7 +225,7 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
       .where(
         and(
           eq(sectionSubjectTeachers.instituteId, instituteId),
-          eq(sectionSubjectTeachers.sessionId, sessionId),
+          eq(sectionSubjectTeachers.sessionId, id),
           eq(sectionSubjectTeachers.sectionId, data.sectionId),
           eq(sectionSubjectTeachers.subjectId, data.subjectId),
         ),
@@ -263,7 +262,7 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
       {
         zodSchema: subjectTeacherZod,
         drizzleSchema: sectionSubjectTeachers,
-        additionFields: { status: "ACTIVE", sessionId },
+        additionFields: { status: "ACTIVE", id },
         entity: "TEACHER",
       },
       data,

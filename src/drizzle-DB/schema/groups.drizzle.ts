@@ -38,12 +38,10 @@ export const groupClasses = pgTable(
   "group_classes",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
+    instituteId: uuid("institute_id").references(() => instituteProfile.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
     groupId: uuid("group_id")
       .notNull()
       .references(() => groups.id, {

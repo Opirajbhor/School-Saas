@@ -14,7 +14,6 @@ export type inputGroupType = z.infer<typeof addGroupZod>;
 
 export type outputGroupType = inputGroupType & {
   id: string;
-  instituteId: string;
 };
 
 // assign to class
@@ -31,17 +30,13 @@ export type AssignGroupClassType = z.infer<typeof assignGroupClassZod>;
 
 export type OutputGroupClassType = {
   id: string;
-  instituteId: string;
   name: string;
   status: string;
   groupClasses: {
-    id: string;
-    groupId: string;
-    group: {
+    class: {
       name: string;
       id: string;
     };
-    name: string;
-    classId: string;
+    status: string;
   }[];
 };

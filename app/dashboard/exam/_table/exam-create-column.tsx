@@ -43,22 +43,19 @@ export const ExamCreateColumn = columnHelper.columns([
     },
   }),
   columnHelper.display({
-    header: "Classes",
-    id: "classes",
+    header: "Actions",
+    id: "actions",
     cell: ({ row }) => {
       const item = row.original;
-      return (
-        <div className="flex flex-wrap gap-1">
-          {item.assignClasses
-            ?.filter((c) => c.status === "ACTIVE")
-            .map((c) => (
-              <p key={c.classId} className="text-xs">
-                {c.class?.name ?? "—"}
-                {","}
-              </p>
-            ))}
-        </div>
-      );
+      return <ActionsCell item={item} />;
     },
   }),
 ]);
+
+//===== actions ====
+function ActionsCell(item) {
+  return <div className="flex gap-2">
+
+    
+  </div>;
+}

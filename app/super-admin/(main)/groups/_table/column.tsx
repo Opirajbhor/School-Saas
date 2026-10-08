@@ -7,10 +7,14 @@ import { cn } from "@/utils/utils";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import DeleteModal from "@/components/modal/delete-modal";
-import { outputGroupType } from "@/src/validation/groups.zod";
+import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import { changeStatusGroups, deleteGroups } from "../_actions/groups.action";
+import AssignGroups from "../assign-groups";
 
-const columnHelper = createColumnHelper<DataTableFeatures, outputGroupType>();
+const columnHelper = createColumnHelper<
+  DataTableFeatures,
+  OutputGroupClassType
+>();
 
 export const GroupsColumn = columnHelper.columns([
   columnHelper.display({
@@ -24,6 +28,20 @@ export const GroupsColumn = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
+  columnHelper.accessor(
+    (row) =>
+      row.groupClasses
+        ?.map((gc) => gc.class?.name)
+        .filter(Boolean)
+        .join(", ") ?? "",
+    {
+      id: "assignClasses",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Assign Classes" />
+      ),
+      filterFn: "includesString",
+    },
+  ),
 
   columnHelper.accessor("status", {
     header: ({ column }) => (
@@ -61,7 +79,7 @@ export const GroupsColumn = columnHelper.columns([
 ]);
 
 //===== actions ====
-function ActionsCell({ item }: { item: outputGroupType }) {
+function ActionsCell({ item }: { item: OutputGroupClassType }) {
   const queryClient = useQueryClient();
 
   return (
@@ -88,6 +106,7 @@ function ActionsCell({ item }: { item: outputGroupType }) {
           }}
         />
       )}
+      <AssignGroups group={item as OutputGroupClassType} />
     </div>
   );
 }

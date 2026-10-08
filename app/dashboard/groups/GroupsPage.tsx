@@ -1,12 +1,13 @@
 import { SpinnerCustom } from "@/components/Spinner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getGroups } from "./_actions/groups.action";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { columns } from "./_table/columns";
+import { getDefaultGroupClasses } from "@/app/super-admin/(main)/groups/_actions/groups.action";
+import { OutputGroupClassType } from "@/src/validation/groups.zod";
 
 export default async function GroupsPage() {
-  const result = await getGroups();
+  const result = await getDefaultGroupClasses();
   if (!result.success) {
     return <SpinnerCustom />;
   }
@@ -51,7 +52,10 @@ export default async function GroupsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
             {/* Data Table Section */}
             <div className="lg:col-span-4">
-              <DataTable columns={columns} data={groups} />
+              <DataTable
+                columns={columns}
+                data={groups as OutputGroupClassType[]}
+              />
             </div>
           </div>
         </div>
