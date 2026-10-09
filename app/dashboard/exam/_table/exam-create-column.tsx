@@ -45,17 +45,8 @@ export const ExamCreateColumn = columnHelper.columns([
   columnHelper.display({
     header: "Actions",
     id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return <ActionsCell item={item} />;
+    cell: ({}) => {
+      return;
     },
   }),
 ]);
-
-//===== actions ====
-function ActionsCell(item) {
-  return <div className="flex gap-2">
-
-    
-  </div>;
-}

@@ -1,0 +1,1 @@
+ALTER TABLE "subject_assignments" DROP COLUMN "subject_type";

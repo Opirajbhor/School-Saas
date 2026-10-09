@@ -7,6 +7,7 @@ import { eq, isNull } from "drizzle-orm";
 import {
   classesType,
   classesTypeWithId,
+  ClassesWithGroups,
   classesZod,
 } from "@/src/validation/classes.zod";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
@@ -110,6 +111,37 @@ export async function deleteClass(id: string) {
     return {
       success: false as const,
       error: "Failed to create Class",
+      details: {},
+    };
+  }
+}
+
+// get Default class subjects
+export async function getClassWithGroups() {
+  try {
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db }) =>
+        db.query.classesDrizzle.findMany({
+          where: isNull(classesDrizzle.instituteId),
+          with: {
+            groupClasses: {
+              with: {
+                group: true,
+              },
+            },
+          },
+          orderBy: (classesDrizzle, { asc }) => [asc(classesDrizzle.createdAt)],
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data as ClassesWithGroups[],
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
       details: {},
     };
   }

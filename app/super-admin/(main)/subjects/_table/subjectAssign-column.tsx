@@ -1,0 +1,102 @@
+"use client";
+
+import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
+import { createColumnHelper } from "@tanstack/react-table";
+import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
+import { cn } from "@/utils/utils";
+import StatusToggleModal from "@/components/modal/status-modal";
+import DeleteModal from "@/components/modal/delete-modal";
+import {
+  OutputSubAssignType,
+  RawSubjectAssignment,
+} from "@/src/validation/subjects.zod";
+import {
+  changeStatussubjects,
+  deletesubjects,
+} from "../_actions/subjects.action";
+
+const columnHelper = createColumnHelper<
+  DataTableFeatures,
+  OutputSubAssignType
+>();
+
+export const subjectsAssignColumn = columnHelper.columns([
+  columnHelper.display({
+    id: "serial",
+    header: "SL",
+    cell: ({ row }) => row.index + 1,
+  }),
+  columnHelper.accessor("className", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Class Name" />
+    ),
+    filterFn: "includesString",
+  }),
+  columnHelper.accessor("groupName", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Group Name" />
+    ),
+    filterFn: "includesString",
+  }),
+
+  columnHelper.accessor("subjectName", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Subject Name" />
+    ),
+    filterFn: "includesString",
+  }),
+
+  columnHelper.accessor("subjectType", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Subject Type" />
+    ),
+    filterFn: "includesString",
+  }),
+  columnHelper.accessor("isOptional", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Optional" />
+    ),
+    filterFn: "includesString",
+    cell: ({ row }) => {
+      const item = row.original;
+      return <p>{item.isOptional ? "YES" : "NO"}</p>;
+    },
+  }),
+  columnHelper.accessor("isReligion", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Religion" />
+    ),
+    filterFn: "includesString",
+    cell: ({ row }) => {
+      const item = row.original;
+      return <p>{item.isReligion ? "YES" : "NO"}</p>;
+    },
+  }),
+
+  columnHelper.display({
+    header: "Actions",
+    id: "actions",
+    cell: ({ row }) => {
+      const item = row.original;
+      return (
+        <div className="flex items-center gap-2">
+          {/* <ActionsCell item={item} /> */}
+        </div>
+      );
+    },
+  }),
+]);
+
+// //===== actions ====
+// function ActionsCell({ item }: { item: OutputSubjectType }) {
+//   return (
+//     <div className="flex gap-2">
+//       {item?.id && (
+//         <StatusToggleModal id={item.id} onDelete={changeStatussubjects} />
+//       )}
+//       {item?.id && item.status === "INACTIVE" && (
+//         <DeleteModal id={item.id} onDelete={deletesubjects} />
+//       )}
+//     </div>
+//   );
+// }

@@ -35,7 +35,9 @@ export type sectionType = SectionInputType & {
 // for classes and nested groups in the server action-------
 export type ClassesWithGroups = classesType & {
   id: string;
-  groups: outputGroupType[];
+  groupClasses: {
+    group: outputGroupType;
+  }[];
 };
 
 // -----------class with section

@@ -28,41 +28,15 @@ export const subjectsColumn = columnHelper.columns([
   }),
   columnHelper.accessor("code", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="subjects Code" />
+      <DataTableColumnHeader column={column} title="Code" />
     ),
     filterFn: "includesString",
   }),
   columnHelper.accessor("shortName", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="subjects Short Name" />
+      <DataTableColumnHeader column={column} title="Short Name" />
     ),
     filterFn: "includesString",
-  }),
-  columnHelper.accessor("subject_type", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Subject Type" />
-    ),
-    filterFn: "includesString",
-  }),
-  columnHelper.accessor("isOptional", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Subject Catagory" />
-    ),
-    filterFn: "includesString",
-    cell: ({ row }) => {
-      const item = row.original;
-      return <p>{item.isOptional ? "Optional" : "-"}</p>;
-    },
-  }),
-  columnHelper.accessor("isReligion", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Subject Catagory" />
-    ),
-    filterFn: "includesString",
-    cell: ({ row }) => {
-      const item = row.original;
-      return <p>{item.isOptional ? "Optional" : "-"}</p>;
-    },
   }),
 
   columnHelper.accessor("status", {

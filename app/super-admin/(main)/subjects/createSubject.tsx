@@ -21,10 +21,13 @@ export default function CreateSubject() {
   const form = useForm<InputSubjectType>({
     resolver: zodResolver(inputSubjectZod),
     defaultValues: {
+      name: "",
+      code: "",
+      shortName: "",
+      status: "ACTIVE",
+      subject_type: "COMPULSORY",
       isOptional: false,
       isReligion: false,
-      religion: null,
-      status: "ACTIVE",
     },
   });
   const { isSubmitting } = form.formState;
@@ -45,7 +48,6 @@ export default function CreateSubject() {
   // reset the form value if sub type changes
   useEffect(() => {
     form.setValue("isOptional", false);
-    form.setValue("religion", null);
   }, [subType, form]);
 
   return (
@@ -90,7 +92,6 @@ export default function CreateSubject() {
               options={[
                 { label: "COMPULSORY", value: "COMPULSORY" },
                 { label: "GROUP_BASED", value: "GROUP_BASED" },
-                { label: "RELIGION", value: "RELIGION" },
               ]}
             />
 
@@ -101,19 +102,11 @@ export default function CreateSubject() {
               label="Add to Optional List"
               disabled={subType !== "GROUP_BASED"}
             />
-
-            {/*--------- religion list --------------*/}
-            <FormSelect
-              disabled={subType !== "RELIGION"}
+            <FormCheckbox
               control={form.control}
-              name="religion"
-              label="Choose Religion"
-              options={[
-                { label: "ISLAM", value: "ISLAM" },
-                { label: "HINDUISM", value: "HINDUISM" },
-                { label: "CHRISTIANITY", value: "CHRISTIANITY" },
-                { label: "BUDDHISM", value: "BUDDHISM" },
-              ]}
+              name="isReligion"
+              label="Select if Religious Subject"
+              disabled={subType === "GROUP_BASED"}
             />
 
             {/* -------submit button------------- */}

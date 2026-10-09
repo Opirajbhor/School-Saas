@@ -12,6 +12,7 @@ import {
   sortFn_alphanumeric,
   sortFn_text,
   tableFeatures,
+  globalFilteringFeature,
 } from "@tanstack/react-table";
 
 // New in v9: declare the features this table uses — anything you don't
@@ -22,12 +23,13 @@ export const features = tableFeatures({
   rowPaginationFeature,
   rowSelectionFeature,
   rowSortingFeature,
+  globalFilteringFeature,
   filteredRowModel: createFilteredRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
   sortedRowModel: createSortedRowModel(),
   filterFns: {
     includesString: filterFn_includesString,
-    inNumberRange: filterFn_inNumberRange ,
+    inNumberRange: filterFn_inNumberRange,
   },
   sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
 });

@@ -1,5 +1,10 @@
 "use server";
-import { academicSessions, enrollments, groupClasses, student } from "@/src/drizzle-DB/schema";
+import {
+  academicSessions,
+  enrollments,
+  groupClasses,
+  student,
+} from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
 import { and, eq } from "drizzle-orm";
@@ -50,13 +55,9 @@ export async function ToggleStudentStatus(id: string) {
 }
 // get academicInfo
 export async function getAcademicInfo() {
-  const { id } = await requireInstitute();
   try {
     const academicInfo = await db.query.academicSessions.findFirst({
-      where: and(
-        eq(academicSessions.instituteId, id),
-        eq(academicSessions.isActive, true),
-      ),
+      where: and(eq(academicSessions.status, "ACTIVE")),
       with: {
         classes: {
           with: {

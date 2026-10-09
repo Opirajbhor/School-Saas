@@ -1,6 +1,7 @@
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { subjectDbSchema } from "../drizzle-DB/schema";
+import { subjectAssignSchema, subjectDbSchema } from "../drizzle-DB/schema";
+import { classesType } from "./classes.zod";
 
 export const religionEnumValues = [
   "ISLAM",
@@ -29,38 +30,46 @@ export type OutputSubjectType = InputSubjectType & {
 };
 
 // --------------subject assign zod validation----------------
-export const subjectAssignmentZod = z.object({
-  classId: z.uuid("Invalid class id"),
-  groupId: z.uuid("Invalid group id").nullable(),
-  subjectIds: z
-    .array(z.uuid("Invalid subject id"))
-    .min(1, "Select at least one subject"),
-  subjectType: z.enum(subjectTypeEnum).default("COMPULSORY"),
-  status: z.enum(statusEnumValues).default("ACTIVE"),
-});
-
+export const subjectAssignmentZod = createInsertSchema(subjectAssignSchema)
+  .omit({
+    subjectId: true,
+    id: true,
+    instituteId: true,
+  })
+  .extend({
+    subjectIds: z.array(z.string().uuid("Invalid subject id")),
+  });
 export type inputSubAssignType = z.input<typeof subjectAssignmentZod>;
+
+export type ClassSubjectsType = classesType &
+  {
+    id: string;
+    subjects: OutputSubjectType[];
+  }[];
+
+// subject assignment
 
 export type RawSubjectAssignment = {
   id: string;
-  instituteId: string;
-  sessionId: string;
-  classId: string;
-  groupId: string;
-  subjectId: string;
-  subjectType: "COMPULSORY" | "GROUP_BASED" | "OPTIONAL" | null;
-  status: "ACTIVE" | "INACTIVE";
-  class: { id: string; name: string } | null;
-  subject: { id: string; name: string } | null;
-  group: { id: string; name: string } | null;
+  className: string;
+  groupName: string;
+  subject:
+    | {
+        id: string;
+        name: string;
+        isOptional: boolean;
+        isReligion: boolean;
+        subjectType: string;
+      }[]
+    | null;
 };
 
-export type OutputSubAssignType = inputSubAssignType & {
+export type OutputSubAssignType = {
   id: string;
-  instituteId: string;
-  sessionId: string;
-  subjectName: string;
-  groupName: string;
   className: string;
-  subjectId: string;
+  groupName: string;
+  subjectName: string;
+  subjectType: string;
+  isOptional: boolean;
+  isReligion: boolean;
 };

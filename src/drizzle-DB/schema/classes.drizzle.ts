@@ -9,6 +9,7 @@ import {
   sectionClassTeachers,
   sectionSubjectTeachers,
 } from "./teacher-assignment.drizzle";
+import { subjectDbSchema } from "./subjects.drizzle";
 
 export const classesDrizzle = pgTable(
   "classes",
@@ -64,6 +65,7 @@ export const sectionDrizzle = pgTable(
 export const classesRelations = relations(classesDrizzle, ({ many }) => ({
   sections: many(sectionDrizzle),
   groupClasses: many(groupClasses),
+  subjects: many(subjectDbSchema),
 }));
 
 // section relatioin ----------------

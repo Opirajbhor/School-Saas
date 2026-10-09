@@ -25,11 +25,15 @@ import { useState } from "react";
 interface DataTableProps<TData extends RowData> {
   columns: ColumnDef<DataTableFeatures, TData>[];
   data: TData[];
+  filterColumn?: string;
+  filterPlaceholder?: string;
 }
 
 export function DataTable<TData extends RowData>({
   columns,
   data,
+  filterColumn,
+  filterPlaceholder = "Search...",
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -40,6 +44,7 @@ export function DataTable<TData extends RowData>({
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    globalFilterFn: "includesString",
 
     state: {
       sorting,
@@ -48,19 +53,25 @@ export function DataTable<TData extends RowData>({
   });
   return (
     <>
-      {/* filter */}
-      {/* <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-      </div> */}
       {/* table  body */}
-      <div className="overflow-hidden rounded-md border">
+      <div className="mx-3 rounded-md border">
+        {/* filter */}
+
+        {filterColumn && (
+          <div className="p-3">
+            <Input
+              placeholder={filterPlaceholder}
+              value={
+                (table.getColumn(filterColumn)?.getFilterValue() as string) ??
+                ""
+              }
+              onChange={(e) =>
+                table.getColumn(filterColumn)?.setFilterValue(e.target.value)
+              }
+              className="max-w-sm"
+            />
+          </div>
+        )}
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

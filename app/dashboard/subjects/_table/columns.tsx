@@ -8,7 +8,7 @@ import { OutputSubjectType } from "@/src/validation/subjects.zod";
 
 const columnHelper = createColumnHelper<DataTableFeatures, OutputSubjectType>();
 
-export const columns = columnHelper.columns([
+export const subjectsColumn = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
@@ -30,13 +30,14 @@ export const columns = columnHelper.columns([
       <DataTableColumnHeader column={column} title="Short Name" />
     ),
   }),
+
   columnHelper.accessor("instituteId", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Provider" />
     ),
     cell: ({ getValue }) => {
-      const status = getValue<string | null>();
-      return <span>{status ? "Default" : "Custom"}</span>;
+      const value = getValue<string | null>();
+      return <span>{value ? "Custom" : "Default"}</span>;
     },
   }),
   columnHelper.accessor("status", {

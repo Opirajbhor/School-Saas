@@ -1,12 +1,6 @@
 import { pgTable, uuid, boolean, text, unique } from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
-import {
-  religionEnum,
-  statusEnum,
-  subjectTypeEnum,
-  timestamps,
-} from "./enums-drizzle";
-import { academicSessions } from "./academic-session.drizzle";
+import { statusEnum, subjectTypeEnum, timestamps } from "./enums-drizzle";
 import { classesDrizzle } from "./classes.drizzle";
 import { groups } from "./groups.drizzle";
 import { relations } from "drizzle-orm";
@@ -22,22 +16,15 @@ export const subjectDbSchema = pgTable(
     name: text("name").notNull(),
     code: text("code").notNull(),
     shortName: text("short_name").notNull(),
-    subject_type: subjectTypeEnum("subject_type")
-      .notNull()
-      .default("COMPULSORY"),
-    isOptional: boolean("is_optional").notNull().default(false),
-    isReligion: boolean("is_religion").notNull().default(false),
+
     status: statusEnum("status").notNull().default("ACTIVE"),
-    religion: religionEnum("religion"),
     ...timestamps,
   },
   (table) => [
-    // Ensures subject code is unique per session in an institute
     unique("subjects_institute_session_code_unique").on(
       table.instituteId,
       table.code,
     ),
-    // Ensures subject full name is unique per session in an institute
     unique("subjects_institute_session_name_unique").on(
       table.instituteId,
       table.name,
@@ -50,18 +37,11 @@ export const subjectAssignSchema = pgTable(
   "subject_assignments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    instituteId: uuid("institute_id")
-      .notNull()
-      .references(() => instituteProfile.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
-    sessionId: uuid("session_id")
-      .notNull()
-      .references(() => academicSessions.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
+    instituteId: uuid("institute_id").references(() => instituteProfile.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+
     classId: uuid("class_id")
       .notNull()
       .references(() => classesDrizzle.id, { onDelete: "cascade" }),
@@ -75,16 +55,17 @@ export const subjectAssignSchema = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    subjectType: subjectTypeEnum("subject_type")
+    subject_type: subjectTypeEnum("subject_type")
       .notNull()
       .default("COMPULSORY"),
+    isOptional: boolean("is_optional").notNull().default(false),
+    isReligion: boolean("is_religion").notNull().default(false),
 
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
   },
   (table) => [
     unique("subject_assign_unique").on(
-      table.sessionId,
       table.classId,
       table.groupId,
       table.subjectId,
@@ -100,10 +81,7 @@ export const subjectAssignRelationOne = relations(
       fields: [subjectAssignSchema.groupId],
       references: [groups.id],
     }),
-    session: one(academicSessions, {
-      fields: [subjectAssignSchema.sessionId],
-      references: [academicSessions.id],
-    }),
+
     subject: one(subjectDbSchema, {
       fields: [subjectAssignSchema.subjectId],
       references: [subjectDbSchema.id],
