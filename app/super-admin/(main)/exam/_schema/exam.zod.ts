@@ -1,4 +1,5 @@
 import {
+  examClasses,
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
 } from "@/src/drizzle-DB/schema";
@@ -29,3 +30,17 @@ export const outputExamGradeRangeZod = createSelectSchema(
   examGradeRangeDrizzle,
 );
 export type OutputExamGradeRangeType = z.infer<typeof examGradeRangeZod>;
+
+// ================ exam assign schema ==============
+
+export const examAssignZod = createInsertSchema(examClasses)
+  .extend({
+    classIds: z
+      .array(z.uuid("Invalid class id"))
+      .min(1, "Select at least one class"),
+  })
+  .omit({
+    classId: true,
+    instituteId: true,
+  });
+export type InputExamMarkType = z.infer<typeof examAssignZod>;

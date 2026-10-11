@@ -1,13 +1,16 @@
 "use server";
 import {
+  examAssignZod,
   examGradeRangeZod,
   examMarkTypesZod,
   InputExamGradeRangeType,
+  InputExamMarkType,
   InputExamMarkTypes,
   OutputExamGradeRangeType,
   OutputExamMarkTypes,
 } from "../_schema/exam.zod";
 import {
+  examClasses,
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
   exams,
@@ -15,7 +18,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
 import { db } from "@/src/drizzle-DB";
-import { eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import {
   examZod,
@@ -31,12 +34,30 @@ export async function getDefaultExams() {
       query: ({ db }) =>
         db.query.exams.findMany({
           where: isNull(exams.instituteId),
+          with: {
+            assignClasses: {
+              with: {
+                class: true,
+              },
+            },
+          },
           orderBy: (exams, { asc }) => [asc(exams.createdAt)],
         }),
     });
+
+    const rawData = result.data as OutputExamType[];
+    const data = rawData.map((exam) => ({
+      ...exam,
+      assignClasses: exam.assignClasses
+        .filter((ex) => ex?.status === "ACTIVE")
+        .map((ex) => ({
+          ...ex,
+          class: ex.class ?? null,
+        })),
+    }));
     return {
       success: true as const,
-      data: result.data as OutputExamType[],
+      data: data as OutputExamType[],
     };
   } catch (error) {
     return {
@@ -103,6 +124,78 @@ export async function ToggleExamStatus(id: string) {
     };
   }
 }
+// =============== assign exams ==================
+// assign to class
+export async function assignExamToClasses(data: InputExamMarkType) {
+  const validation = examAssignZod.safeParse(data);
+  if (!validation.success) {
+    return {
+      success: false as const,
+      error: "Invalid data",
+      details: validation.error.flatten().fieldErrors,
+    };
+  }
+  const { examId, classIds } = validation.data;
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      // 1. Deactivate all existing classes in the group
+      await tx
+        .update(examClasses)
+        .set({ status: "INACTIVE" })
+        .where(eq(examClasses.examId, examId));
+
+      const existingAssignments = await tx.query.examClasses.findMany({
+        where: eq(examClasses.examId, examId),
+      });
+
+      const existingClassIdSet = new Set(
+        existingAssignments.map((item) => item.classId),
+      );
+
+      // Reactivate existing classes
+      if (classIds.length > 0) {
+        await tx
+          .update(examClasses)
+          .set({ status: "ACTIVE" })
+          .where(
+            and(
+              inArray(examClasses.classId, classIds),
+              eq(examClasses.examId, examId),
+            ),
+          );
+      }
+
+      // Create new class assignments
+      const newClassIds = classIds.filter((id) => !existingClassIdSet.has(id));
+
+      if (newClassIds.length > 0) {
+        await tx.insert(examClasses).values(
+          newClassIds.map((classId) => ({
+            examId,
+            classId,
+            status: "ACTIVE" as const,
+          })),
+        );
+      }
+      revalidatePath("/super-admin/exam");
+      revalidatePath("/super-admin/exam/create");
+      revalidatePath("/dashboard/exam");
+    });
+    return {
+      success: true as const,
+      data: result,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false as const,
+      error: "failed to update group assignment",
+      details: {},
+    };
+  }
+}
+
 //=================  exam mark types ==============
 
 // get Default exam mark types

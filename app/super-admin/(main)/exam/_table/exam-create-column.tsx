@@ -7,6 +7,7 @@ import { cn } from "@/utils/utils";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { OutputExamType } from "@/app/dashboard/exam/_schema/exam.zod";
 import { ToggleExamStatus } from "../_actions/exam.action";
+import AssignExamToClasses from "../_component/assign-exams";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<DataTableFeatures, OutputExamType>();
@@ -23,7 +24,20 @@ export const ExamCreateColumn = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
-
+  columnHelper.accessor(
+    (row) =>
+      row.assignClasses
+        ?.map((gc) => gc.class?.name)
+        .filter(Boolean)
+        .join(", ") ?? "",
+    {
+      id: "assignClasses",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Assign Classes" />
+      ),
+      filterFn: "includesString",
+    },
+  ),
   columnHelper.accessor("status", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
@@ -66,6 +80,7 @@ function ActionsCell({ item }: { item: OutputExamType }) {
       {item?.id && (
         <StatusToggleModal id={item.id} onDelete={ToggleExamStatus} />
       )}
+      {item?.id && <AssignExamToClasses exam={item as OutputExamType} />}
     </div>
   );
 }

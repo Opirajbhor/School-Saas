@@ -21,6 +21,7 @@ export type OutputExamType = z.infer<typeof outputExamZod> & {
     classId: string;
     status: string;
     class: {
+      id: string;
       name: string;
     };
   }[];

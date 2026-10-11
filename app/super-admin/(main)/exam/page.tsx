@@ -7,6 +7,12 @@ export default async function Page() {
       <div>
         <Link
           className="card flex items-center gap-2 p-10 border"
+          href={"/super-admin/exam/create"}
+        >
+          Go To exam create <ArrowBigRight />
+        </Link>
+        <Link
+          className="card flex items-center gap-2 p-10 border"
           href={"/super-admin/exam/mark-types"}
         >
           Go To Mark Types <ArrowBigRight />
@@ -16,6 +22,12 @@ export default async function Page() {
           href={"/super-admin/exam/grade-ranges"}
         >
           Go To Grade Range <ArrowBigRight />
+        </Link>
+        <Link
+          className="card flex items-center gap-2 p-10 border"
+          href={"/super-admin/exam/mark-config"}
+        >
+          Go To Mark Config <ArrowBigRight />
         </Link>
       </div>
     </div>
