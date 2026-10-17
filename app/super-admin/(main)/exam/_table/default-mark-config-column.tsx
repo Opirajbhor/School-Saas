@@ -3,11 +3,11 @@ import { DataTableFeatures } from "@/components/table/tanstack/data-table-featur
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import MarkInputModal from "../_component/MarkInputModal";
-import { OutputDefaultMarkType } from "../_schema/markInput.zod";
+import { OutputDefaultMarkTypes } from "../_schema/markInput.zod";
 
 const columnHelper = createColumnHelper<
   DataTableFeatures,
-  OutputDefaultMarkType
+  OutputDefaultMarkTypes
 >();
 
 export function DefaultMarkCongfigColumn(markTypeNames: string[]) {
