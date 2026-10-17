@@ -1,6 +1,7 @@
 "use server";
 import {
   examAssignZod,
+  examClassSearchType,
   examGradeRangeZod,
   examMarkTypesZod,
   InputExamGradeRangeType,
@@ -14,6 +15,7 @@ import {
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
   exams,
+  subjectAssignSchema,
 } from "@/src/drizzle-DB/schema";
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
@@ -25,6 +27,10 @@ import {
   InputExamType,
   OutputExamType,
 } from "@/app/dashboard/exam/_schema/exam.zod";
+import {
+  ClassesSubjectsType,
+  ClassSubjectRowType,
+} from "@/src/validation/subjects.zod";
 
 // =============== Exam ================
 export async function getDefaultExams() {
@@ -367,5 +373,65 @@ export async function ToggleGradeRangeStatus(id: string) {
       error: "change grade range status failed",
       details: {},
     };
+  }
+}
+
+// server action — Fixed: remove the lying cast; let inference flow
+export async function getClassSubjectWithExamType(data: examClassSearchType) {
+  try {
+    const [subjectsResult, markTypes] = await Promise.all([
+      readMany({
+        drizzleSchema: subjectAssignSchema,
+        query: ({ db }) =>
+          db.query.subjectAssignSchema.findMany({
+            where: and(
+              isNull(subjectAssignSchema.instituteId),
+              eq(subjectAssignSchema.classId, data.classId),
+            ),
+            with: { subject: true },
+            orderBy: (s, { asc }) => [asc(s.createdAt)],
+          }),
+      }),
+      getDefaultMarkTypes(),
+    ]);
+
+    if (!subjectsResult.success) {
+      return {
+        success: false as const,
+        error: "Failed to get subjects",
+        details: {},
+      };
+    }
+
+    // Fixed: subjectsResult.data is already the correct row shape
+    const subjects = subjectsResult.data as ClassesSubjectsType[];
+    const markTypesData = markTypes.success ? markTypes.data : [];
+
+    const combined: ClassSubjectRowType[] = subjects.map((subject) => ({
+      id: subject.id,
+      classId: subject.classId,
+      groupId: subject.groupId,
+      subjectId: subject.subjectId,
+      subject_type: subject.subject_type,
+      isOptional: subject.isOptional,
+      isReligion: subject.isReligion,
+      status: subject.status,
+      createdAt: subject.createdAt,
+      updatedAt: subject.updatedAt,
+      instituteId: subject.instituteId,
+      subject: subject.subject
+        ? {
+            id: subject.subject.id,
+            name: subject.subject.name,
+            code: subject.subject.code,
+            shortName: subject.subject.shortName,
+          }
+        : null,
+      markTypes: markTypesData,
+    }));
+
+    return { success: true as const, data: combined };
+  } catch (error) {
+    return { success: false as const, error: String(error), details: {} };
   }
 }

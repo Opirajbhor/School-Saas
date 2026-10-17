@@ -17,7 +17,6 @@ import {
 } from "@/src/validation/institute-profile.zod";
 import { Spinner } from "@/components/ui/spinner";
 import RedAlert from "@/components/dashboard/alert-notice/red-alert";
-import { sessionUserType } from "@/src/server-actions/auth/currentUser.action";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {

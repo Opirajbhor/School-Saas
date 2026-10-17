@@ -2,6 +2,8 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { subjectAssignSchema, subjectDbSchema } from "../drizzle-DB/schema";
 import { classesType } from "./classes.zod";
+import { OutputExamMarkTypes } from "@/app/super-admin/(main)/exam/_schema/exam.zod";
+import { InferSelectModel } from "drizzle-orm";
 
 export const religionEnumValues = [
   "ISLAM",
@@ -44,7 +46,12 @@ export type inputSubAssignType = z.input<typeof subjectAssignmentZod>;
 export type ClassSubjectsType = classesType &
   {
     id: string;
-    subjects: OutputSubjectType[];
+    subject: {
+      id: string;
+      name: string;
+    };
+    markTypes: OutputExamMarkTypes[];
+    subject_type: string;
   }[];
 
 // subject assignment
@@ -73,3 +80,35 @@ export type OutputSubAssignType = {
   isOptional: boolean;
   isReligion: boolean;
 };
+
+// ===============table type ===============
+export type ClassesSubjectsType = InferSelectModel<
+  typeof subjectAssignSchema
+> & {
+  subject: InferSelectModel<typeof subjectDbSchema> | null;
+};
+
+// subjects.zod.ts — Fixed: align the row type with reality
+export type ClassSubjectRowType = {
+  id: string;
+  classId: string;
+  groupId: string | null;
+  subjectId: string;
+  subject_type: string;
+  isOptional: boolean;
+  isReligion: boolean;
+  status: "ACTIVE" | "INACTIVE";
+  subject: {
+    id: string;
+    name: string;
+    code: string;
+    shortName: string | null;
+  } | null;
+  markTypes: {
+    id: string;
+    name: string;
+    status: "ACTIVE" | "INACTIVE";
+  }[];
+};
+
+export type ClassWithSubjectsType = ClassSubjectRowType;

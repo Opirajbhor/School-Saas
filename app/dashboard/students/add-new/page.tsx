@@ -19,15 +19,13 @@ import { FormSelect } from "@/components/forms/form-select";
 import { FormInput } from "@/components/forms/form-input";
 import { FormTextarea } from "@/components/forms/form-textarea";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { addStudent, getAcademicInfo } from "../_actions/student.action";
 
 const randomId = Math.floor(Math.random() * 100) + 1;
 
 export default function AddStudent() {
-  // --------------active session-----------------
   // ------------- query fn ---------------
-  const queryClient = useQueryClient();
   const { data: activeSession, isPending } = useQuery<AcademicInfoType>({
     queryKey: ["page-addStudent"],
     queryFn: async () => {

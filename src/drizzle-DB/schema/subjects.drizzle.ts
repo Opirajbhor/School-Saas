@@ -4,6 +4,7 @@ import { statusEnum, subjectTypeEnum, timestamps } from "./enums-drizzle";
 import { classesDrizzle } from "./classes.drizzle";
 import { groups } from "./groups.drizzle";
 import { relations } from "drizzle-orm";
+import { subjectMarkTemplates } from "../schema";
 
 // subject Schema
 export const subjectDbSchema = pgTable(
@@ -31,6 +32,9 @@ export const subjectDbSchema = pgTable(
     ),
   ],
 );
+export const subjectsRelations = relations(subjectDbSchema, ({ many }) => ({
+  markTemplates: many(subjectMarkTemplates),
+}));
 
 // subject assign schema---
 export const subjectAssignSchema = pgTable(

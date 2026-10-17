@@ -44,3 +44,10 @@ export const examAssignZod = createInsertSchema(examClasses)
     instituteId: true,
   });
 export type InputExamMarkType = z.infer<typeof examAssignZod>;
+
+export const examClassSearchZod = z.object({
+  examId: z.string().uuid("Invalid exam id"),
+  classId: z.string().uuid("Invalid class id"),
+});
+
+export type examClassSearchType = z.infer<typeof examClassSearchZod>;

@@ -13,6 +13,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { cn } from "@/utils/utils";
+import { maxLength } from "zod";
 
 type FormInputProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>;
@@ -24,6 +25,7 @@ type FormInputProps<TFieldValues extends FieldValues> = {
   disabled?: boolean;
   className?: string;
   defaultValue?: string;
+  max?: number;
 } & Omit<
   React.ComponentProps<"input">,
   "name" | "type" | "value" | "onChange" | "onBlur"
@@ -38,6 +40,7 @@ export function FormInput<TFieldValues extends FieldValues>({
   description,
   disabled,
   className,
+  max,
   defaultValue,
   ...inputProps
 }: FormInputProps<TFieldValues>) {
@@ -56,9 +59,21 @@ export function FormInput<TFieldValues extends FieldValues>({
                 {...field}
                 type={type}
                 placeholder={placeholder}
+                max={max}
                 disabled={disabled}
                 value={field.value ?? ""}
                 defaultValue={defaultValue}
+                onChange={(e) => {
+                  if (type === "number") {
+                    field.onChange(
+                      e.target.value === ""
+                        ? undefined
+                        : e.target.valueAsNumber,
+                    );
+                  } else {
+                    field.onChange(e.target.value);
+                  }
+                }}
               />
             </FormControl>
 

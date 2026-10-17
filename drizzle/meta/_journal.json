@@ -554,6 +554,13 @@
       "when": 1791729307035,
       "tag": "0078_brief_mongoose",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1792081703130,
+      "tag": "0079_stale_vermin",
+      "breakpoints": true
     }
   ]
 }
