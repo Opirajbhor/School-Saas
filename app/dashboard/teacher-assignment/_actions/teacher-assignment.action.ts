@@ -15,12 +15,14 @@ import {
   sectionClassTeachers,
   sectionSubjectTeachers,
 } from "../../../../src/drizzle-DB/schema/teacher-assignment.drizzle";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { deleteRecord } from "../../../../src/server-actions/crud-funtions/server-delete-crud";
 import {
   classesDrizzle,
   groupClasses,
+  sectionDrizzle,
   subjectAssignSchema,
+  subjectDbSchema,
 } from "../../../../src/drizzle-DB/schema";
 import { Teacherlist } from "../../../../src/validation/teacher.zod";
 import {
@@ -78,7 +80,7 @@ export async function assignClassTeacher(data: InputClassTeacherType) {
     {
       zodSchema: sectionClassTeacherZod,
       drizzleSchema: sectionClassTeachers,
-      additionFields: { status: "ACTIVE", id },
+      additionFields: { status: "ACTIVE", sessionId: id },
       entity: "TEACHER",
     },
     data,
@@ -165,18 +167,18 @@ export async function getActiveClassesSection() {
   try {
     const result = await readMany({
       drizzleSchema: classesDrizzle,
-      query: ({ db, instituteId }) =>
+      query: ({ db }) =>
         db.query.classesDrizzle.findMany({
           where: and(
-            eq(classesDrizzle.instituteId, instituteId),
+            isNull(classesDrizzle.instituteId),
             eq(classesDrizzle.status, "ACTIVE"),
           ),
           with: {
             sections: {
-              where: eq(classesDrizzle.status, "ACTIVE"),
+              where: eq(sectionDrizzle.status, "ACTIVE"),
             },
             groupClasses: {
-              where: eq(classesDrizzle.status, "ACTIVE"),
+              where: eq(groupClasses.status, "ACTIVE"),
               with: {
                 group: true,
               },
@@ -314,14 +316,15 @@ export async function getActiveAssignGroup() {
 // ------------- get class section all subjects -------------
 export async function getSingleClassSubjects(data: classSubjectGroupType) {
   const { classId, sectionId } = data;
+  console.log(data);
   try {
     const assignedSubjects = await readMany({
       drizzleSchema: subjectAssignSchema,
-      query: ({ db, instituteId }) =>
+      query: ({ db }) =>
         db.query.subjectAssignSchema.findMany({
           where: and(
-            eq(subjectAssignSchema.instituteId, instituteId),
-            eq(subjectAssignSchema.classId, classId),
+            isNull(subjectDbSchema.instituteId),
+            eq(classesDrizzle.id, classId),
           ),
           with: {
             subject: true,
@@ -363,9 +366,7 @@ export async function getSingleClassSubjects(data: classSubjectGroupType) {
 
     // -------merging both arrays---------
     const tableData = subjects.map((subject) => {
-      const assignment = teachers.find(
-        (t) => t.subjectId === subject.subjectId,
-      );
+      const assignment = teachers.find((t) => t.subjectId === subject.id);
       return {
         ...subject,
         teacherId: assignment?.teacherId ?? null,

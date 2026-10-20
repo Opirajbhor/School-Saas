@@ -162,11 +162,12 @@ export async function postSection(data: sectionType) {
     };
   }
   const { id } = session;
+  console.log(session);
   return createRecord(
     {
       zodSchema: sectionZod,
       drizzleSchema: sectionDrizzle,
-      additionFields: { status: "ACTIVE", id },
+      additionFields: { status: "ACTIVE", sessionId: id },
       entity: "SECTION",
     },
     data,

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 export default async function Page() {
   const { allowed } = await AccessServer("admin");
   if (!allowed) redirect("/unauthorize");
+
   return (
     <div>
       <div className="p-3">

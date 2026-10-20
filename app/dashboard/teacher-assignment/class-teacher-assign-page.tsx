@@ -117,7 +117,7 @@ export function ClassTeacherAssign() {
                 name="classId"
                 label="Select Class"
                 options={
-                  (availableSections ?? [])
+                  (classInfo ?? [])
                     .filter(
                       (item): item is typeof item & { id: string } =>
                         item.id !== undefined && item.status === "ACTIVE",

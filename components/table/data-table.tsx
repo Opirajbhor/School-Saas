@@ -52,7 +52,6 @@ export function AppTable<T extends { id: string }>({
   const [search, setSearch] = React.useState("");
 
   const filteredData = React.useMemo(() => {
-    console.log("problem here");
     if (!search.trim()) return data;
 
     const query = search.toLowerCase();

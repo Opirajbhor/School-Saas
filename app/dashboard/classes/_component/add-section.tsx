@@ -1,4 +1,6 @@
 "use client";
+import { FiPlus } from "react-icons/fi";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,9 +39,13 @@ export default function AddClassSection({
     resolver: zodResolver(sectionZod),
     defaultValues: {
       classId: id,
+      name: "",
+      sessionId: "",
+      status: "ACTIVE",
     },
   });
   const addBtn = async (data: SectionInputType) => {
+    console.log(data);
     setLoad(true);
     await handleCrudAction(postSection, data, {
       successMessage: "Section Created Succesfully",
@@ -56,9 +62,12 @@ export default function AddClassSection({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <div className="flex items-center justify-center w-full">
+      <div className="flex items-center  w-full">
         <DialogTrigger asChild>
-          <Button className="w-full mb-3">Add Section</Button>
+          <Button className=" mb-3">
+            <FiPlus />
+            Section
+          </Button>
         </DialogTrigger>
       </div>
       <DialogContent className="sm:max-w-md">

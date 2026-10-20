@@ -5,7 +5,7 @@ import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { cn } from "@/utils/utils";
-import { ClassDetails } from "@/app/dashboard/classes/_component/class-details";
+import AddClassSection from "../_component/add-section";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<DataTableFeatures, classesTypeWithId>();
@@ -22,11 +22,16 @@ export const columns = columnHelper.columns([
     ),
     filterFn: "includesString",
   }),
-  columnHelper.accessor("sections.name", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Sections" />
-    ),
-  }),
+  columnHelper.accessor(
+    (row) => row.sections?.map((s) => s.name).join(", ") ?? "—",
+    {
+      id: "sections",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Sections" />
+      ),
+      filterFn: "includesString",
+    },
+  ),
   columnHelper.accessor("status", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
@@ -61,7 +66,7 @@ export const columns = columnHelper.columns([
 function ActionsCell({ item }: { item: classesTypeWithId }) {
   return (
     <div className="flex gap-2">
-      <ClassDetails classData={item} />
+      <AddClassSection classData={item} />
     </div>
   );
 }

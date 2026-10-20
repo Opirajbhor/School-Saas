@@ -34,7 +34,7 @@ const SubjectTeacherAssign = () => {
   // ---------------- subject and teacher search form -------------
   const form = useForm<classSubjectGroupType>({
     resolver: zodResolver(classSubjectGroupZod),
-    defaultValues: {},
+    defaultValues: { classId: "", sectionId: "" },
   });
   const { isSubmitting } = form.formState;
 
@@ -58,6 +58,7 @@ const SubjectTeacherAssign = () => {
   });
 
   const searchBtn = (data: classSubjectGroupType) => {
+    console.log(data)
     setSearchParams(data);
   };
   const allTeachers = (sectionSubData?.teachers as Teacherlist[]) ?? [];
@@ -146,7 +147,7 @@ const SubjectTeacherAssign = () => {
               data={sectionSubData?.tableData ?? []}
               searchable
               searchPlaceholder="Search Assigned Subjects..."
-              searchKeys={["status", "className", "groupName", "subjectName"]}
+              searchKeys={["className", "groupName", "subjectName"]}
               selectable
               selectedIds={selectedSub}
               onSelectionChange={setSelectedSub}
@@ -181,7 +182,7 @@ const SubjectTeacherAssign = () => {
                     <AssingTeacherModal
                       classData={classData}
                       teacherData={allTeachers}
-                      subjectId={item.subjectId}
+                      subjectId={item.id}
                     />
                   ),
                 },
