@@ -88,12 +88,9 @@ export async function getClassAndSection({
   try {
     const result = await readMany({
       drizzleSchema: classesDrizzle,
-      query: ({ db, instituteId }) =>
+      query: ({ db }) =>
         db.query.classesDrizzle.findMany({
-          where: and(
-            eq(classesDrizzle.instituteId, instituteId),
-            eq(classesDrizzle.id, classId),
-          ),
+          where: and(eq(classesDrizzle.id, classId)),
           with: {
             sections: {
               where: and(
@@ -162,7 +159,6 @@ export async function postSection(data: sectionType) {
     };
   }
   const { id } = session;
-  console.log(session);
   return createRecord(
     {
       zodSchema: sectionZod,

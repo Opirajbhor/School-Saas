@@ -174,7 +174,6 @@ export async function deleteTeacher(teacherId: string) {
 // edit teacher
 
 export async function editTeacher(id: string, data: editTeacherType) {
-  console.log("------updating-----------");
 
   return await updateRecord(
     {

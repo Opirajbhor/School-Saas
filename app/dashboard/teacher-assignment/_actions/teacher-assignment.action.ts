@@ -22,7 +22,6 @@ import {
   groupClasses,
   sectionDrizzle,
   subjectAssignSchema,
-  subjectDbSchema,
 } from "../../../../src/drizzle-DB/schema";
 import { Teacherlist } from "../../../../src/validation/teacher.zod";
 import {
@@ -39,6 +38,7 @@ import { getTeacher } from "../../teachers/_actions/teacher.action";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { getActiveSession } from "../../academic-sessions/_actions/session.action";
+import { revalidatePath } from "next/cache";
 
 // ---------------- class teacher ---------------
 
@@ -248,11 +248,13 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
         {
           drizzleSchema: sectionSubjectTeachers,
           zodSchema: subjectTeacherZod,
-          entity: "TEACHER",
+          entity: "ASSIGNED_SUBJECT",
         },
         existing.id,
         data,
       );
+      revalidatePath("/dashboard/teacher-assignment");
+
       return {
         success: true as const,
         data: updateData,
@@ -260,15 +262,17 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
     }
 
     // ----------create new record ------------
+    console.log("new", data);
     const newId = await createRecord(
       {
         zodSchema: subjectTeacherZod,
         drizzleSchema: sectionSubjectTeachers,
-        additionFields: { status: "ACTIVE", id },
-        entity: "TEACHER",
+        additionFields: { status: "ACTIVE", sessionId: id },
+        entity: "ASSIGNED_SUBJECT",
       },
       data,
     );
+    revalidatePath("/dashboard/teacher-assignment");
     return {
       success: true as const,
       data: newId,
@@ -316,21 +320,22 @@ export async function getActiveAssignGroup() {
 // ------------- get class section all subjects -------------
 export async function getSingleClassSubjects(data: classSubjectGroupType) {
   const { classId, sectionId } = data;
-  console.log(data);
   try {
     const assignedSubjects = await readMany({
       drizzleSchema: subjectAssignSchema,
       query: ({ db }) =>
         db.query.subjectAssignSchema.findMany({
           where: and(
-            isNull(subjectDbSchema.instituteId),
-            eq(classesDrizzle.id, classId),
+            isNull(subjectAssignSchema.instituteId),
+            eq(subjectAssignSchema.classId, classId),
           ),
           with: {
             subject: true,
           },
         }),
     });
+    const allTeachers = await getTeacher();
+
     const assignedTeachers = await readMany({
       drizzleSchema: sectionSubjectTeachers,
       query: ({ db, instituteId }) =>
@@ -340,16 +345,15 @@ export async function getSingleClassSubjects(data: classSubjectGroupType) {
             eq(sectionSubjectTeachers.sectionId, sectionId),
           ),
           with: {
-            subject: true,
+            // subject: true,
             teacher: true,
           },
         }),
     });
-    const allTeachers = await getTeacher();
+
     const classData = await getClassAndSection({ classId, sectionId });
 
     if (
-      !assignedSubjects.success ||
       !assignedSubjects.success ||
       !allTeachers.success ||
       !classData.success
@@ -360,21 +364,21 @@ export async function getSingleClassSubjects(data: classSubjectGroupType) {
         details: {},
       };
     }
-
     const subjects = (assignedSubjects?.data as ClassSubjectType[]) ?? [];
-    const teachers = (assignedTeachers?.data as OutputSubjectTeacher[]) ?? [];
+    const subTeachers =
+      (assignedTeachers?.data as OutputSubjectTeacher[]) ?? [];
 
     // -------merging both arrays---------
     const tableData = subjects.map((subject) => {
-      const assignment = teachers.find((t) => t.subjectId === subject.id);
+      const assignment = subTeachers.find(
+        (t) => t.subjectId === subject.subject.id,
+      );
       return {
         ...subject,
         teacherId: assignment?.teacherId ?? null,
-        teacherName: assignment?.teacher.nameEnglish ?? null,
+        teacherName: assignment?.teacher?.nameEnglish ?? null,
       };
     });
-
-    // -----------get all teacher data--------------
 
     return {
       success: true as const,

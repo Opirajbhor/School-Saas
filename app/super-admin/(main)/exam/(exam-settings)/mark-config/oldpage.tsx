@@ -66,7 +66,6 @@ export default function Page() {
       fetchData(() => getClassSubjectWithExamType(data)),
     onSuccess: (result) => {
       //   queryClient.setQueryData(["class-subjects", selectedId], result);
-      console.log(result);
     },
   });
 
@@ -93,8 +92,6 @@ export default function Page() {
   });
 
   const onSubmit = (values: ExamConfigFormValues) => {
-    console.log(values);
-    console.log("values here");
   };
 
   if (isPending) {

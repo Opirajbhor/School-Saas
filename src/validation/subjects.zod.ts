@@ -76,7 +76,7 @@ export type OutputSubAssignType = {
   className: string;
   groupName: string;
   subjectName: string;
-  subjectType: string;
+  subject_type: string;
   isOptional: boolean;
   isReligion: boolean;
 };

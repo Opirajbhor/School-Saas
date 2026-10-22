@@ -52,19 +52,18 @@ const SubjectTeacherAssign = () => {
 
   // ----------Search button---------------
   const { data: sectionSubData } = useQuery({
-    queryKey: ["single-class-subjects", searchParams],
+    queryKey: ["single-class-subjects"],
     queryFn: () => fetchData(() => getSingleClassSubjects(searchParams!)),
     enabled: !!searchParams,
   });
-
   const searchBtn = (data: classSubjectGroupType) => {
-    console.log(data)
     setSearchParams(data);
   };
   const allTeachers = (sectionSubData?.teachers as Teacherlist[]) ?? [];
   // ------- selected class and section
   const classData =
     (sectionSubData?.class as ClassWithSectionType) ?? undefined;
+  console.log(sectionSubData)
 
   if (isPending) {
     return <SpinnerCustom />;
@@ -167,7 +166,7 @@ const SubjectTeacherAssign = () => {
                 {
                   key: "subjectType",
                   label: "Subject Type",
-                  render: (item) => item.subjectType,
+                  render: (item) => item.subject_type,
                 },
                 {
                   key: "teacherId",
@@ -182,7 +181,7 @@ const SubjectTeacherAssign = () => {
                     <AssingTeacherModal
                       classData={classData}
                       teacherData={allTeachers}
-                      subjectId={item.id}
+                      subjectId={item.subject.id}
                     />
                   ),
                 },

@@ -10,7 +10,6 @@ export default async function Page() {
     return <SpinnerCustom />;
   }
   const subjects = result.data;
-  console.log(subjects);
   return (
     <div>
       <div>

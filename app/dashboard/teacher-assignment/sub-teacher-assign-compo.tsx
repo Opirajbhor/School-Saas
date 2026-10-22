@@ -37,6 +37,7 @@ export default function AssingTeacherModal({
   const { isSubmitting } = form.formState;
 
   const handleSubmit = async (data: InputSubjectTeacherType) => {
+    console.log(data);
     await handleCrudAction(assignSubjectTeacher, data, {
       successMessage: "Teacher Assigned Successfully",
       onSuccess: () => {

@@ -45,7 +45,6 @@ export default function AddClassSection({
     },
   });
   const addBtn = async (data: SectionInputType) => {
-    console.log(data);
     setLoad(true);
     await handleCrudAction(postSection, data, {
       successMessage: "Section Created Succesfully",

@@ -52,9 +52,7 @@ export default function ExamAssignToClass(exam: OutputExamType) {
     control: form.control,
     name: "classId",
   });
-  console.log(selectedClasses);
   const handleSubmit = async (data: InputExamAssignType) => {
-    console.log("submit--data", data);
     await handleCrudAction(assignExamClasses, data, {
       successMessage: "Classes Assigned Successfully",
       onSuccess: () => {
