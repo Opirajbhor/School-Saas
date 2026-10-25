@@ -114,6 +114,40 @@ export async function getClassAndSection({
   }
 }
 
+// ------------------get only active Classes----------------
+export async function getClassSectionGroups() {
+  try {
+    const result = await readMany({
+      drizzleSchema: classesDrizzle,
+      query: ({ db }) =>
+        db.query.classesDrizzle.findMany({
+          where: and(
+            isNull(classesDrizzle.instituteId),
+            eq(classesDrizzle.status, "ACTIVE"),
+          ),
+          with: {
+            groupClasses: {
+              with: {
+                group: true,
+              },
+            },
+            sections: true,
+          },
+        }),
+    });
+    return {
+      success: true as const,
+      data: result.data,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: String(error),
+      details: {},
+    };
+  }
+}
+
 // post class
 export async function postClasses(data: classesType) {
   const session = await getActiveSession();

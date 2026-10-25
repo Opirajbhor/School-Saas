@@ -4,8 +4,6 @@ import { classesType, sectionType } from "./classes.zod";
 import { outputGroupType } from "./groups.zod";
 
 export const addStudentZod = z.object({
-  // instituteId: z.uuid("Invalid institute id").optional(),
-
   studentId: z
     .string()
     .trim()
@@ -58,7 +56,7 @@ export const addStudentZod = z.object({
   birthCertificateNo: z.union([z.string().trim().max(50), z.null()]).optional(),
 
   address: z.string().trim().max(500),
-  session: z.string().trim().max(500),
+  sessionId: z.uuid().nullable(),
   className: z.string().trim().max(500),
   section: z.string().trim().max(500),
   roll: z.string().trim().max(500),
@@ -73,8 +71,8 @@ export type OutputStudentType = AddStudentType & {
   id: string;
 };
 
-export type AcademicInfoType = academicSessionType & {
-  id: string;
+export type AcademicInfoType = {
+  session: academicSessionType;
   classes: (classesType & {
     id: string;
     sections: sectionType[];

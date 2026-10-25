@@ -63,7 +63,6 @@ const SubjectTeacherAssign = () => {
   // ------- selected class and section
   const classData =
     (sectionSubData?.class as ClassWithSectionType) ?? undefined;
-  console.log(sectionSubData)
 
   if (isPending) {
     return <SpinnerCustom />;

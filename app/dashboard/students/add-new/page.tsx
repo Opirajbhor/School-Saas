@@ -36,25 +36,22 @@ export default function AddStudent() {
       return result.data as AcademicInfoType;
     },
   });
-  // ------------------form------------
+  const sessionId = activeSession?.session?.id ?? null;
 
+  // ------------------form------------
   const form = useForm({
     resolver: zodResolver(addStudentZod),
     defaultValues: {
       photoUrl: "",
-      studentId: `HAR-${randomId}`,
-      session: activeSession?.id,
+      studentId: `SID-${randomId}`,
+      sessionId: null,
       status: "ACTIVE",
       groupId: null,
     },
   });
   const { isSubmitting } = form.formState;
-
   // ----------form Effect------------
-  const selectedSession = useWatch({
-    control: form.control,
-    name: "session",
-  });
+
   const selectedClass = useWatch({
     control: form.control,
     name: "className",
@@ -70,7 +67,11 @@ export default function AddStudent() {
   useEffect(() => {
     form.setValue("className", "");
     form.setValue("section", "");
-  }, [selectedSession, form]);
+    form.setValue("groupId", "");
+    if (sessionId) {
+      form.setValue("sessionId", sessionId);
+    }
+  }, [form, sessionId]);
 
   // ---------handle button------------
   const addBtn = async (data: AddStudentType) => {
@@ -101,18 +102,14 @@ export default function AddStudent() {
             </CardHeader>
 
             <CardContent className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-              {/*------------SESSION----------- */}
-              <FormSelect
-                control={form.control}
-                name="session"
-                label="Session"
-                options={
-                  activeSession
-                    ? [{ label: activeSession.year, value: activeSession.id }]
-                    : []
-                }
-              />
+              {/*------------Session----------- */}
 
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <Label>Session:</Label>
+                  <Input value={activeSession?.session?.year} disabled />
+                </div>
+              </div>
               {/*------------CLASS----------- */}
 
               <FormSelect
@@ -194,7 +191,7 @@ export default function AddStudent() {
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
                     <Label>Student ID</Label>
-                    <Input value={"HAR"} disabled />
+                    <Input value={"SID"} disabled />
                   </div>
                   {/*------------ENGLISH NAME----------- */}
 

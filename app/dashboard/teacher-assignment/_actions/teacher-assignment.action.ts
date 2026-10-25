@@ -262,7 +262,6 @@ export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
     }
 
     // ----------create new record ------------
-    console.log("new", data);
     const newId = await createRecord(
       {
         zodSchema: subjectTeacherZod,

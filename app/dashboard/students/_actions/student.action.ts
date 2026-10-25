@@ -1,16 +1,13 @@
 "use server";
-import {
-  academicSessions,
-  enrollments,
-  groupClasses,
-  student,
-} from "@/src/drizzle-DB/schema";
+import { enrollments, student } from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { requireInstitute } from "../../profile/_actions/get-institute-profile";
 import { db } from "@/src/drizzle-DB";
 import { AddStudentType, addStudentZod } from "@/src/validation/student.zod";
+import { getActiveSession } from "../../academic-sessions/_actions/session.action";
+import { getClassSectionGroups } from "../../classes/_actions/classes.action";
 
 // get student
 export async function getStudents() {
@@ -56,25 +53,14 @@ export async function ToggleStudentStatus(id: string) {
 // get academicInfo
 export async function getAcademicInfo() {
   try {
-    const academicInfo = await db.query.academicSessions.findFirst({
-      where: and(eq(academicSessions.status, "ACTIVE")),
-      with: {
-        classes: {
-          with: {
-            sections: true,
-            groupClasses: {
-              where: eq(groupClasses.status, "ACTIVE"),
-              with: {
-                group: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const currentSession = await getActiveSession();
+    const academicInfo = await getClassSectionGroups();
     return {
       success: true as const,
-      data: academicInfo,
+      data: {
+        session: currentSession,
+        classes: academicInfo?.data,
+      },
     };
   } catch (error) {
     console.error(
@@ -100,6 +86,14 @@ export async function addStudent(data: AddStudentType) {
         success: false as const,
         error: "Validation failed",
         details: validated.error.flatten().fieldErrors,
+      };
+    }
+    const activeSession = await getActiveSession();
+    if (!activeSession) {
+      return {
+        success: false as const,
+        error: "No active session",
+        details: {},
       };
     }
     const profile = await requireInstitute();
@@ -134,7 +128,7 @@ export async function addStudent(data: AddStudentType) {
         .values({
           instituteId: profile.id,
           studentId: newStudent.id,
-          sessionId: data.session,
+          sessionId: activeSession.id,
           classId: data.className,
           sectionId: data.section,
           roll: data.roll,

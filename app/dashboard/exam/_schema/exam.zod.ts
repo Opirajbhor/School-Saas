@@ -4,6 +4,9 @@ import {
   examMarkTypesDrizzle,
   exams,
 } from "@/src/drizzle-DB/schema";
+import { sectionType } from "@/src/validation/classes.zod";
+import { OutputStudentType } from "@/src/validation/student.zod";
+import { OutputSubjectType } from "@/src/validation/subjects.zod";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import z from "zod";
 
@@ -60,3 +63,18 @@ export const outputExamGradeRangeZod = createSelectSchema(
   examGradeRangeDrizzle,
 );
 export type OutputExamGradeRangeType = z.infer<typeof examGradeRangeZod>;
+
+// -------------------mark entry/exam overview ------------
+export type ExamOverViewType = z.infer<typeof outputExamZod> & {
+  assignClasses: {
+    classId: string;
+    status: string;
+    class: {
+      id: string;
+      name: string;
+      sections: sectionType[];
+      subjects: OutputSubjectType[];
+      students: OutputStudentType[];
+    };
+  }[];
+};

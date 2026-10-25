@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AccessServer } from "@/src/server-actions/protected-routes/role-access-server";
 import Link from "next/link";
 import { ArrowBigRight } from "lucide-react";
+import ExamListPage from "./_component/main-page/exam-page";
 
 export default async function Page() {
   const { allowed } = await AccessServer("admin");
@@ -9,6 +10,7 @@ export default async function Page() {
 
   return (
     <div>
+      <ExamListPage />
       <div>
         <Link
           className="card flex items-center gap-2 p-10 border"
