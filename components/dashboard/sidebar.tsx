@@ -1,11 +1,9 @@
 "use client";
 import { cn } from "@/src/lib/utils";
 import {
-  BookOpen,
   ClipboardList,
   FileBarChart,
   GraduationCap,
-  Layers,
   Library,
   PencilLine,
   School,
@@ -50,7 +48,11 @@ const nav = [
     group: "Assessment",
     items: [
       { name: "Exams", link: "/dashboard/exam", icon: ClipboardList },
-      { name: "Marks Entry", link: "/dashboard/mark-entry", icon: PencilLine },
+      {
+        name: "Marks Entry",
+        link: "/dashboard/exam/mark-entry",
+        icon: PencilLine,
+      },
       { name: "Results", link: "/dashboard/results", icon: GraduationCap },
       { name: "Reports", link: "/dashboard/reports", icon: FileBarChart },
     ],
