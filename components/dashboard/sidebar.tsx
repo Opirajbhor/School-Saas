@@ -50,7 +50,7 @@ const nav = [
       { name: "Exams", link: "/dashboard/exam", icon: ClipboardList },
       {
         name: "Marks Entry",
-        link: "/dashboard/exam/mark-entry",
+        link: "/dashboard/exam/mark-input",
         icon: PencilLine,
       },
       { name: "Results", link: "/dashboard/results", icon: GraduationCap },

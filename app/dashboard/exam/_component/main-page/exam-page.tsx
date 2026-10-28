@@ -49,7 +49,7 @@ export default async function ExamListPage() {
         {/* Exam Cards Grid */}
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {examData.map((exam) => (
-            <Link key={exam.id} href={`/dashboard/exam/mark-entry/${exam.id}`}>
+            <Link key={exam.id} href={`/dashboard/exam/${exam.id}`}>
               <ExamCard exam={exam} />
             </Link>
           ))}
