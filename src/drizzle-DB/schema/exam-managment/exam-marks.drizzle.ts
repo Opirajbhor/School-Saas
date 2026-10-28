@@ -14,7 +14,11 @@ import { enrollments } from "../enrollments.drizzle";
 import { subjectDbSchema } from "../subjects.drizzle";
 import { exams } from "./exam.drizzle";
 import { examMarkTypesDrizzle } from "./exam-mark-types.drizzle";
-import { statusEnum, timestamps } from "../enums-drizzle";
+import {
+  markEntryStatusEnum,
+  statusEnum,
+  timestamps,
+} from "../enums-drizzle";
 
 export const examMarks = pgTable(
   "exam_marks",
@@ -48,6 +52,9 @@ export const examMarks = pgTable(
     // an absent student stores 0 and the flag instead of a mark
     absent: boolean("absent").notNull().default(false),
 
+    // draft until the section's marks are submitted for this exam + subject
+    entryStatus: markEntryStatusEnum("entry_status").notNull().default("DRAFT"),
+
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
   },
@@ -62,6 +69,7 @@ export const examMarks = pgTable(
     index("exam_marks_exam_idx").on(t.examId),
     index("exam_marks_enrollment_idx").on(t.enrollmentId),
     index("exam_marks_exam_subject_idx").on(t.examId, t.subjectId),
+    index("exam_marks_entry_status_idx").on(t.entryStatus),
   ],
 );
 

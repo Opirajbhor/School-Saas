@@ -89,6 +89,10 @@ export const examMarkColumnsZod = z.object({
 });
 export type InputExamMarkColumnsType = z.infer<typeof examMarkColumnsZod>;
 
+// draft keeps whatever was typed; submit requires a complete sheet
+export const markEntryStatusZod = z.enum(["DRAFT", "SUBMITTED"]);
+export type MarkEntryStatus = z.infer<typeof markEntryStatusZod>;
+
 // one student's row in the mark sheet
 export const markInputRowZod = z
   .object({
@@ -109,13 +113,19 @@ export const markInputRowZod = z
     path: ["marks"],
   });
 export type InputMarkInputRowType = z.infer<typeof markInputRowZod>;
+
 // the whole sheet — this is the react-hook-form value shape
 export const markInputSheetZod = examMarkColumnsZod.extend({
   rows: z.array(markInputRowZod).min(1, { error: "No students to save" }),
 });
 export type InputMarkInputSheetType = z.infer<typeof markInputSheetZod>;
 
-export type MarkEntryStatus = "PENDING" | "SUBMITTED";
+// the save payload adds the workflow intent to the sheet
+export const saveMarkInputZod = examMarkColumnsZod.extend({
+  intent: markEntryStatusZod,
+  rows: z.array(markInputRowZod).min(1, { error: "No students to save" }),
+});
+export type InputSaveMarkInputType = z.infer<typeof saveMarkInputZod>;
 
 export type OutputMarkEntrySheetType = {
   exam: { id: string; name: string };
@@ -132,6 +142,8 @@ export type OutputMarkEntrySheetType = {
     passMark: number;
   }[];
   totalMarks: number;
+  // draft until this exam + subject has been submitted for the section
+  entryStatus: MarkEntryStatus;
   // status is null until this student has any saved mark row
   rows: {
     studentId: string;

@@ -1,30 +1,31 @@
 import { Badge } from "@/components/ui/badge";
-import { CardDescription, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/utils/utils";
+import { MarkEntryStatus } from "../../_schema/exam.zod";
 
-// --- Step heading with numbered badge ---
-export function StepHeading({
-  step,
-  title,
+// --- One compact control in the selection bar: label above, control below ---
+export function ControlField({
+  label,
+  htmlFor,
+  className,
   children,
 }: {
-  step: string;
-  title: string;
+  label: string;
+  htmlFor?: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-        {step}
-      </div>
-      <div className="space-y-1">
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <CardDescription>{children}</CardDescription>
-      </div>
+    <div className={cn("flex min-w-0 flex-col gap-1", className)}>
+      <Label htmlFor={htmlFor} className="text-xs text-muted-foreground">
+        {label}
+      </Label>
+      {children}
     </div>
   );
 }
 
-// --- Per mark type status badge ---
+// --- Per mark type status badge, shown under each entered mark ---
 export function MarkStatusBadge({
   absent,
   mark,
@@ -44,7 +45,7 @@ export function MarkStatusBadge({
     );
   }
   const value = Number(mark);
-  if (mark === undefined || value === 0) {
+  if (mark === undefined || mark === 0) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
   if (Number.isNaN(value) || value < 0 || value > fullMark) {
@@ -64,6 +65,20 @@ export function MarkStatusBadge({
   return (
     <Badge variant="secondary" className="text-[11px]">
       Present
+    </Badge>
+  );
+}
+
+// --- Sheet-level workflow state, shown in the toolbar ---
+export function SheetStatusBadge({ status }: { status: MarkEntryStatus }) {
+  if (status === "SUBMITTED") {
+    return (
+      <Badge className="text-[11px]">Submitted</Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[11px]">
+      Draft
     </Badge>
   );
 }

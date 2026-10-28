@@ -25,8 +25,9 @@ import {
 import {
   examMarkColumnsZod,
   InputExamMarkColumnsType,
-  InputMarkInputSheetType,
-  markInputSheetZod,
+  InputSaveMarkInputType,
+  MarkEntryStatus,
+  saveMarkInputZod,
   OutputMarkEntrySheetType,
 } from "../_schema/exam.zod";
 
@@ -45,6 +46,11 @@ type MarkTypeRow = {
   name: string;
   fullMark: number;
   passMark: number;
+};
+// per-student saved state, as read back from exam_marks
+type SavedMarkState = {
+  status: MarkEntryStatus;
+  marks: Map<string, { mark: number; absent: boolean }>;
 };
 
 // ================== selectors ==================
@@ -289,7 +295,12 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
     }
 
     const markTypeRows = markTypes.data as MarkTypeRow[];
-    const savedMarks = await getSavedMarks(examId, subjectId, ctx.instituteId);
+    const savedMarks = await getSavedMarks({
+      examId,
+      subjectId,
+      sectionId,
+      instituteId: ctx.instituteId,
+    });
     if (!savedMarks.success) {
       return {
         success: false as const,
@@ -297,6 +308,13 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
         details: {},
       };
     }
+
+    // the sheet is submitted as a whole, so one submitted row means all are
+    const entryStatus: MarkEntryStatus = [...savedMarks.data.values()].some(
+      (saved) => saved.status === "SUBMITTED",
+    )
+      ? "SUBMITTED"
+      : "DRAFT";
 
     const sheet: OutputMarkEntrySheetType = {
       exam,
@@ -308,16 +326,19 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
       classTeacher: classTeacher.data,
       markTypes: markTypeRows,
       totalMarks: markTypeRows.reduce((sum, type) => sum + type.fullMark, 0),
-      rows: (students.data as StudentRow[]).map((row) => ({
-        ...row,
-        status: savedMarks.data.has(row.studentId) ? "PENDING" : null,
-        marks: markTypeRows.map((type) => ({
-          markTypeId: type.id,
-          mark: savedMarks.data.get(row.studentId)?.get(type.id)?.mark ?? 0,
-          absent:
-            savedMarks.data.get(row.studentId)?.get(type.id)?.absent ?? false,
-        })),
-      })),
+      entryStatus,
+      rows: (students.data as StudentRow[]).map((row) => {
+        const saved = savedMarks.data.get(row.studentId);
+        return {
+          ...row,
+          status: saved?.status ?? null,
+          marks: markTypeRows.map((type) => ({
+            markTypeId: type.id,
+            mark: saved?.marks.get(type.id)?.mark ?? 0,
+            absent: saved?.marks.get(type.id)?.absent ?? false,
+          })),
+        };
+      }),
     };
 
     return { success: true as const, data: sheet };
@@ -335,7 +356,12 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
 
 // validates the sheet against the subject's mark config and the section
 // enrollment, then upserts one row per student / mark type.
-export async function saveMarkInput(data: InputMarkInputSheetType) {
+//
+// `intent: "DRAFT"` stores whatever was entered. `intent: "SUBMITTED"`
+// additionally requires every enrolled student to be complete — marked
+// absent, or a mark for each configured mark type — and flips the section's
+// rows to SUBMITTED.
+export async function saveMarkInput(data: InputSaveMarkInputType) {
   const ctx = await getUserContext();
   if (!ctx) {
     return {
@@ -346,7 +372,7 @@ export async function saveMarkInput(data: InputMarkInputSheetType) {
   }
   const { userId, instituteId } = ctx;
 
-  const parsed = parseWithZod(markInputSheetZod, data);
+  const parsed = parseWithZod(saveMarkInputZod, data);
   if (!parsed.success) {
     return {
       success: false as const,
@@ -354,7 +380,7 @@ export async function saveMarkInput(data: InputMarkInputSheetType) {
       details: parsed.details,
     };
   }
-  const { examId, classId, sectionId, subjectId, rows } = parsed.data;
+  const { examId, classId, sectionId, subjectId, rows, intent } = parsed.data;
 
   const studentIds = rows.map((row) => row.studentId);
   if (new Set(studentIds).size !== studentIds.length) {
@@ -438,6 +464,32 @@ export async function saveMarkInput(data: InputMarkInputSheetType) {
       }
     }
 
+    // submitting means the whole section is finished, so every student needs
+    // either the absent flag or a mark for each configured mark type
+    if (intent === "SUBMITTED") {
+      const expectedIds = new Set(markTypeRows.map((type) => type.id));
+      for (const row of rows) {
+        if (row.absent) continue;
+
+        const entered = new Set(
+          row.marks.filter((entry) => expectedIds.has(entry.markTypeId))
+            .map((entry) => entry.markTypeId),
+        );
+        if (entered.size === expectedIds.size) continue;
+
+        const missing = markTypeRows
+          .filter((type) => !entered.has(type.id))
+          .map((type) => type.name)
+          .join(", ");
+
+        return {
+          success: false as const,
+          error: `Missing ${missing} for ${row.studentId}`,
+          details: {},
+        };
+      }
+    }
+
     const values = rows.flatMap((row) => {
       const enrollmentId = enrollmentByStudent.get(row.studentId);
       if (!enrollmentId) return [];
@@ -450,6 +502,7 @@ export async function saveMarkInput(data: InputMarkInputSheetType) {
         markTypeId: entry.markTypeId,
         mark: row.absent ? 0 : Math.round(entry.mark),
         absent: row.absent,
+        entryStatus: intent,
       }));
     });
 
@@ -468,10 +521,30 @@ export async function saveMarkInput(data: InputMarkInputSheetType) {
             set: {
               mark: sql`excluded.mark`,
               absent: sql`excluded.absent`,
+              entryStatus: sql`excluded.entry_status`,
               status: "ACTIVE",
               updatedAt: new Date(),
             },
           });
+      }
+
+      // submitting covers the whole section, so students the teacher left
+      // untouched are promoted too — otherwise the sheet would stay half
+      // draft after it was signed off.
+      if (intent === "SUBMITTED") {
+        await tx
+          .update(examMarks)
+          .set({ entryStatus: "SUBMITTED", updatedAt: new Date() })
+          .where(
+            and(
+              eq(examMarks.instituteId, instituteId),
+              eq(examMarks.examId, examId),
+              eq(examMarks.subjectId, subjectId),
+              eq(examMarks.status, "ACTIVE"),
+              inArray(examMarks.enrollmentId, [...enrollmentByStudent.values()]),
+              eq(examMarks.entryStatus, "DRAFT"),
+            ),
+          );
       }
 
       await createAuditLog(tx, {
@@ -480,12 +553,13 @@ export async function saveMarkInput(data: InputMarkInputSheetType) {
         action: "UPDATED",
         entity: "MARK",
         entityId: examId,
-        description: `saved marks for ${rows.length} students`,
+        description: `${intent === "SUBMITTED" ? "submitted" : "saved"} marks for ${rows.length} students`,
         metadata: {
           examId,
           classId,
           sectionId,
           subjectId,
+          intent,
           rows: rows.length,
         },
       });
@@ -501,6 +575,7 @@ export async function saveMarkInput(data: InputMarkInputSheetType) {
         classId,
         sectionId,
         subjectId,
+        intent,
         savedRows: rows.length,
         absentRows: rows.filter((row) => row.absent).length,
       },
@@ -599,18 +674,27 @@ async function getSectionStudents(classId: string, sectionId: string) {
   });
 }
 
-// saved marks for this exam + subject, keyed by studentId -> markTypeId
-async function getSavedMarks(
-  examId: string,
-  subjectId: string,
-  instituteId: string,
-) {
+// saved marks for this exam + subject, keyed by studentId -> markTypeId.
+// scoped to the section's enrollments so a student saved elsewhere can never
+// surface in this sheet.
+async function getSavedMarks({
+  examId,
+  subjectId,
+  sectionId,
+  instituteId,
+}: {
+  examId: string;
+  subjectId: string;
+  sectionId: string;
+  instituteId: string;
+}) {
   const rows = await db
     .select({
       studentId: enrollments.studentId,
       markTypeId: examMarks.markTypeId,
       mark: examMarks.mark,
       absent: examMarks.absent,
+      entryStatus: examMarks.entryStatus,
     })
     .from(examMarks)
     .innerJoin(enrollments, eq(enrollments.id, examMarks.enrollmentId))
@@ -620,17 +704,25 @@ async function getSavedMarks(
         eq(examMarks.examId, examId),
         eq(examMarks.subjectId, subjectId),
         eq(examMarks.status, "ACTIVE"),
+        eq(enrollments.sectionId, sectionId),
       ),
     );
 
-  const byStudent = new Map<
-    string,
-    Map<string, { mark: number; absent: boolean }>
-  >();
+  const byStudent = new Map<string, SavedMarkState>();
   for (const row of rows) {
-    const perType = byStudent.get(row.studentId) ?? new Map();
-    perType.set(row.markTypeId, { mark: row.mark, absent: row.absent });
-    byStudent.set(row.studentId, perType);
+    const saved = byStudent.get(row.studentId) ?? {
+      status: "DRAFT" as MarkEntryStatus,
+      marks: new Map<string, { mark: number; absent: boolean }>(),
+    };
+
+    saved.marks.set(row.markTypeId, {
+      mark: row.mark,
+      absent: row.absent,
+    });
+    // submitted wins if any row for the student was submitted
+    if (row.entryStatus === "SUBMITTED") saved.status = "SUBMITTED";
+
+    byStudent.set(row.studentId, saved);
   }
 
   return { success: true as const, data: byStudent, details: {} };

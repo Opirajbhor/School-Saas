@@ -18,67 +18,57 @@ import {
 } from "../../_schema/exam.zod";
 import { MarkStatusBadge } from "./mark-input-ui";
 
-type SheetRow = OutputMarkEntrySheetType["rows"][number];
-
-// rows render their details from the loaded sheet and their inputs from the
-// form — both are indexed the same way
+// Grid of students × configured mark types. Row details come from the loaded
+// sheet, the inputs from the form; both are indexed against the *unfiltered*
+// row array, so search and pagination only choose which indexes render.
 export function MarkInputTable({
   sheet,
-  isFetching,
-  filteredIndexes,
+  visibleIndexes,
 }: {
-  sheet: OutputMarkEntrySheetType | undefined;
-  isFetching: boolean;
-  filteredIndexes: { row: SheetRow; index: number }[];
+  sheet: OutputMarkEntrySheetType;
+  visibleIndexes: number[];
 }) {
   const { control } = useFormContext<InputMarkInputSheetType>();
   const rows = useWatch({ control, name: "rows" });
-  const markTypes = sheet?.markTypes ?? [];
-
-  if (isFetching) {
-    return (
-      <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-        <Spinner />
-        Loading students...
-      </div>
-    );
-  }
+  const markTypes = sheet.markTypes;
+  const submitted = sheet.entryStatus === "SUBMITTED";
 
   return (
     <Table>
       <TableHeader className="bg-muted/50">
         <TableRow>
           <TableHead rowSpan={2} className="w-16 text-center">
-            Roll No.
+            Roll
           </TableHead>
-          <TableHead rowSpan={2} className="min-w-40">
+          <TableHead rowSpan={2} className="min-w-44">
             Student Name
           </TableHead>
           {markTypes.map((type) => (
             <TableHead key={type.id} colSpan={2} className="text-center">
-              {type.name} ({type.fullMark})
+              {type.name}
+              <span className="font-normal text-muted-foreground">
+                {" "}
+                ({type.fullMark})
+              </span>
             </TableHead>
           ))}
           <TableHead rowSpan={2} className="w-20 text-center">
-            Total{" "}
-            <span className="text-xs font-normal text-muted-foreground">
-              / {sheet?.totalMarks ?? 0}
+            Total
+            <span className="block text-xs font-normal text-muted-foreground">
+              / {sheet.totalMarks}
             </span>
           </TableHead>
-          <TableHead rowSpan={2} className="min-w-32">
-            Remarks
-          </TableHead>
           <TableHead rowSpan={2} className="w-24 text-center">
-            Action
+            Status
+          </TableHead>
+          <TableHead rowSpan={2} className="w-20 text-center">
+            Absent
           </TableHead>
         </TableRow>
         <TableRow>
           {markTypes.flatMap((type) =>
-            ["Marks", "Status"].map((label) => (
-              <TableHead
-                key={`${type.id}-${label}`}
-                className="w-24 text-center"
-              >
+            ["Mark", "Result"].map((label) => (
+              <TableHead key={`${type.id}-${label}`} className="w-24 text-center">
                 {label}
               </TableHead>
             )),
@@ -86,91 +76,105 @@ export function MarkInputTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredIndexes.length === 0 ? (
+        {visibleIndexes.map((index) => {
+          const row = sheet.rows[index];
+          const studentMarks = rows?.[index]?.marks ?? [];
+          const isAbsent = Boolean(rows?.[index]?.absent);
+          const total = studentMarks.reduce(
+            (sum, mark) => sum + (Number(mark.mark) || 0),
+            0,
+          );
+
+          return (
+            <TableRow key={row.studentId}>
+              <TableCell className="text-center text-muted-foreground">
+                {row.roll}
+              </TableCell>
+              <TableCell className="font-medium text-foreground">
+                {row.englishName}
+                {row.banglaName && (
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {row.banglaName}
+                  </span>
+                )}
+              </TableCell>
+              {markTypes.flatMap((type, typeIndex) => {
+                const mark = studentMarks[typeIndex];
+                return [
+                  <TableCell key={`${type.id}-mark`} className="text-center">
+                    {isAbsent ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <FormInput
+                        control={control}
+                        name={`rows.${index}.marks.${typeIndex}.mark`}
+                        label=""
+                        type="number"
+                        min={0}
+                        max={type.fullMark}
+                        disabled={submitted}
+                        aria-label={`${type.name} mark for ${row.englishName}`}
+                        className="mx-auto w-16"
+                      />
+                    )}
+                  </TableCell>,
+                  <TableCell key={`${type.id}-result`} className="text-center">
+                    <MarkStatusBadge
+                      absent={isAbsent}
+                      mark={mark?.mark}
+                      passMark={type.passMark}
+                      fullMark={type.fullMark}
+                    />
+                  </TableCell>,
+                ];
+              })}
+              <TableCell className="text-center font-medium text-foreground">
+                {isAbsent ? "—" : total}
+              </TableCell>
+              <TableCell className="text-center">
+                {row.status ? (
+                  <span className="text-xs text-muted-foreground">
+                    {row.status === "SUBMITTED" ? "Submitted" : "Draft"}
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">—</span>
+                )}
+              </TableCell>
+              <TableCell className="text-center">
+                <FormCheckbox
+                  control={control}
+                  name={`rows.${index}.absent`}
+                  label=""
+                  disabled={submitted}
+                  className="justify-center"
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+      {sheet.rows.length === 0 && (
+        <TableBody>
           <TableRow>
             <TableCell
               colSpan={5 + markTypes.length * 2}
               className="h-24 text-center text-muted-foreground"
             >
-              {sheet
-                ? sheet.rows.length === 0
-                  ? "No active students enrolled in this section."
-                  : "No students match your search."
-                : "Select an exam, class, section and subject to load students."}
+              No active students are enrolled in this section.
             </TableCell>
           </TableRow>
-        ) : (
-          filteredIndexes.map(({ row, index }) => {
-            const studentMarks = rows?.[index]?.marks ?? [];
-            const isAbsent = Boolean(rows?.[index]?.absent);
-            const total = studentMarks.reduce(
-              (sum, mark) => sum + (Number(mark.mark) || 0),
-              0,
-            );
-
-            return (
-              <TableRow key={row.studentId}>
-                <TableCell className="text-center text-muted-foreground">
-                  {row.roll}
-                </TableCell>
-                <TableCell className="font-medium text-foreground">
-                  {row.englishName}
-                  {row.banglaName && (
-                    <span className="block text-xs font-normal text-muted-foreground">
-                      {row.banglaName}
-                    </span>
-                  )}
-                </TableCell>
-                {markTypes.flatMap((type, typeIndex) => {
-                  const mark = studentMarks[typeIndex];
-                  return [
-                    <TableCell key={`${type.id}-marks`} className="text-center">
-                      {isAbsent ? (
-                        <span className="text-muted-foreground">N/A</span>
-                      ) : (
-                        <FormInput
-                          control={control}
-                          name={`rows.${index}.marks.${typeIndex}.mark`}
-                          label=""
-                          type="number"
-                          min={0}
-                          max={type.fullMark}
-                          aria-label={`${type.name} marks for ${row.englishName}`}
-                          className="mx-auto w-16"
-                        />
-                      )}
-                    </TableCell>,
-                    <TableCell
-                      key={`${type.id}-status`}
-                      className="text-center"
-                    >
-                      <MarkStatusBadge
-                        absent={isAbsent}
-                        mark={mark?.mark}
-                        passMark={type.passMark}
-                        fullMark={type.fullMark}
-                      />
-                    </TableCell>,
-                  ];
-                })}
-                <TableCell className="text-center font-medium text-foreground">
-                  {isAbsent ? "—" : total}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {isAbsent ? "Absent" : "—"}
-                </TableCell>
-                <TableCell className="text-center">
-                  <FormCheckbox
-                    control={control}
-                    name={`rows.${index}.absent`}
-                    label="Absent"
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })
-        )}
-      </TableBody>
+        </TableBody>
+      )}
     </Table>
+  );
+}
+
+// Kept separate so the parent can render it while the sheet query is in flight.
+export function MarkInputTableLoading() {
+  return (
+    <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
+      <Spinner />
+      Loading students...
+    </div>
   );
 }

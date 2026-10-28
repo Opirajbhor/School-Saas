@@ -568,6 +568,13 @@
       "when": 1793203099797,
       "tag": "0080_fresh_bruce_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1793204532201,
+      "tag": "0081_rich_excalibur",
+      "breakpoints": true
     }
   ]
 }

@@ -18,6 +18,13 @@ export const subjectTypeEnum = pgEnum("subject_type", [
   "GROUP_BASED",
 ]);
 
+// how far an entered mark sheet has progressed. `status` stays the
+// soft-delete flag; this one is the workflow state.
+export const markEntryStatusEnum = pgEnum("mark_entry_status", [
+  "DRAFT",
+  "SUBMITTED",
+]);
+
 export const timestamps = {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
