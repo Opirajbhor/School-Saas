@@ -332,6 +332,32 @@ export type OutputMarkEntrySheetType = {
     reason: string;
     resolutionNote: string | null;
   } | null;
+  // how this subject combines with its paired paper (English 1st + 2nd).
+  // display only — the two papers are still stored, entered and graded
+  // separately; this just says what to show alongside the sheet.
+  combined: {
+    label: string;
+    // the paper this sheet belongs to, 0 for the 1st, 1 for the 2nd
+    position: 0 | 1;
+    papers: {
+      id: string;
+      name: string;
+      fullMark: number;
+    }[];
+    // one row per student, so the pair can be compared student by student.
+    // `marks` is null for a paper that has no saved marks yet.
+    students: {
+      studentId: string;
+      roll: string;
+      englishName: string;
+      papers: {
+        id: string;
+        total: number | null;
+        absent: boolean;
+        marks: { markTypeId: string; mark: number; absent: boolean }[];
+      }[];
+    }[];
+  } | null;
   // status is null until this student has any saved mark row
   rows: {
     studentId: string;

@@ -338,6 +338,19 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
       instituteId: ctx.instituteId,
     });
 
+    // show the paired paper alongside this sheet, when there is one
+    const pair = await getCombinedPartner(subjectId, ctx.instituteId);
+    const combined = pair
+      ? await getCombinedDisplay({
+          pair,
+          currentSubjectId: subjectId,
+          examId,
+          sectionId,
+          instituteId: ctx.instituteId,
+          students: students.data as StudentRow[],
+        })
+      : null;
+
     const sheet: OutputMarkEntrySheetType = {
       exam,
       class: classRow,
@@ -352,6 +365,7 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
       canEdit: permission.allowed,
       lockReason: permission.allowed ? null : permission.error,
       markWorkflow: lock.workflow,
+      combined,
       editRequest: latestRequest
         ? {
             id: latestRequest.id,
@@ -995,6 +1009,131 @@ async function getSectionStudents(classId: string, sectionId: string) {
         )
         .orderBy(asc(enrollments.roll)),
   });
+}
+
+// The other paper of a combined pair (English 1st + 2nd), if this subject has
+// one. The pair is stored as two ordinary subjects — the second paper points at
+// the first with `combineWith` — so the partner sits at either end of the
+// pointer. Display only: nothing here changes what is stored or entered.
+async function getCombinedPartner(subjectId: string, instituteId: string) {
+  const rows = await db
+    .select({
+      id: subjectDbSchema.id,
+      name: subjectDbSchema.name,
+      combineWith: subjectDbSchema.combineWith,
+      combineLabel: subjectDbSchema.combineLabel,
+    })
+    .from(subjectDbSchema)
+    .where(
+      and(
+        or(
+          eq(subjectDbSchema.id, subjectId),
+          eq(subjectDbSchema.combineWith, subjectId),
+        ),
+        or(
+          isNull(subjectDbSchema.instituteId),
+          eq(subjectDbSchema.instituteId, instituteId),
+        ),
+      ),
+    );
+
+  const current = rows.find((row) => row.id === subjectId);
+  if (!current?.combineLabel) return null;
+
+  const anchorId = current.combineWith ?? current.id;
+  const anchor = rows.find((row) => row.id === anchorId);
+  const partner = rows.find(
+    (row) => row.id !== subjectId && (row.combineWith ?? row.id) === anchorId,
+  );
+  if (!anchor || !partner) return null;
+
+  return {
+    label: current.combineLabel,
+    // 1st paper is the anchor, 2nd paper points at it
+    first: current.combineWith ? partner : current,
+    second: current.combineWith ? current : partner,
+  };
+}
+
+// Both papers' marks for this exam, so the sheet can show the pair together.
+// Marks are read per paper and never merged in storage.
+async function getCombinedDisplay({
+  pair,
+  currentSubjectId,
+  examId,
+  sectionId,
+  instituteId,
+  students,
+}: {
+  pair: {
+    label: string;
+    first: { id: string; name: string };
+    second: { id: string; name: string };
+  };
+  currentSubjectId: string;
+  examId: string;
+  sectionId: string;
+  instituteId: string;
+  students: StudentRow[];
+}) {
+  const papers = await Promise.all(
+    [pair.first, pair.second].map(async (paper) => {
+      const [markTypes, savedMarks] = await Promise.all([
+        getSubjectMarkTypes(paper.id, instituteId),
+        getSavedMarks({ examId, subjectId: paper.id, sectionId, instituteId }),
+      ]);
+
+      const fullMark = markTypes.success
+        ? (markTypes.data as MarkTypeRow[]).reduce(
+            (sum, type) => sum + type.fullMark,
+            0,
+          )
+        : 0;
+
+      return { ...paper, fullMark, saved: savedMarks.data };
+    }),
+  );
+
+  return {
+    label: pair.label,
+    position: (currentSubjectId === pair.first.id ? 0 : 1) as 0 | 1,
+    papers: papers.map((paper) => ({
+      id: paper.id,
+      name: paper.name,
+      fullMark: paper.fullMark,
+    })),
+    // one row per student, so the two papers are compared student by student
+    students: students.map((student) => ({
+      studentId: student.studentId,
+      roll: student.roll,
+      englishName: student.englishName,
+      papers: papers.map((paper) => {
+        const saved = paper.saved?.get(student.studentId);
+        const marks = saved
+          ? [...saved.marks.entries()].map(([markTypeId, value]) => ({
+              markTypeId,
+              mark: value.mark,
+              absent: value.absent,
+            }))
+          : [];
+        // a paper counts as sat when at least one mark type is not absent
+        const sat = marks.filter((mark) => !mark.absent);
+        const absent = marks.length > 0 && sat.length === 0;
+
+        return {
+          id: paper.id,
+          absent,
+          marks,
+          total:
+            marks.length === 0
+              ? null
+              : absent
+                ? 0
+                : sat.reduce((sum, mark) => sum + mark.mark, 0),
+        };
+      }),
+    })),
+  };
 }
 
 // saved marks for this exam + subject, keyed by studentId -> markTypeId.

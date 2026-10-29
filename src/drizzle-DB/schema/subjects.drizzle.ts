@@ -1,4 +1,11 @@
-import { pgTable, uuid, boolean, text, unique } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  boolean,
+  text,
+  unique,
+  type AnyPgColumn,
+} from "drizzle-orm/pg-core";
 import { instituteProfile } from "./institute-profile-schema.drizzle";
 import { statusEnum, subjectTypeEnum, timestamps } from "./enums-drizzle";
 import { classesDrizzle } from "./classes.drizzle";
@@ -18,6 +25,16 @@ export const subjectDbSchema = pgTable(
     code: text("code").notNull(),
     shortName: text("short_name").notNull(),
 
+    // two related papers (e.g. English 1st + 2nd) are stored as ordinary
+    // subjects. only the second paper points at the first, which is the
+    // bundle's anchor. the pair is combined for display only — never in the
+    // subject list, assignment or mark entry.
+    combineWith: uuid("combine_with").references(
+      (): AnyPgColumn => subjectDbSchema.id,
+      { onDelete: "set null" },
+    ),
+    combineLabel: text("combine_label"),
+
     status: statusEnum("status").notNull().default("ACTIVE"),
     ...timestamps,
   },
@@ -32,8 +49,18 @@ export const subjectDbSchema = pgTable(
     ),
   ],
 );
-export const subjectsRelations = relations(subjectDbSchema, ({ many }) => ({
+export const subjectsRelations = relations(subjectDbSchema, ({ many, one }) => ({
   markTemplates: many(subjectMarkTemplates),
+
+  // the anchor this paper is bundled under, when it is the second paper
+  combineAnchor: one(subjectDbSchema, {
+    fields: [subjectDbSchema.combineWith],
+    references: [subjectDbSchema.id],
+    relationName: "combinedPapers",
+  }),
+
+  // papers bundled under this subject, when it is the anchor
+  combinedPapers: many(subjectDbSchema, { relationName: "combinedPapers" }),
 }));
 
 // subject assign schema---

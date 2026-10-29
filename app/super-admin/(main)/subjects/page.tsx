@@ -2,6 +2,7 @@ import { DataTable } from "@/components/table/tanstack/data-table";
 import { OutputSubjectType } from "@/src/validation/subjects.zod";
 import { subjectsColumn } from "./_table/column";
 import CreateSubject from "./createSubject";
+import CombineSubjects from "./combineSubjects";
 import { SpinnerCustom } from "@/components/Spinner";
 import { getDefaultSubjects } from "./_actions/subjects.action";
 import Link from "next/link";
@@ -11,7 +12,7 @@ export default async function Page() {
   if (!result.success) {
     return <SpinnerCustom />;
   }
-  const subjects = result.data;
+  const subjects = result.data as OutputSubjectType[];
   return (
     <div>
       <div className="flex items-center justify-center ">
@@ -34,6 +35,7 @@ export default async function Page() {
         />
       </div>
       <CreateSubject />
+      <CombineSubjects subjects={subjects} />
     </div>
   );
 }

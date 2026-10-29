@@ -11,6 +11,7 @@ import {
   changeStatussubjects,
   deletesubjects,
 } from "../_actions/subjects.action";
+import { UncombineButton } from "./uncombine-button";
 
 const columnHelper = createColumnHelper<DataTableFeatures, OutputSubjectType>();
 
@@ -37,6 +38,24 @@ export const subjectsColumn = columnHelper.columns([
       <DataTableColumnHeader column={column} title="Short Name" />
     ),
     filterFn: "includesString",
+  }),
+
+  columnHelper.accessor("combineLabel", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Combined" />
+    ),
+    filterFn: "includesString",
+    cell: ({ row }) => {
+      const item = row.original;
+      // only the first paper is the anchor; the second points at it
+      if (!item.combineLabel) return <span>—</span>;
+      return (
+        <span className="text-xs">
+          {item.combineLabel}
+          {item.combineWith ? " (2nd)" : " (1st)"}
+        </span>
+      );
+    },
   }),
 
   columnHelper.accessor("status", {
@@ -82,6 +101,9 @@ function ActionsCell({ item }: { item: OutputSubjectType }) {
       )}
       {item?.id && item.status === "INACTIVE" && (
         <DeleteModal id={item.id} onDelete={deletesubjects} />
+      )}
+      {item?.id && item.combineLabel && (
+        <UncombineButton id={item.id} label={item.combineLabel} />
       )}
     </div>
   );

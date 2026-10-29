@@ -23,12 +23,33 @@ export const subjectTypeEnum = [
 export const inputSubjectZod = createInsertSchema(subjectDbSchema).omit({
   id: true,
   instituteId: true,
+  combineWith: true,
+  combineLabel: true,
 });
+
+// -------- combining two papers (English 1st + 2nd) --------
+// display only: the papers stay individual subjects everywhere else.
+export const combineSubjectsZod = z.object({
+  // the first paper — becomes the anchor of the pair
+  firstSubjectId: z.uuid("Invalid first subject id"),
+  // the second paper — points back at the anchor
+  secondSubjectId: z.uuid("Invalid second subject id"),
+  // what the pair is called when shown together, e.g. "English"
+  label: z.string().trim().min(1, "Label is required").max(100),
+});
+export type InputCombineSubjectsType = z.infer<typeof combineSubjectsZod>;
+
+export const uncombineSubjectZod = z.object({
+  subjectId: z.uuid("Invalid subject id"),
+});
+export type InputUncombineSubjectType = z.infer<typeof uncombineSubjectZod>;
 
 export type InputSubjectType = z.infer<typeof inputSubjectZod>;
 export type OutputSubjectType = InputSubjectType & {
   id: string;
   instituteId: string | null;
+  combineWith: string | null;
+  combineLabel: string | null;
 };
 
 // --------------subject assign zod validation----------------

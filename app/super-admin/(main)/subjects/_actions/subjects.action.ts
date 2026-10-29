@@ -2,13 +2,17 @@
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
-import { eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import {
   ClassSubjectsType,
+  combineSubjectsZod,
   inputSubAssignType,
+  InputCombineSubjectsType,
   InputSubjectType,
   inputSubjectZod,
   OutputSubjectType,
+  uncombineSubjectZod,
 } from "@/src/validation/subjects.zod";
 import {
   classesDrizzle,
@@ -117,6 +121,188 @@ export async function deletesubjects(id: string) {
     return {
       success: false as const,
       error: "Failed to create subjects",
+      details: {},
+    };
+  }
+}
+
+// ================= combine two papers =================
+// Display only. The papers stay individual subjects in the list, in subject
+// assignment and in mark entry; they are only shown together when marks are
+// displayed.
+
+// validate a pair without writing anything, shared by combine and its UI
+type CombineCandidate = {
+  id: string;
+  name: string;
+  instituteId: string | null;
+  combineWith: string | null;
+  combineLabel: string | null;
+};
+
+function validatePair(
+  first: CombineCandidate | undefined,
+  second: CombineCandidate | undefined,
+) {
+  if (!first || !second) {
+    return "Select two subjects to combine";
+  }
+  if (first.id === second.id) {
+    return "A subject cannot be combined with itself";
+  }
+  // a global record and an institute record must never end up in one pair
+  if (first.instituteId !== second.instituteId) {
+    return "Both subjects must belong to the same institute";
+  }
+  // one subject can only ever be in one pair, so a half-combined subject has
+  // to be separated before it can join another
+  if (first.combineWith || second.combineWith) {
+    return "One of these subjects is already combined. Separate it first";
+  }
+  if (first.combineLabel || second.combineLabel) {
+    return "One of these subjects still carries a combine label. Separate it first";
+  }
+  return null;
+}
+
+// two papers become a pair: the second points at the first (the anchor) and
+// both carry the label the pair is shown under
+export async function combineSubjects(data: InputCombineSubjectsType) {
+  const parsed = combineSubjectsZod.safeParse(data);
+  if (!parsed.success) {
+    return {
+      success: false as const,
+      error: parsed.error.issues[0]?.message ?? "Invalid combine request",
+      details: {},
+    };
+  }
+  const { firstSubjectId, secondSubjectId, label } = parsed.data;
+
+  // super-admin manages the global defaults, and the pair must stay in one scope
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session found",
+      details: {},
+    };
+  }
+  const { instituteId } = ctx;
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      const rows = await tx
+        .select({
+          id: subjectDbSchema.id,
+          name: subjectDbSchema.name,
+          instituteId: subjectDbSchema.instituteId,
+          combineWith: subjectDbSchema.combineWith,
+          combineLabel: subjectDbSchema.combineLabel,
+        })
+        .from(subjectDbSchema)
+        .where(
+          and(
+            inArray(subjectDbSchema.id, [firstSubjectId, secondSubjectId]),
+            or(
+              isNull(subjectDbSchema.instituteId),
+              eq(subjectDbSchema.instituteId, instituteId),
+            ),
+          ),
+        );
+
+      const first = rows.find((row) => row.id === firstSubjectId);
+      const second = rows.find((row) => row.id === secondSubjectId);
+
+      const invalid = validatePair(first, second);
+      if (invalid) throw new Error(invalid);
+
+      await tx
+        .update(subjectDbSchema)
+        .set({ combineWith: firstSubjectId, combineLabel: label })
+        .where(eq(subjectDbSchema.id, secondSubjectId));
+
+      await tx
+        .update(subjectDbSchema)
+        .set({ combineWith: null, combineLabel: label })
+        .where(eq(subjectDbSchema.id, firstSubjectId));
+
+      return rows;
+    });
+
+    revalidatePath("/super-admin/subjects");
+    return { success: true as const, data: result };
+  } catch (error) {
+    console.error("combineSubjects failed:", error);
+    return {
+      success: false as const,
+      error:
+        error instanceof Error ? error.message : "Failed to combine subjects",
+      details: {},
+    };
+  }
+}
+
+// clears the pair. Safe when called on either paper.
+export async function uncombineSubject(data: { subjectId: string }) {
+  const parsed = uncombineSubjectZod.safeParse(data);
+  if (!parsed.success) {
+    return {
+      success: false as const,
+      error: parsed.error.issues[0]?.message ?? "Invalid subject id",
+      details: {},
+    };
+  }
+  const { subjectId } = parsed.data;
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      const current = await tx
+        .select({
+          id: subjectDbSchema.id,
+          combineWith: subjectDbSchema.combineWith,
+          combineLabel: subjectDbSchema.combineLabel,
+        })
+        .from(subjectDbSchema)
+        .where(eq(subjectDbSchema.id, subjectId))
+        .limit(1);
+
+      const subject = current[0];
+      if (!subject) throw new Error("Subject not found");
+
+      // the anchor sits at the other end of the pointer
+      const anchorId = subject.combineWith ?? subject.id;
+
+      const affected = await tx
+        .select({ id: subjectDbSchema.id })
+        .from(subjectDbSchema)
+        .where(
+          or(
+            eq(subjectDbSchema.id, anchorId),
+            eq(subjectDbSchema.combineWith, anchorId),
+          ),
+        );
+
+      await tx
+        .update(subjectDbSchema)
+        .set({ combineWith: null, combineLabel: null })
+        .where(
+          inArray(
+            subjectDbSchema.id,
+            affected.map((row) => row.id),
+          ),
+        );
+
+      return affected;
+    });
+
+    revalidatePath("/super-admin/subjects");
+    return { success: true as const, data: result };
+  } catch (error) {
+    console.error("uncombineSubject failed:", error);
+    return {
+      success: false as const,
+      error:
+        error instanceof Error ? error.message : "Failed to separate subjects",
       details: {},
     };
   }

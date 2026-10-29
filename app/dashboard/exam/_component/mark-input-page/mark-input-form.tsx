@@ -35,7 +35,11 @@ import {
   markInputSheetZod,
 } from "../../_schema/exam.zod";
 import { MarkInputTable, MarkInputTableLoading } from "./mark-input-table";
-import { ControlField, SheetStatusBadge } from "./mark-input-ui";
+import {
+  CombinedPairPanel,
+  ControlField,
+  SheetStatusBadge,
+} from "./mark-input-ui";
 import MarkEditRequestModal from "../exam-overview/mark-edit-request-modal";
 
 type Option = { id: string; name: string };
@@ -474,6 +478,17 @@ export default function MarkInputPage() {
                 </div>
               ) : sheet ? (
                 <>
+                  {/* the paired paper of a combined subject, shown together */}
+                  {sheet.combined && (
+                    <div className="p-3 pb-0">
+                      <CombinedPairPanel
+                        label={sheet.combined.label}
+                        papers={sheet.combined.papers}
+                        students={sheet.combined.students}
+                      />
+                    </div>
+                  )}
+
                   {!sheet.canEdit && (
                     <div className="p-3 pb-0">
                       <Alert>
