@@ -40,6 +40,49 @@ export async function getStudents() {
   }
 }
 
+// counts for the stat cards. one query, folded in memory — the enrollment list
+// is already small enough that four round trips would only add latency.
+export async function getStudentStats() {
+  try {
+    const result = await readMany({
+      drizzleSchema: enrollments,
+      query: ({ db, instituteId }) =>
+        db
+          .select({
+            status: enrollments.status,
+            classId: enrollments.classId,
+            sectionId: enrollments.sectionId,
+          })
+          .from(enrollments)
+          .where(eq(enrollments.instituteId, instituteId)),
+    });
+
+    const rows = (result.data ?? []) as {
+      status: string;
+      classId: string;
+      sectionId: string;
+    }[];
+
+    return {
+      success: true as const,
+      data: {
+        total: rows.length,
+        active: rows.filter((row) => row.status === "ACTIVE").length,
+        inactive: rows.filter((row) => row.status === "INACTIVE").length,
+        classes: new Set(rows.map((row) => row.classId)).size,
+        sections: new Set(rows.map((row) => row.sectionId)).size,
+      },
+    };
+  } catch (error) {
+    console.error("Failed to load student stats:", error);
+    return {
+      success: false as const,
+      error: "Failed to fetch student stats",
+      details: {},
+    };
+  }
+}
+
 // toogle Status
 export async function ToggleStudentStatus(id: string) {
   return toggleStatus(

@@ -1,18 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Eye,
-  Filter,
-  Pen,
-  Search,
-  Trash,
-} from "lucide-react";
+import { Card, CardHeader } from "@/components/ui/card";
+import { ChevronDown, Download } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,27 +10,31 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { cn } from "@/utils/utils";
-import { StatCards } from "@/components/dashboard/stat-cards";
 import { StudentEnrollment } from "@/src/validation/student.zod";
+import type { ColumnFiltersState } from "@tanstack/react-table";
 
 import Link from "next/link";
 import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
-import StatusToggleModal from "@/components/modal/status-modal";
 import { DataTable } from "@/components/table/tanstack/data-table";
-import { columns } from "./_table/columns";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getStudents, ToggleStudentStatus } from "./_actions/student.action";
+import { studentColumns } from "./_table/columns";
+import {
+  HIDDEN_FILTER_COLUMNS,
+  StudentFilters,
+} from "./_table/student-filters";
+import { useQuery } from "@tanstack/react-query";
+import { getStudents, getStudentStats } from "./_actions/student.action";
+import {
+  StudentStatCards,
+  StudentStats,
+} from "@/components/dashboard/stat-cards";
 
 export default function Page() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  // applied state — the toolbar edits a draft and commits it on Search
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [search, setSearch] = useState("");
 
-  // get Student data
-  // ------------- query fn ---------------
-  const queryClient = useQueryClient();
-
+  // ------------- queries ---------------
   const { data: students, isPending } = useQuery<StudentEnrollment[]>({
     queryKey: ["page-Student", "enrollment"],
     queryFn: async () => {
@@ -52,11 +45,23 @@ export default function Page() {
       return result.data as StudentEnrollment[];
     },
   });
-  const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
+
+  const { data: statsData } = useQuery<StudentStats>({
+    queryKey: ["page-Student", "stats"],
+    queryFn: async () => {
+      const result = await getStudentStats();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+  });
 
   if (isPending) {
     return <SpinnerCustom />;
   }
+
+  const rows = students ?? [];
 
   return (
     <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,29 +70,20 @@ export default function Page() {
         Manage enrolled students across all classes and sections.
       </p>
       <div className=" mb-5">
-        <StatCards />
+        {statsData && <StudentStatCards stats={statsData} />}
       </div>
 
       <Card className="pb-0 gap-0">
         <CardHeader className="border-b border-border gap-0">
           {/* tools */}
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input placeholder="Search user" className="pl-10" />
+            <div className="text-sm text-muted-foreground">
+              Filter students by class, section, group and more.
             </div>
             <div className="sm:ml-auto flex items-center gap-2 flex-wrap justify-center">
               <Link href={"/dashboard/students/add-new"}>
                 <Button variant={"default"}>Add Student</Button>
               </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs cursor-pointer"
-              >
-                <Filter />
-                Filter
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger render={<Button variant="outline" />}>
                   <Download data-icon="inline-start" />
@@ -111,164 +107,31 @@ export default function Page() {
             </div>
           </div>
         </CardHeader>
-        {students && <DataTable columns={columns} data={students} />}
 
-        <CardContent className="p-0">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-4 font-medium text-sm text-muted-foreground">
-                    Student ID
-                  </th>
-
-                  <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                    Student Name <br />
-                    Father Name <br />
-                    Mother Name
-                  </th>
-
-                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Religion <br />
-                    GENDER <br />
-                    DOB
-                  </th>
-
-                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Class <br />
-                    Section <br />
-                    Roll
-                  </th>
-
-                  <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                    Group <br />
-                    PHONE <br />
-                    Address
-                  </th>
-
-                  <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {(students === null || students?.length === 0) && (
-                  <p className="text-center mx-auto p-5">No Students found.</p>
-                )}
-
-                {students?.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4 font-medium">
-                      {item.student.studentId}
-                    </td>
-
-                    <td className="p-4">
-                      <p>{item.student.englishName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.student.fatherName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.student.motherName}
-                      </p>
-                    </td>
-
-                    <td className="p-4">
-                      <p>{item?.student.religion}</p>
-                      <p>{item?.student.gender}</p>
-                      <p>
-                        {item?.student.dateOfBirth.toLocaleDateString("en-GB")}
-                      </p>
-                    </td>
-
-                    <td className="p-4">
-                      <p>{item?.class?.name}</p>
-                      <p>{item?.section.name}</p>
-                      <p>{item?.roll}</p>
-                    </td>
-
-                    <td className="p-4">
-                      <p>{item?.group?.name ?? "-"}</p>
-                      <p>{item?.student.phone}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {item?.student.address}
-                      </p>
-                    </td>
-
-                    <td className="p-4">
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye />
-                        </Button>
-
-                        <Button size="sm">
-                          <Pen />
-                        </Button>
-                        <StatusToggleModal
-                          id={item.id}
-                          onDelete={ToggleStudentStatus}
-                          onSuccess={() => {
-                            queryClient.invalidateQueries({
-                              queryKey: ["page-Student", "enrollment"],
-                            });
-                          }}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between p-4 border-t border-border">
-            <div className="text-sm text-muted-foreground">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, students?.length ?? 0)} of{" "}
-              {students?.length ?? 0} entries
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="h-9 w-9 cursor-pointer"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => setCurrentPage(page)}
-                    className={cn(
-                      "h-9 w-9",
-                      currentPage === page && "bg-primary",
-                      "cursor-pointer",
-                    )}
-                  >
-                    {page}
-                  </Button>
-                ),
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, currentPage + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="h-9 w-9 cursor-pointer"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
+        {/* the only student list on this page */}
+        <DataTable
+          columns={studentColumns}
+          data={rows}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+          initialColumnVisibility={HIDDEN_FILTER_COLUMNS}
+          globalFilter={search}
+          toolbar={(table) => (
+            <>
+              <StudentFilters
+                students={rows}
+                filters={columnFilters}
+                onFiltersChange={setColumnFilters}
+                search={search}
+                onSearchChange={setSearch}
+              />
+              <div className="px-3 pt-2 text-xs text-muted-foreground">
+                Showing {table.getRowModel().rows.length} of {rows.length}{" "}
+                students
+              </div>
+            </>
+          )}
+        />
       </Card>
     </div>
   );

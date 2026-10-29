@@ -6,6 +6,9 @@ import {
   type RowData,
   type SortingState,
   type ColumnFiltersState,
+  type ColumnVisibilityState,
+  type Updater,
+  type Table as TableInstance,
 } from "@tanstack/react-table";
 
 import {
@@ -27,6 +30,15 @@ interface DataTableProps<TData extends RowData> {
   data: TData[];
   filterColumn?: string;
   filterPlaceholder?: string;
+  /** Rendered above the table. Receives the table so it can read/write filters. */
+  toolbar?: (table: TableInstance<DataTableFeatures, TData>) => React.ReactNode;
+  /** Pass together with `onColumnFiltersChange` to control filtering from outside. */
+  columnFilters?: ColumnFiltersState;
+  onColumnFiltersChange?: (filters: ColumnFiltersState) => void;
+  /** Columns to hide on first render, e.g. filter-only columns. */
+  initialColumnVisibility?: ColumnVisibilityState;
+  /** Free-text search across every column. */
+  globalFilter?: string;
 }
 
 export function DataTable<TData extends RowData>({
@@ -34,9 +46,24 @@ export function DataTable<TData extends RowData>({
   data,
   filterColumn,
   filterPlaceholder = "Search...",
+  toolbar,
+  columnFilters: controlledColumnFilters,
+  onColumnFiltersChange,
+  initialColumnVisibility,
+  globalFilter,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [internalColumnFilters, setInternalColumnFilters] =
+    useState<ColumnFiltersState>([]);
+
+  const columnFilters = controlledColumnFilters ?? internalColumnFilters;
+  // TanStack hands back either a value or an updater fn, so resolve both.
+  const setColumnFilters = (updater: Updater<ColumnFiltersState>) => {
+    const next =
+      typeof updater === "function" ? updater(columnFilters) : updater;
+    setInternalColumnFilters(next);
+    onColumnFiltersChange?.(next);
+  };
 
   const table = useTable({
     features,
@@ -46,13 +73,20 @@ export function DataTable<TData extends RowData>({
     onColumnFiltersChange: setColumnFilters,
     globalFilterFn: "includesString",
 
+    initialState: initialColumnVisibility
+      ? { columnVisibility: initialColumnVisibility }
+      : undefined,
+
     state: {
       sorting,
       columnFilters,
+      ...(globalFilter !== undefined ? { globalFilter } : {}),
     },
   });
   return (
     <>
+      {toolbar?.(table)}
+
       {/* table  body */}
       <div className="mx-3 rounded-md border">
         {/* filter */}

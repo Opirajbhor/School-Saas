@@ -35,3 +35,37 @@ export function StatCards() {
     </div>
   )
 }
+
+// Real counts for one institute, passed in so the caller owns the query.
+export type StudentStats = {
+  total: number;
+  active: number;
+  inactive: number;
+  classes: number;
+  sections: number;
+};
+
+export function StudentStatCards({ stats }: { stats: StudentStats }) {
+  const cards = [
+    { label: "Total Students", value: stats.total, hint: "all enrollments" },
+    { label: "Active", value: stats.active, hint: "currently enrolled" },
+    { label: "Inactive", value: stats.inactive, hint: "no longer enrolled" },
+    { label: "Classes", value: stats.classes, hint: "with students" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
+      {cards.map((card) => (
+        <Card key={card.label} className="gap-0 p-5">
+          <p className="text-sm font-medium text-muted-foreground">
+            {card.label}
+          </p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+            {card.value}
+          </p>
+          <p className="mt-3 text-xs text-muted-foreground">{card.hint}</p>
+        </Card>
+      ))}
+    </div>
+  );
+}

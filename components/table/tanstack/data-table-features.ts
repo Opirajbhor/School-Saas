@@ -4,6 +4,8 @@ import {
   createFilteredRowModel,
   createPaginatedRowModel,
   createSortedRowModel,
+  filterFn_arrIncludes,
+  filterFn_equals,
   filterFn_includesString,
   filterFn_inNumberRange,
   rowPaginationFeature,
@@ -30,6 +32,8 @@ export const features = tableFeatures({
   filterFns: {
     includesString: filterFn_includesString,
     inNumberRange: filterFn_inNumberRange,
+    equals: filterFn_equals,
+    arrIncludes: filterFn_arrIncludes,
   },
   sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
 });

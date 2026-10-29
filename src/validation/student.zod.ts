@@ -92,6 +92,7 @@ export type StudentEnrollment = {
   sectionId: string;
   sessionId: string;
   studentId: string;
+  status: "ACTIVE" | "INACTIVE";
   class: {
     id: string;
     name: string;
