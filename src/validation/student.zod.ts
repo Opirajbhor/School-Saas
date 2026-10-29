@@ -67,6 +67,37 @@ export const addStudentZod = z.object({
 
 export type AddStudentType = z.infer<typeof addStudentZod>;
 
+// Same field rules as creation, but only the parts that are editable: the
+// enrolment's session is fixed, and dates arrive as "YYYY-MM-DD" from the
+// date input. `studentId`, `className`, `section` and `roll` are enrolment or
+// identity fields that stay editable, while sessionId is not accepted at all.
+export const editStudentZod = addStudentZod
+  .omit({ sessionId: true, photoUrl: true })
+  .extend({
+    photoUrl: addStudentZod.shape.photoUrl,
+    // an <input type="date"> always sends a string, and empty means unchanged
+    dateOfBirth: z.coerce.date({ error: "Invalid date of birth" }),
+    className: z.string().trim().min(1, "Class is required"),
+    section: z.string().trim().min(1, "Section is required"),
+    roll: z
+      .string()
+      .trim()
+      .min(1, "Roll is required")
+      .max(10, "Roll cannot exceed 10 characters"),
+  });
+
+export type EditStudentType = z.infer<typeof editStudentZod>;
+/**
+ * What the form holds: the validated shape, except `dateOfBirth` is still the
+ * raw "YYYY-MM-DD" string from the date input until zod coerces it on submit.
+ * Optional-with-default fields are required here because the form always
+ * supplies them, which `z.input` would otherwise mark undefined.
+ */
+export type EditStudentInput = Omit<EditStudentType, "dateOfBirth"> & {
+  dateOfBirth: string;
+  status: "ACTIVE" | "INACTIVE";
+};
+
 export type OutputStudentType = AddStudentType & {
   id: string;
 };
@@ -122,5 +153,55 @@ export type StudentEnrollment = {
     phone: string | null;
     address: string | null;
     dateOfBirth: Date;
+  };
+};
+
+/**
+ * A single enrolment with its full student row, for the view/edit pages.
+ * Broader than `StudentEnrollment` because those pages show every stored
+ * column, not just the ones the list table renders.
+ */
+export type StudentDetail = {
+  id: string;
+  instituteId: string;
+  roll: string;
+  classId: string;
+  sectionId: string;
+  sessionId: string;
+  studentId: string;
+  status: "ACTIVE" | "INACTIVE";
+  class: {
+    id: string;
+    name: string;
+  };
+  section: {
+    id: string;
+    name: string;
+  };
+  session: {
+    id: string;
+    year: string;
+  };
+  group: {
+    id: string;
+    name: string;
+  } | null;
+  student: {
+    id: string;
+    studentId: string;
+    englishName: string;
+    banglaName: string | null;
+    fatherName: string;
+    motherName: string;
+    gender: "MALE" | "FEMALE" | "OTHER";
+    dateOfBirth: Date;
+    religion: string;
+    nationality: string;
+    phone: string;
+    email: string | null;
+    photoUrl: string | null;
+    birthCertificateNo: string | null;
+    address: string;
+    status: "ACTIVE" | "INACTIVE" | "TRANSFERRED" | "LEFT";
   };
 };
