@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
@@ -11,11 +11,14 @@ import {
   classesDrizzle,
   enrollments,
   examClasses,
+  examMarkCorrections,
+  examMarkEditRequests,
   examMarkTypesDrizzle,
   examMarks,
   exams,
   sectionClassTeachers,
   sectionDrizzle,
+  sectionSubjectTeachers,
   student,
   subjectAssignSchema,
   subjectDbSchema,
@@ -27,6 +30,7 @@ import {
   InputExamMarkColumnsType,
   InputSaveMarkInputType,
   MarkEntryStatus,
+  MarkWorkflow,
   saveMarkInputZod,
   OutputMarkEntrySheetType,
 } from "../_schema/exam.zod";
@@ -316,6 +320,24 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
       ? "SUBMITTED"
       : "DRAFT";
 
+    // reuse the same guard the save path enforces, so the UI never offers an
+    // edit the server would reject
+    const permission = await checkEditPermission({
+      examId,
+      sectionId,
+      subjectId,
+      instituteId: ctx.instituteId,
+      role: ctx.role,
+      teacherId: ctx.teacherId,
+    });
+    const lock = await checkMarkLock(examId, ctx.instituteId);
+    const latestRequest = await getLatestEditRequest({
+      examId,
+      sectionId,
+      subjectId,
+      instituteId: ctx.instituteId,
+    });
+
     const sheet: OutputMarkEntrySheetType = {
       exam,
       class: classRow,
@@ -327,6 +349,17 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
       markTypes: markTypeRows,
       totalMarks: markTypeRows.reduce((sum, type) => sum + type.fullMark, 0),
       entryStatus,
+      canEdit: permission.allowed,
+      lockReason: permission.allowed ? null : permission.error,
+      markWorkflow: lock.workflow,
+      editRequest: latestRequest
+        ? {
+            id: latestRequest.id,
+            status: latestRequest.status,
+            reason: latestRequest.reason,
+            resolutionNote: latestRequest.resolutionNote,
+          }
+        : null,
       rows: (students.data as StudentRow[]).map((row) => {
         const saved = savedMarks.data.get(row.studentId);
         return {
@@ -392,6 +425,20 @@ export async function saveMarkInput(data: InputSaveMarkInputType) {
   }
 
   try {
+    // once submitted, marks are frozen for teachers. Admins may always correct
+    // them; a teacher needs an APPROVED request covering this exact scope.
+    const lock = await checkEditPermission({
+      examId,
+      sectionId,
+      subjectId,
+      instituteId,
+      role: ctx.role,
+      teacherId: ctx.teacherId,
+    });
+    if (!lock.allowed) {
+      return { success: false as const, error: lock.error, details: {} };
+    }
+
     const [markTypes, enrolled] = await Promise.all([
       getSubjectMarkTypes(subjectId, instituteId),
       readMany({
@@ -506,7 +553,80 @@ export async function saveMarkInput(data: InputSaveMarkInputType) {
       }));
     });
 
+    // the approved request that permitted this write, if the teacher needed one
+    const approvedRequest = await getApprovedRequest({
+      examId,
+      sectionId,
+      subjectId,
+      instituteId,
+    });
+
     await db.transaction(async (tx) => {
+      // read the current values first so the correction trail can record what
+      // each cell held before this save overwrote it
+      const before = await tx
+        .select({
+          enrollmentId: examMarks.enrollmentId,
+          markTypeId: examMarks.markTypeId,
+          mark: examMarks.mark,
+          absent: examMarks.absent,
+        })
+        .from(examMarks)
+        .where(
+          and(
+            eq(examMarks.instituteId, instituteId),
+            eq(examMarks.examId, examId),
+            eq(examMarks.subjectId, subjectId),
+            eq(examMarks.status, "ACTIVE"),
+            inArray(examMarks.enrollmentId, [...enrollmentByStudent.values()]),
+          ),
+        );
+
+      const beforeKey = (enrollmentId: string, markTypeId: string) =>
+        `${enrollmentId}:${markTypeId}`;
+      const beforeMap = new Map(
+        before.map((row) => [beforeKey(row.enrollmentId, row.markTypeId), row]),
+      );
+
+      // only cells that actually moved are recorded, so re-saving unchanged
+      // marks does not fill the trail with noise
+      const corrections = values.flatMap((value) => {
+        const previous = beforeMap.get(
+          beforeKey(value.enrollmentId, value.markTypeId),
+        );
+        const oldMark = previous?.mark ?? null;
+        const oldAbsent = previous?.absent ?? null;
+
+        const changed =
+          previous === undefined ||
+          previous.mark !== value.mark ||
+          previous.absent !== value.absent;
+        if (!changed) return [];
+
+        return [
+          {
+            instituteId,
+            examId,
+            enrollmentId: value.enrollmentId,
+            subjectId,
+            markTypeId: value.markTypeId,
+            oldMark,
+            newMark: value.mark,
+            oldAbsent,
+            newAbsent: value.absent,
+            editedById: userId,
+            editedByRole: ctx.role ?? "user",
+            editRequestId: approvedRequest?.id ?? null,
+            approvedById: approvedRequest?.resolvedById ?? null,
+            reason: approvedRequest?.reason ?? null,
+          },
+        ];
+      });
+
+      if (corrections.length > 0) {
+        await tx.insert(examMarkCorrections).values(corrections);
+      }
+
       if (values.length > 0) {
         await tx
           .insert(examMarks)
@@ -561,6 +681,7 @@ export async function saveMarkInput(data: InputSaveMarkInputType) {
           subjectId,
           intent,
           rows: rows.length,
+          corrections: corrections.length,
         },
       });
     });
@@ -591,6 +712,208 @@ export async function saveMarkInput(data: InputSaveMarkInputType) {
 }
 
 // ================== helpers ==================
+
+// Whether the exam itself is locked. Finalizing or publishing an exam freezes
+// every mark in it, so even an admin — and even an approved edit request —
+// cannot write. This is checked before any other permission so the lock wins.
+async function checkMarkLock(
+  examId: string,
+  instituteId: string,
+): Promise<
+  | { locked: false; workflow: MarkWorkflow }
+  | { locked: true; workflow: MarkWorkflow; error: string }
+> {
+  const rows = await db
+    .select({ markWorkflow: exams.markWorkflow })
+    .from(exams)
+    .where(
+      and(
+        eq(exams.id, examId),
+        or(isNull(exams.instituteId), eq(exams.instituteId, instituteId)),
+      ),
+    )
+    .limit(1);
+
+  const workflow = (rows[0]?.markWorkflow ?? "OPEN") as MarkWorkflow;
+  if (workflow === "OPEN") return { locked: false, workflow };
+
+  return {
+    locked: true,
+    workflow,
+    error:
+      workflow === "PUBLISHED"
+        ? "The results for this exam are published, so marks can no longer be changed."
+        : "This exam is finalized, so marks can no longer be changed. An admin must reopen it first.",
+  };
+}
+
+// Whether the caller may write marks for this exam + section + subject.
+// Submitted marks are frozen for teachers unless an admin approved a request
+// for that exact scope. Enforced here so hiding UI controls is never the guard.
+async function checkEditPermission({
+  examId,
+  sectionId,
+  subjectId,
+  instituteId,
+  role,
+  teacherId,
+}: {
+  examId: string;
+  sectionId: string;
+  subjectId: string;
+  instituteId: string;
+  role: string | null | undefined;
+  teacherId: string | undefined;
+}): Promise<
+  | { allowed: true }
+  | { allowed: false; error: string; lockReason?: string }
+> {
+  // the exam-level lock outranks every other rule
+  const lock = await checkMarkLock(examId, instituteId);
+  if (lock.locked) {
+    return { allowed: false, error: lock.error, lockReason: lock.error };
+  }
+
+  const admin = role === "admin";
+
+  // a teacher must own the section + subject assignment
+  if (!admin) {
+    if (!teacherId) return { allowed: false, error: "Not authorized" };
+
+    const assigned = await db
+      .select({ id: sectionSubjectTeachers.id })
+      .from(sectionSubjectTeachers)
+      .where(
+        and(
+          eq(sectionSubjectTeachers.instituteId, instituteId),
+          eq(sectionSubjectTeachers.sectionId, sectionId),
+          eq(sectionSubjectTeachers.subjectId, subjectId),
+          eq(sectionSubjectTeachers.teacherId, teacherId),
+          eq(sectionSubjectTeachers.status, "ACTIVE"),
+        ),
+      )
+      .limit(1);
+    if (!assigned[0]) {
+      return {
+        allowed: false,
+        error: "You are not assigned to this section and subject",
+      };
+    }
+  }
+
+  // is any row for this scope already submitted?
+  const submitted = await db
+    .select({ id: examMarks.id })
+    .from(examMarks)
+    .innerJoin(enrollments, eq(enrollments.id, examMarks.enrollmentId))
+    .where(
+      and(
+        eq(examMarks.instituteId, instituteId),
+        eq(examMarks.examId, examId),
+        eq(examMarks.subjectId, subjectId),
+        eq(examMarks.entryStatus, "SUBMITTED"),
+        eq(examMarks.status, "ACTIVE"),
+        eq(enrollments.sectionId, sectionId),
+      ),
+    )
+    .limit(1);
+
+  if (!submitted[0]) return { allowed: true };
+  if (admin) return { allowed: true };
+
+  // a teacher needs an approved request for exactly this scope
+  const approved = await db
+    .select({ id: examMarkEditRequests.id })
+    .from(examMarkEditRequests)
+    .where(
+      and(
+        eq(examMarkEditRequests.instituteId, instituteId),
+        eq(examMarkEditRequests.examId, examId),
+        eq(examMarkEditRequests.sectionId, sectionId),
+        eq(examMarkEditRequests.subjectId, subjectId),
+        eq(examMarkEditRequests.status, "APPROVED"),
+      ),
+    )
+    .limit(1);
+
+  if (approved[0]) return { allowed: true };
+
+  return {
+    allowed: false,
+    error:
+      "These marks are already submitted. Request permission before editing them.",
+  };
+}
+
+// the most recent edit request for one scope, if any. Surfaced on the mark
+// sheet so the UI can show "pending" or "approved" next to the lock.
+async function getLatestEditRequest({
+  examId,
+  sectionId,
+  subjectId,
+  instituteId,
+}: {
+  examId: string;
+  sectionId: string;
+  subjectId: string;
+  instituteId: string;
+}) {
+  const rows = await db
+    .select({
+      id: examMarkEditRequests.id,
+      status: examMarkEditRequests.status,
+      reason: examMarkEditRequests.reason,
+      resolutionNote: examMarkEditRequests.resolutionNote,
+    })
+    .from(examMarkEditRequests)
+    .where(
+      and(
+        eq(examMarkEditRequests.instituteId, instituteId),
+        eq(examMarkEditRequests.examId, examId),
+        eq(examMarkEditRequests.sectionId, sectionId),
+        eq(examMarkEditRequests.subjectId, subjectId),
+      ),
+    )
+    .orderBy(desc(examMarkEditRequests.createdAt))
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+// the latest approved request for one scope. Corrections made under an
+// approval are stamped with it so the trail shows who authorised the change.
+async function getApprovedRequest({
+  examId,
+  sectionId,
+  subjectId,
+  instituteId,
+}: {
+  examId: string;
+  sectionId: string;
+  subjectId: string;
+  instituteId: string;
+}) {
+  const rows = await db
+    .select({
+      id: examMarkEditRequests.id,
+      reason: examMarkEditRequests.reason,
+      resolvedById: examMarkEditRequests.resolvedById,
+    })
+    .from(examMarkEditRequests)
+    .where(
+      and(
+        eq(examMarkEditRequests.instituteId, instituteId),
+        eq(examMarkEditRequests.examId, examId),
+        eq(examMarkEditRequests.sectionId, sectionId),
+        eq(examMarkEditRequests.subjectId, subjectId),
+        eq(examMarkEditRequests.status, "APPROVED"),
+      ),
+    )
+    .orderBy(desc(examMarkEditRequests.resolvedAt))
+    .limit(1);
+
+  return rows[0] ?? null;
+}
 
 // mark types (CQ, MCQ, …) configured for a subject, tenant or global defaults.
 // `subject_mark_templates` has no instituteId (it hangs off the subject), so it

@@ -1,4 +1,4 @@
-import ExamOverview from "../../_component/mark-entry-page/exam-overview";
+import ExamOverview from "../../_component/exam-overview/exam-overview";
 
 export default async function Page({
   params,

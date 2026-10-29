@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { getSingleExamData } from "../../_actions/examOverview.action";
 import { ExamOverViewType } from "../../_schema/exam.zod";
+import ExamDashboard from "./exam-dashboard";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -269,7 +270,7 @@ export default async function ExamOverview({ id }: { id: string }) {
                       <TableCell className="px-4">
                         <Button variant="outline" size="xs" asChild>
                           <Link
-                            href={`/dashboard/exam/mark-entry?examId=${currentData.id}&classId=${row.classId}`}
+                            href={`/dashboard/exam/mark-input?examId=${currentData.id}&classId=${row.classId}`}
                           >
                             Enter Marks
                             <ArrowRight data-icon="inline-end" />
@@ -283,9 +284,9 @@ export default async function ExamOverview({ id }: { id: string }) {
             </TabsContent>
 
             <TabsContent value="progress" className="mt-0">
-              <p className="p-6 text-sm text-muted-foreground">
-                Mark entry progress will appear here once marks can be recorded.
-              </p>
+              <div className="p-4">
+                <ExamDashboard examId={currentData.id} />
+              </div>
             </TabsContent>
           </Tabs>
         </Card>

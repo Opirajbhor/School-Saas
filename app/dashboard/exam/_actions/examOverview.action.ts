@@ -3,12 +3,8 @@
 import { exams } from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { parseWithZod } from "@/src/validation/validator.zod";
-import { eq, or } from "drizzle-orm";
-import z from "zod";
-
-// `exams.id` is a uuid column, so a non-uuid segment (e.g. /mark-entry without
-// an id) must fail validation instead of reaching Postgres
-const examIdZod = z.uuid("Invalid exam id");
+import { and, eq, isNull, or } from "drizzle-orm";
+import { examIdZod } from "../_schema/exam.zod";
 
 export async function getSingleExamData(id: string) {
   const parsed = parseWithZod(examIdZod, id);
@@ -24,7 +20,11 @@ export async function getSingleExamData(id: string) {
     drizzleSchema: exams,
     query: ({ db, instituteId }) =>
       db.query.exams.findMany({
-        where: or(eq(exams.instituteId, instituteId), eq(exams.id, id)),
+        // the requested exam AND the caller's scope — global defaults included
+        where: and(
+          eq(exams.id, parsed.data),
+          or(isNull(exams.instituteId), eq(exams.instituteId, instituteId)),
+        ),
         with: {
           assignClasses: {
             with: {

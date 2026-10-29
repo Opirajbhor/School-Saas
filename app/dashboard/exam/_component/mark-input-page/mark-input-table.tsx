@@ -31,7 +31,9 @@ export function MarkInputTable({
   const { control } = useFormContext<InputMarkInputSheetType>();
   const rows = useWatch({ control, name: "rows" });
   const markTypes = sheet.markTypes;
-  const submitted = sheet.entryStatus === "SUBMITTED";
+  // read-only when submitted for a teacher; admins and approved requests keep
+  // editing rights, which the server has already decided
+  const readOnly = !sheet.canEdit;
 
   return (
     <Table>
@@ -112,7 +114,7 @@ export function MarkInputTable({
                         type="number"
                         min={0}
                         max={type.fullMark}
-                        disabled={submitted}
+                        disabled={readOnly}
                         aria-label={`${type.name} mark for ${row.englishName}`}
                         className="mx-auto w-16"
                       />
@@ -145,7 +147,7 @@ export function MarkInputTable({
                   control={control}
                   name={`rows.${index}.absent`}
                   label=""
-                  disabled={submitted}
+                  disabled={readOnly}
                   className="justify-center"
                 />
               </TableCell>

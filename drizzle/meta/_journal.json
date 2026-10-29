@@ -575,6 +575,20 @@
       "when": 1793204532201,
       "tag": "0081_rich_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1793277117952,
+      "tag": "0082_nebulous_red_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1793280237142,
+      "tag": "0083_new_ares",
+      "breakpoints": true
     }
   ]
 }

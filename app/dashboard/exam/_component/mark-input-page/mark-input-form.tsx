@@ -36,6 +36,7 @@ import {
 } from "../../_schema/exam.zod";
 import { MarkInputTable, MarkInputTableLoading } from "./mark-input-table";
 import { ControlField, SheetStatusBadge } from "./mark-input-ui";
+import MarkEditRequestModal from "../exam-overview/mark-edit-request-modal";
 
 type Option = { id: string; name: string };
 // the exact selection a loaded sheet belongs to
@@ -473,6 +474,32 @@ export default function MarkInputPage() {
                 </div>
               ) : sheet ? (
                 <>
+                  {!sheet.canEdit && (
+                    <div className="p-3 pb-0">
+                      <Alert>
+                        <AlertTitle>
+                          {sheet.markWorkflow === "OPEN"
+                            ? "These marks are submitted"
+                            : sheet.markWorkflow === "FINALIZED"
+                              ? "This exam is finalized"
+                              : "Results are published"}
+                        </AlertTitle>
+                        <AlertDescription>
+                          {sheet.markWorkflow === "OPEN"
+                            ? sheet.editRequest?.status === "PENDING"
+                              ? "Your edit request is awaiting admin approval."
+                              : sheet.editRequest?.status === "REJECTED"
+                                ? `Your edit request was rejected${
+                                    sheet.editRequest.resolutionNote
+                                      ? `: ${sheet.editRequest.resolutionNote}`
+                                      : "."
+                                  }`
+                                : "Request permission to edit them."
+                            : sheet.lockReason}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
                   <div className="overflow-x-auto">
                     <MarkInputTable
                       sheet={sheet}
@@ -522,27 +549,43 @@ export default function MarkInputPage() {
                       </div>
 
                       <div className={cn("flex items-center gap-2")}>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleSave("DRAFT")}
-                          disabled={isSubmitting || sheet.rows.length === 0}
-                        >
-                          {isSubmitting ? <Spinner /> : <Save />}
-                          Save Draft
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => handleSave("SUBMITTED")}
-                          disabled={
-                            isSubmitting ||
-                            sheet.rows.length === 0 ||
-                            sheet.entryStatus === "SUBMITTED"
-                          }
-                        >
-                          {isSubmitting ? <Spinner /> : <Send />}
-                          Submit Marks
-                        </Button>
+                        {sheet.canEdit ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => handleSave("DRAFT")}
+                              disabled={isSubmitting || sheet.rows.length === 0}
+                            >
+                              {isSubmitting ? <Spinner /> : <Save />}
+                              Save Draft
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={() => handleSave("SUBMITTED")}
+                              disabled={
+                                isSubmitting ||
+                                sheet.rows.length === 0 ||
+                                sheet.entryStatus === "SUBMITTED"
+                              }
+                            >
+                              {isSubmitting ? <Spinner /> : <Send />}
+                              Submit Marks
+                            </Button>
+                          </>
+                        ) : sheet.markWorkflow === "OPEN" ? (
+                          <MarkEditRequestModal
+                            examId={sheet.exam.id}
+                            classId={sheet.class.id}
+                            sectionId={sheet.section.id}
+                            subjectId={sheet.subject.id}
+                            onSuccess={() =>
+                              queryClient.invalidateQueries({
+                                queryKey: ["examMarkInput"],
+                              })
+                            }
+                          />
+                        ) : null}
                       </div>
                     </div>
                   </div>

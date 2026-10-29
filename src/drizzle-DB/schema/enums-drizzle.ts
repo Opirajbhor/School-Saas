@@ -25,6 +25,20 @@ export const markEntryStatusEnum = pgEnum("mark_entry_status", [
   "SUBMITTED",
 ]);
 
+// a teacher can ask to unlock submitted marks; an admin approves or rejects
+export const markEditRequestStatusEnum = pgEnum("mark_edit_request_status", [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+]);
+
+// exam-level lock. FINALIZED still lets an admin reopen; PUBLISHED is final.
+export const markWorkflowEnum = pgEnum("mark_workflow", [
+  "OPEN",
+  "FINALIZED",
+  "PUBLISHED",
+]);
+
 export const timestamps = {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
