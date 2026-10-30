@@ -92,14 +92,18 @@ export type RawSubjectAssignment = {
     | null;
 };
 
+// A row of the subject-assignment list. `id` is composite
+// (`${classId}-${subjectId}`) because a class can carry the same subject in more
+// than one group; there is no single table row behind it.
 export type OutputSubAssignType = {
   id: string;
   className: string;
   groupName: string;
   subjectName: string;
-  subject_type: string;
+  subjectType: "COMPULSORY" | "GROUP_BASED" | "RELIGION";
   isOptional: boolean;
   isReligion: boolean;
+  status: "ACTIVE" | "INACTIVE";
 };
 
 // ===============table type ===============

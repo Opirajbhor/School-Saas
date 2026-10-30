@@ -1,5 +1,4 @@
 import { DataTable } from "@/components/table/tanstack/data-table";
-import { OutputSubAssignType } from "@/src/validation/subjects.zod";
 import { SpinnerCustom } from "@/components/Spinner";
 import Link from "next/link";
 import { subjectsAssignColumn } from "../_table/subjectAssign-column";
@@ -31,7 +30,7 @@ export default async function Page() {
         <div className="lg:col-span-2 min-w-0">
           <DataTable
             columns={subjectsAssignColumn}
-            data={subjects as OutputSubAssignType[]}
+            data={subjects}
             filterColumn="className"
           />
         </div>

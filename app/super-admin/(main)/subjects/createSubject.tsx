@@ -9,15 +9,15 @@ import {
 } from "@/src/validation/subjects.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { useEffect } from "react";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { FormInput } from "@/components/forms/form-input";
-import { FormSelect } from "@/components/forms/form-select";
-import { FormCheckbox } from "@/components/forms/form-checkbox";
 import { createAcademicsubjects } from "./_actions/subjects.action";
 
 export default function CreateSubject() {
   // -------------- form -------------------
+  // A subject row stores only its identity (name / code / short name). Whether it
+  // is compulsory, group-based or religious is decided per class when the subject
+  // is assigned, and lives on subject_assignments.
   const form = useForm<InputSubjectType>({
     resolver: zodResolver(inputSubjectZod),
     defaultValues: {
@@ -25,16 +25,9 @@ export default function CreateSubject() {
       code: "",
       shortName: "",
       status: "ACTIVE",
-      subject_type: "COMPULSORY",
-      isOptional: false,
-      isReligion: false,
     },
   });
   const { isSubmitting } = form.formState;
-  const subType = useWatch({
-    control: form.control,
-    name: "subject_type",
-  });
   // add button
   const addBtn = async (data: InputSubjectType) => {
     await handleCrudAction(createAcademicsubjects, data, {
@@ -46,9 +39,6 @@ export default function CreateSubject() {
   };
 
   // reset the form value if sub type changes
-  useEffect(() => {
-    form.setValue("isOptional", false);
-  }, [subType, form]);
 
   return (
     <div className="max-w-7xl lg:w-full mx-auto p-6">
@@ -83,30 +73,6 @@ export default function CreateSubject() {
               label="Subject Code"
               name="code"
               placeholder="e.g., 101, 102"
-            />
-            {/* ---------type-------- */}
-            <FormSelect
-              control={form.control}
-              name="subject_type"
-              label="Subject Type"
-              options={[
-                { label: "COMPULSORY", value: "COMPULSORY" },
-                { label: "GROUP_BASED", value: "GROUP_BASED" },
-              ]}
-            />
-
-            {/*--------- optional checkbox --------------*/}
-            <FormCheckbox
-              control={form.control}
-              name="isOptional"
-              label="Add to Optional List"
-              disabled={subType !== "GROUP_BASED"}
-            />
-            <FormCheckbox
-              control={form.control}
-              name="isReligion"
-              label="Select if Religious Subject"
-              disabled={subType === "GROUP_BASED"}
             />
 
             {/* -------submit button------------- */}

@@ -165,7 +165,7 @@ const SubjectTeacherAssign = () => {
                 {
                   key: "subjectType",
                   label: "Subject Type",
-                  render: (item) => item.subject_type,
+                  render: (item) => item.subjectType,
                 },
                 {
                   key: "teacherId",

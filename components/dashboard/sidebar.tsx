@@ -2,7 +2,6 @@
 import { cn } from "@/src/lib/utils";
 import {
   ClipboardList,
-  FileBarChart,
   GraduationCap,
   Library,
   PencilLine,
@@ -54,7 +53,6 @@ const nav = [
         icon: PencilLine,
       },
       { name: "Results", link: "/dashboard/results", icon: GraduationCap },
-      { name: "Reports", link: "/dashboard/reports", icon: FileBarChart },
     ],
   },
 ];

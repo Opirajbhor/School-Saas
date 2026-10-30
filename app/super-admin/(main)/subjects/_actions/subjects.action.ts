@@ -361,6 +361,7 @@ export async function getDefaultAssignSubjects() {
         subjectType: row.subject_type,
         isOptional: row.isOptional,
         isReligion: row.isReligion,
+        status: row.status,
       }));
 
     return { success: true as const, data: subjects };
@@ -381,14 +382,33 @@ export async function subjectAssignment(data: inputSubAssignType) {
       details: {},
     };
   }
+
+  // Assignment is a platform-wide default when a superadmin runs it from
+  // /super-admin (matching getDefaultAssignSubjects, which filters
+  // instituteId IS NULL), and an institute-scoped row on the tenant dashboard.
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session found",
+      details: {},
+    };
+  }
+  const instituteId = ctx.role === "superadmin" ? null : ctx.instituteId;
+
   try {
     const result = await db.transaction(async (tx) => {
-      return Promise.all(
+      return await Promise.all(
         subjectIds.map(async (subjectId) => {
           const payload = {
+            instituteId,
             classId: rest.classId,
             groupId: rest.groupId,
-            subjectType: rest.subject_type,
+            // the column is subject_type; writing subjectType here silently
+            // dropped the choice and left every row on the COMPULSORY default
+            subject_type: rest.subject_type,
+            isOptional: rest.isOptional,
+            isReligion: rest.isReligion,
             subjectId,
             status: "ACTIVE" as const,
           };
@@ -401,6 +421,8 @@ export async function subjectAssignment(data: inputSubAssignType) {
       );
     });
 
+    revalidatePath("/dashboard/subjects/assignment");
+    revalidatePath("/super-admin/subjects/assignment");
     return {
       success: true as const,
       data: result,
