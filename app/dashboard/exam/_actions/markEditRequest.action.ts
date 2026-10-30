@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createHash } from "node:crypto";
 import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
@@ -10,10 +11,12 @@ import { db } from "@/src/drizzle-DB";
 import {
   classesDrizzle,
   enrollments,
+  examClasses,
   examMarkCorrections,
   examMarkEditRequests,
   examMarks,
   examMarkTypesDrizzle,
+  examResultSnapshots,
   exams,
   sectionDrizzle,
   sectionSubjectTeachers,
@@ -35,6 +38,10 @@ import {
   setExamWorkflowZod,
   ExamMarkWorkflowType,
 } from "../_schema/exam.zod";
+import { buildExamResultSheet } from "./result.action";
+
+// the transaction handle, so the snapshot writers can join the caller's tx
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 // ================== shared guards ==================
 
@@ -516,8 +523,13 @@ export async function getMarkEditRequests(examId?: string) {
 // ================== exam-level lock (finalize / publish) ==================
 
 // Moves the exam between OPEN, FINALIZED and PUBLISHED. Only an admin may do
-// this, and PUBLISHED is terminal: results that are out cannot be pulled back
-// without losing the promise the publish made.
+// this.
+//
+// Publishing freezes the calculated sheet for every class of the exam into
+// `exam_result_snapshots`, so the published numbers never change afterwards.
+// Unpublishing (PUBLISHED → FINALIZED) is allowed and keeps that snapshot as
+// history — it only clears the live publish stamp, it never deletes the record
+// of what was published.
 export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
   const ctx = await getUserContext();
   if (!ctx) {
@@ -565,28 +577,73 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
         details: {},
       };
     }
-    if (exam.markWorkflow === "PUBLISHED") {
+    // a published result may only go back to FINALIZED (unpublish); OPEN would
+    // let marks be edited under a result that was already announced
+    if (exam.markWorkflow === "PUBLISHED" && workflow === "OPEN") {
       return {
         success: false as const,
-        error: "Published results cannot be reopened",
+        error:
+          "Unpublish the results before reopening mark entry for this exam",
         details: {},
       };
     }
 
     const now = new Date();
-    const patch =
-      workflow === "FINALIZED"
-        ? { finalizedAt: now, finalizedById: userId }
-        : workflow === "PUBLISHED"
-          ? { publishedAt: now, publishedById: userId }
-          : // reopening clears only the finalize stamp; publish can't be undone
-            { finalizedAt: null, finalizedById: null };
+
+    // every class assigned to the exam is frozen on publish, so one publish is
+    // consistent exam-wide even though snapshots are per class
+    const snapshotPlan: { classId: string; payload: unknown }[] =
+      workflow === "PUBLISHED"
+        ? await buildSnapshotPlan(examId, instituteId)
+        : [];
 
     await db.transaction(async (tx) => {
+      const patch =
+        workflow === "FINALIZED"
+          ? { finalizedAt: now, finalizedById: userId }
+          : workflow === "PUBLISHED"
+            ? { publishedAt: now, publishedById: userId }
+            : // reopening clears only the finalize stamp
+              { finalizedAt: null, finalizedById: null };
+
       await tx
         .update(exams)
         .set({ markWorkflow: workflow, ...patch, updatedAt: now })
         .where(eq(exams.id, examId));
+
+      if (workflow === "PUBLISHED") {
+        for (const plan of snapshotPlan) {
+          await insertSnapshot(tx, {
+            instituteId,
+            examId,
+            classId: plan.classId,
+            userId,
+            payload: plan.payload,
+            now,
+          });
+        }
+      }
+
+      // unpublishing keeps the snapshot but marks it as taken down
+      if (
+        exam.markWorkflow === "PUBLISHED" &&
+        workflow === "FINALIZED"
+      ) {
+        await tx
+          .update(examResultSnapshots)
+          .set({
+            unpublishedAt: now,
+            unpublishedById: userId,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(examResultSnapshots.examId, examId),
+              eq(examResultSnapshots.instituteId, instituteId),
+              isNull(examResultSnapshots.unpublishedAt),
+            ),
+          );
+      }
 
       await createAuditLog(tx, {
         instituteId,
@@ -598,12 +655,15 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
           workflow === "OPEN"
             ? "reopened mark entry for an exam"
             : workflow === "FINALIZED"
-              ? "finalized an exam's marks"
+              ? exam.markWorkflow === "PUBLISHED"
+                ? "unpublished an exam's results"
+                : "finalized an exam's marks"
               : "published an exam's results",
         metadata: {
           examId,
           from: exam.markWorkflow,
           to: workflow,
+          snapshots: snapshotPlan.length,
         },
       });
     });
@@ -611,6 +671,7 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
     revalidatePath("/dashboard/exam");
     revalidatePath(`/dashboard/exam/${examId}`);
     revalidatePath("/dashboard/exam/mark-input");
+    revalidatePath("/dashboard/results");
 
     return { success: true as const, data: { examId, workflow } };
   } catch (error) {
@@ -621,6 +682,94 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
       details: {},
     };
   }
+}
+
+// The calculated sheet for every class assigned to the exam, ready to freeze.
+// A class that fails to calculate is skipped rather than aborting the publish,
+// so one broken class cannot block the rest.
+async function buildSnapshotPlan(examId: string, instituteId: string) {
+  const classes = await db
+    .select({ id: classesDrizzle.id })
+    .from(examClasses)
+    .innerJoin(classesDrizzle, eq(classesDrizzle.id, examClasses.classId))
+    .where(
+      and(
+        eq(examClasses.examId, examId),
+        eq(examClasses.status, "ACTIVE"),
+        or(
+          isNull(examClasses.instituteId),
+          eq(examClasses.instituteId, instituteId),
+        ),
+      ),
+    );
+
+  const plan: { classId: string; payload: unknown }[] = [];
+  for (const row of classes) {
+    try {
+      plan.push({
+        classId: row.id,
+        payload: await buildExamResultSheet(examId, row.id),
+      });
+    } catch (error) {
+      console.error(`Skipping snapshot for class ${row.id}:`, error);
+    }
+  }
+  return plan;
+}
+
+// Writes one immutable snapshot row, numbered after the highest version already
+// stored for that exam + class. The version is computed inside the caller's
+// transaction so two publishes cannot collide.
+async function insertSnapshot(
+  tx: Tx,
+  {
+    instituteId,
+    examId,
+    classId,
+    userId,
+    payload,
+    now,
+  }: {
+    instituteId: string;
+    examId: string;
+    classId: string;
+    userId: string;
+    payload: unknown;
+    now: Date;
+  },
+) {
+  const existing = await tx
+    .select({ version: examResultSnapshots.version })
+    .from(examResultSnapshots)
+    .where(
+      and(
+        eq(examResultSnapshots.examId, examId),
+        eq(examResultSnapshots.classId, classId),
+      ),
+    );
+
+  const nextVersion =
+    existing.reduce((max, row) => Math.max(max, row.version), 0) + 1;
+
+  const serialized = JSON.stringify(payload);
+
+  await tx.insert(examResultSnapshots).values({
+    instituteId,
+    examId,
+    classId,
+    version: nextVersion,
+    payload,
+    payloadHash: hashPayload(serialized),
+    publishedAt: now,
+    publishedById: userId,
+    updatedAt: now,
+  });
+}
+
+// A cheap integrity check over the stored payload so a later reader can tell
+// whether a snapshot was altered outside the app.
+function hashPayload(value: string) {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 // Current lock state for one exam, with the admin who applied it and a count of

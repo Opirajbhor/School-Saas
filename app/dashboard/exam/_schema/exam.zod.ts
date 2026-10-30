@@ -444,6 +444,56 @@ export type OutputExamResultType = {
     submitted: boolean;
   }[];
   complete: boolean;
+  // true when the sheet was served from a published snapshot rather than a
+  // live calculation, so the page can say the numbers are frozen
+  fromSnapshot?: boolean;
+  // the snapshot version being shown, when `fromSnapshot` is set
+  snapshotVersion?: number;
+};
+
+// ------------------- result review & publication ------------
+
+// the publish / unpublish / preview scope: one exam + one class at a time,
+// matching resultQueryZod
+export const resultSnapshotScopeZod = resultQueryZod;
+export type InputResultSnapshotScopeType = z.infer<
+  typeof resultSnapshotScopeZod
+>;
+
+// a frozen result sheet. `payload` is the exact OutputExamResultType that was
+// calculated at publish time, so a published result never changes afterwards.
+export const outputResultSnapshotZod = z.object({
+  id: z.uuid(),
+  version: z.number().int().positive(),
+  publishedAt: z.date(),
+  publishedByName: z.string().nullable(),
+  unpublishedAt: z.date().nullable(),
+  unpublishedByName: z.string().nullable(),
+  payloadHash: z.string(),
+});
+export type OutputResultSnapshotType = z.infer<
+  typeof outputResultSnapshotZod
+> & {
+  payload: OutputExamResultType;
+};
+
+// what the review step needs before an admin approves: the calculated sheet
+// plus whether anything is missing or looks wrong
+export type PublishReadinessType = {
+  /** false when at least one section × subject unit is missing marks */
+  ready: boolean;
+  /** units still missing marks, straight from the calculator */
+  incomplete: OutputExamResultType["incomplete"];
+  // calculation problems that are not simply missing marks
+  problems: {
+    kind: "NO_SUBJECTS" | "NO_MARKS" | "FAILED_ALL";
+    studentId: string;
+    studentName: string;
+    roll: string;
+    detail: string;
+  }[];
+  /** the sheet that would be frozen if the admin publishes now */
+  preview: OutputExamResultType;
 };
 
 // ------------------- mark workflow (lock) ------------

@@ -7,6 +7,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
@@ -24,6 +25,8 @@ import {
 import { MarkWorkflowBadge } from "../exam-overview/monitoring-ui";
 import { resultColumns } from "./result-columns";
 import { IncompleteMarksPanel } from "./result-ui";
+import ResultReview from "./result-review";
+import { ReportLinks } from "./report-links";
 
 type Option = { id: string; name: string };
 // the exact exam + class a loaded result sheet belongs to
@@ -92,6 +95,10 @@ export default function ResultForm() {
       ? sheet.students.filter((row) => row.sectionId === sectionFilter)
       : sheet.students
     : [];
+
+  // only publish/unpublish once a sheet is actually loaded, since the action
+  // needs the exam + class the review was for
+  const reviewKey = sheet && loadedKey ? loadedKey : null;
 
   return (
     <FormProvider {...form}>
@@ -187,6 +194,14 @@ export default function ResultForm() {
                     {sheet ? `${sheet.exam.name} · ${sheet.class.name}` : "Results"}
                   </CardTitle>
                   {sheet && <MarkWorkflowBadge workflow={sheet.exam.markWorkflow} />}
+                  {sheet?.fromSnapshot && (
+                    <Badge
+                      variant="outline"
+                      className="h-auto px-1.5 py-0 text-[11px]"
+                    >
+                      published snapshot v{sheet.snapshotVersion}
+                    </Badge>
+                  )}
                   {sheet && (
                     <span className="text-xs text-muted-foreground">
                       {students.length} students · {sheet.subjects.length} subjects
@@ -227,10 +242,28 @@ export default function ResultForm() {
                 </Alert>
               ) : sheet ? (
                 <>
+                  {reviewKey && sheet && (
+                    <ResultReview
+                      examId={reviewKey.examId}
+                      classId={reviewKey.classId}
+                      workflow={sheet.exam.markWorkflow}
+                      fromSnapshot={Boolean(sheet.fromSnapshot)}
+                      snapshotVersion={sheet.snapshotVersion}
+                    />
+                  )}
+
                   <IncompleteMarksPanel
                     incomplete={sheet.incomplete}
                     sections={sheet.sections}
                   />
+
+                  {reviewKey && (
+                    <ReportLinks
+                      examId={reviewKey.examId}
+                      classId={reviewKey.classId}
+                      sectionId={sectionFilter || undefined}
+                    />
+                  )}
 
                   {students.length === 0 ? (
                     <p className="p-6 text-center text-sm text-muted-foreground">

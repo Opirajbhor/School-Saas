@@ -180,3 +180,66 @@
     @apply font-sans;
   }
 }
+
+/* ---------------------------------------------------------------- print
+
+   The result reports under /print are printed from the browser (Ctrl+P or the
+   Print button), which is also how they are saved as PDF, so no PDF library is
+   needed. Printing must always come out black on white: a theme colour would
+   wash out or print as a dark block. */
+
+@media print {
+  /* page setup: a plain A4 sheet with a real margin, no browser chrome */
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* keep every table header with its body, and repeat it when a long table
+     runs onto the next page */
+  thead {
+    display: table-header-group;
+  }
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* a student's card or a table row must never be sliced in half across pages */
+  article,
+  tr,
+  img {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* links carry no meaning on paper */
+  a[href]::after {
+    content: "";
+  }
+}
+
+/* the tabulation sheet is wider than A4 portrait, so its page is rotated on
+   its own rather than rotating every report */
+@media print {
+  @page landscape-page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  .print-landscape {
+    page: landscape-page;
+  }
+}

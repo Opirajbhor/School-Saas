@@ -32,7 +32,8 @@ export const markEditRequestStatusEnum = pgEnum("mark_edit_request_status", [
   "REJECTED",
 ]);
 
-// exam-level lock. FINALIZED still lets an admin reopen; PUBLISHED is final.
+// exam-level lock. FINALIZED still lets an admin reopen; PUBLISHED freezes the
+// results into a snapshot and may be taken back down to FINALIZED.
 export const markWorkflowEnum = pgEnum("mark_workflow", [
   "OPEN",
   "FINALIZED",
