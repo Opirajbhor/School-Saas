@@ -2,7 +2,7 @@
 
 import { currentUser } from "../auth/currentUser.action";
 
-type Role = "admin" | "user";
+type Role = "superadmin" | "admin" | "user";
 
 export async function AccessServer(roles: Role | Role[]) {
   const profile = await currentUser();
@@ -10,7 +10,10 @@ export async function AccessServer(roles: Role | Role[]) {
   if (!ctx) return { allowed: false as const, ctx: null };
 
   const list = Array.isArray(roles) ? roles : [roles];
-  const allowed = list.includes(ctx.role as Role);
+  // the session user type does not declare role, so read it through a lookup
+  // rather than widening the shared schema type
+  const role = (ctx as { role?: Role }).role;
+  const allowed = role ? list.includes(role) : false;
 
   return { allowed, ctx };
 }

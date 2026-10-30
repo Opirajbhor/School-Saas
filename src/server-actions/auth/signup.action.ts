@@ -56,6 +56,13 @@ export async function getOnboardingStep() {
 
   const role = session.user.role;
 
+  // a superadmin governs platform-wide defaults and belongs to no institute, so
+  // there is no onboarding to complete; send it to its own area instead of the
+  // tenant dashboard.
+  if (role === "superadmin") {
+    return "SUPERADMIN";
+  }
+
   if (role === "user") {
     return "USER";
   }

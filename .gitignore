@@ -40,8 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+tsc-baseline.txt
 
 
 .databricks
 problemFix.md
 .andromity/
+issues.md

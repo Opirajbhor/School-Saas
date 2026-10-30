@@ -8,6 +8,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const step = await getOnboardingStep();
+  // a superadmin has no institute, so it must never reach the tenant dashboard.
+  if (step === "SUPERADMIN") {
+    redirect("/super-admin/institutes");
+  }
   if (step === "UNAUTHORIZED") {
     redirect("/auth/onboarding/institute-profile");
   }

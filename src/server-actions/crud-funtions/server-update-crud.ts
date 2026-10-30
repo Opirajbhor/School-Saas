@@ -55,7 +55,7 @@ export async function updateRecord<
     };
 
     return await db.transaction(async (tx) => {
-      const [record] = await db
+      const [record] = await tx
         .update(config.drizzleSchema)
         .set(updateData)
         .where(
@@ -78,7 +78,7 @@ export async function updateRecord<
       await createAuditLog(tx, {
         instituteId,
         userId,
-        action: "DELETED",
+        action: "UPDATED",
         entity: config.entity,
         entityId: (record as { id: string }).id,
       });

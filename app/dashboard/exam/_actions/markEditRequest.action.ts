@@ -592,10 +592,10 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
 
     // every class assigned to the exam is frozen on publish, so one publish is
     // consistent exam-wide even though snapshots are per class
-    const snapshotPlan: { classId: string; payload: unknown }[] =
+    const snapshotPlan =
       workflow === "PUBLISHED"
         ? await buildSnapshotPlan(examId, instituteId)
-        : [];
+        : { plan: [], skipped: [] };
 
     await db.transaction(async (tx) => {
       const patch =
@@ -612,13 +612,13 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
         .where(eq(exams.id, examId));
 
       if (workflow === "PUBLISHED") {
-        for (const plan of snapshotPlan) {
+        for (const planRow of snapshotPlan.plan) {
           await insertSnapshot(tx, {
             instituteId,
             examId,
-            classId: plan.classId,
+            classId: planRow.classId,
             userId,
-            payload: plan.payload,
+            payload: planRow.payload,
             now,
           });
         }
@@ -663,7 +663,10 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
           examId,
           from: exam.markWorkflow,
           to: workflow,
-          snapshots: snapshotPlan.length,
+          snapshots: snapshotPlan.plan.length,
+          // a class that failed to calculate is recorded here rather than
+          // silently dropped, so the gap is visible afterwards
+          skippedClasses: snapshotPlan.skipped,
         },
       });
     });
@@ -673,7 +676,15 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
     revalidatePath("/dashboard/exam/mark-input");
     revalidatePath("/dashboard/results");
 
-    return { success: true as const, data: { examId, workflow } };
+    return {
+      success: true as const,
+      data: {
+        examId,
+        workflow,
+        publishedClasses: snapshotPlan.plan.length,
+        skippedClasses: snapshotPlan.skipped,
+      },
+    };
   } catch (error) {
     console.error("Failed to set exam mark workflow:", error);
     return {
@@ -685,8 +696,10 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
 }
 
 // The calculated sheet for every class assigned to the exam, ready to freeze.
+//
 // A class that fails to calculate is skipped rather than aborting the publish,
-// so one broken class cannot block the rest.
+// so one broken class cannot block the rest — but the skipped ids are returned
+// so the caller can report the gap instead of leaving it invisible.
 async function buildSnapshotPlan(examId: string, instituteId: string) {
   const classes = await db
     .select({ id: classesDrizzle.id })
@@ -704,6 +717,7 @@ async function buildSnapshotPlan(examId: string, instituteId: string) {
     );
 
   const plan: { classId: string; payload: unknown }[] = [];
+  const skipped: string[] = [];
   for (const row of classes) {
     try {
       plan.push({
@@ -712,14 +726,20 @@ async function buildSnapshotPlan(examId: string, instituteId: string) {
       });
     } catch (error) {
       console.error(`Skipping snapshot for class ${row.id}:`, error);
+      skipped.push(row.id);
     }
   }
-  return plan;
+  return { plan, skipped };
 }
 
 // Writes one immutable snapshot row, numbered after the highest version already
-// stored for that exam + class. The version is computed inside the caller's
-// transaction so two publishes cannot collide.
+// stored for that exam + class.
+//
+// Reading the max is not enough on its own: two publishes running at the same
+// time would both read the same max and pick the same version. `for update`
+// locks the rows this exam + class already has, so the second publisher waits
+// and then reads the first one's version. The unique index on
+// (exam_id, class_id, version) is the backstop if that lock is ever missed.
 async function insertSnapshot(
   tx: Tx,
   {
@@ -746,7 +766,8 @@ async function insertSnapshot(
         eq(examResultSnapshots.examId, examId),
         eq(examResultSnapshots.classId, classId),
       ),
-    );
+    )
+    .for("update");
 
   const nextVersion =
     existing.reduce((max, row) => Math.max(max, row.version), 0) + 1;

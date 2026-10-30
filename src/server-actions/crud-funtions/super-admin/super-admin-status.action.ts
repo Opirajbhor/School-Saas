@@ -1,6 +1,7 @@
 import { db } from "@/src/drizzle-DB";
 import { eq, Table } from "drizzle-orm";
 import { PgColumn, PgTable } from "drizzle-orm/pg-core";
+import { getUserContext } from "../../shared/get-user-context.action";
 
 type StatusTable = PgTable & {
   
@@ -18,6 +19,19 @@ export async function statusChangeSuperAdmin<T extends StatusTable>(
   id: string,
 ) {
   try {
+    // platform-wide defaults, so only a superadmin may toggle them
+    const ctx = await getUserContext();
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session found",
+        details: {},
+      };
+    }
+    if (ctx.role !== "superadmin") {
+      return { success: false as const, error: "Not authorized", details: {} };
+    }
+
     const table = config.drizzleSchema;
 
     const [record] = await db

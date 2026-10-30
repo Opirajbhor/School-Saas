@@ -11,6 +11,7 @@ export async function loginAction(data: LogInType) {
   if (!parsed.success) return parsed;
   // parse with zod-----------------
 
+  let role: string | undefined;
   try {
     const currentUser = await auth.api.signInEmail({
       body: {
@@ -20,11 +21,18 @@ export async function loginAction(data: LogInType) {
     });
     if (currentUser) {
       isSuccesfull = true;
+      // each area lives behind its own guard, so send the user to the one their
+      // role can actually open; a superadmin has no institute, so letting it
+      // fall through to /dashboard leaves it on a page with no tenant context.
+      role = (currentUser.user as { role?: string }).role;
     }
   } catch (error) {
     console.error(error);
   }
   if (isSuccesfull) {
+    if (role === "superadmin") {
+      redirect("/super-admin/institutes");
+    }
     redirect("/dashboard");
   }
 }

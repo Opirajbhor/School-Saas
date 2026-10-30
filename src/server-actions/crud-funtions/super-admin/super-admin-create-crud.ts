@@ -2,6 +2,7 @@ import { db } from "@/src/drizzle-DB";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { InferInsertModel } from "drizzle-orm";
+import { getUserContext } from "../../shared/get-user-context.action";
 
 type TableWithId = PgTable & {
   $inferSelect: { id: string; [key: string]: unknown };
@@ -19,6 +20,20 @@ export async function CreateSuperAdmin<T extends TableWithId>(
   data: unknown,
 ) {
   try {
+    // these rows are platform-wide defaults (instituteId stays null), so only a
+    // superadmin may create them
+    const ctx = await getUserContext();
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session found",
+        details: {},
+      };
+    }
+    if (ctx.role !== "superadmin") {
+      return { success: false as const, error: "Not authorized", details: {} };
+    }
+
     // Validate input first
     const parsed = config.zodSchema.safeParse(data);
     if (!parsed.success) {

@@ -3,7 +3,7 @@
 
 import { useSession } from "../../better-auth/auth-client";
 
-type Role = "admin" | "teacher" | "user";
+type Role = "superadmin" | "admin" | "teacher" | "user";
 
 export function AccessClient(roles: Role | Role[]) {
   const { data: session } = useSession();

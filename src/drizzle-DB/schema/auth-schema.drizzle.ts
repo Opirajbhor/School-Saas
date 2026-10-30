@@ -8,7 +8,11 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "user"]);
+export const userRoleEnum = pgEnum("user_role", [
+  "superadmin",
+  "admin",
+  "user",
+]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -16,7 +20,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
-  role: userRoleEnum("role").default("admin").notNull(),
+  role: userRoleEnum("role").default("user").notNull(),
   banned: boolean("banned").default(false), // [!code highlight]
   banReason: text("ban_reason"), // [!code highlight]
   banExpires: timestamp("ban_expires"),
