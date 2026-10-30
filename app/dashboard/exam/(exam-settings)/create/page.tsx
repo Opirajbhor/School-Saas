@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AccessServer } from "@/src/server-actions/protected-routes/role-access-server";
 import { DataTable } from "@/components/table/tanstack/data-table";
-import { OutputExamType } from "../../_schema/exam.zod";
+import { OutputExamType, sortAssignedClasses } from "../../_schema/exam.zod";
 import { ExamCreateColumn } from "../../_table/exam-create-column";
 import { exams } from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
@@ -33,7 +33,15 @@ export default async function Page() {
   if (!result.success) {
     return <SpinnerCustom />;
   }
-  const examData = result.data;
+  const examData = result.data as OutputExamType[];
+
+  // the "Assign Classes" cell joins the class names, so sort them into
+  // academic order before they are joined
+  for (const exam of examData) {
+    if (exam.assignClasses) {
+      exam.assignClasses = sortAssignedClasses(exam.assignClasses);
+    }
+  }
   return (
     <div>
       <div>

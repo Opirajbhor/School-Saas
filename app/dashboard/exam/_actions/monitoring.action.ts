@@ -4,6 +4,7 @@ import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { parseWithZod } from "@/src/validation/validator.zod";
+import { compareClassName } from "@/src/validation/classes.zod";
 import { db } from "@/src/drizzle-DB";
 import {
   academicSessions,
@@ -644,12 +645,16 @@ async function getExamUnitScopes(
       ),
     )
     .orderBy(
-      asc(classesDrizzle.name),
       asc(sectionDrizzle.name),
       asc(subjectDbSchema.name),
     );
 
-  return rows;
+  // the class part of the sort is done here so "Class 10" does not come before
+  // "Class 6". sort is stable, so the section and subject order the query
+  // already applied is preserved within each class.
+  return rows.sort((a, b) =>
+    compareClassName({ name: a.className }, { name: b.className }),
+  );
 }
 
 // required cells = eligible students × configured mark types, summed per unit.

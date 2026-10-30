@@ -4,7 +4,7 @@ import {
   examMarkTypesDrizzle,
   exams,
 } from "@/src/drizzle-DB/schema";
-import { sectionType } from "@/src/validation/classes.zod";
+import { sectionType, compareClassName } from "@/src/validation/classes.zod";
 import { OutputStudentType } from "@/src/validation/student.zod";
 import { OutputSubjectType } from "@/src/validation/subjects.zod";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -84,6 +84,22 @@ export type ExamOverViewType = z.infer<typeof outputExamZod> & {
     };
   }[];
 };
+
+/**
+ * Sorts the classes assigned to an exam into academic order.
+ *
+ * `exam_classes` rows are inserted in the order the classes were ticked on the
+ * assign form, so the database order is arbitrary and "Class 10" can land ahead
+ * of "Class 6". Every screen that lists an exam's classes must sort through
+ * this so the cards, badges and table cells all agree.
+ */
+export function sortAssignedClasses<
+  T extends { class: { name?: string | null } | null },
+>(rows: T[]): T[] {
+  return [...rows].sort((a, b) =>
+    compareClassName({ name: a.class?.name ?? "" }, { name: b.class?.name ?? "" }),
+  );
+}
 
 // -------------------mark input (exam × class × section × subject) ------------
 

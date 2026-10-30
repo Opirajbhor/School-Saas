@@ -20,6 +20,7 @@ import {
   subjectDbSchema,
 } from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
+import { compareClassName } from "@/src/validation/classes.zod";
 
 // get Default Subjects
 export async function getDefaultSubjects() {
@@ -321,12 +322,11 @@ export async function getDefaultClassSubjects() {
           with: {
             groupClasses: true,
           },
-          orderBy: (classesDrizzle, { asc }) => [asc(classesDrizzle.createdAt)],
         }),
     });
     return {
       success: true as const,
-      data: result.data as ClassSubjectsType[],
+      data: (result.data as ClassSubjectsType[]).sort(compareClassName),
     };
   } catch (error) {
     return {

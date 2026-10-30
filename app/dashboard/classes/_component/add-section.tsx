@@ -21,7 +21,7 @@ import {
   sectionZod,
 } from "@/src/validation/classes.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { postSection } from "../_actions/classes.action";
@@ -32,7 +32,7 @@ export default function AddClassSection({
 }) {
   const { name, id } = classData;
   const [load, setLoad] = useState(false);
-  const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<SectionInputType>({
@@ -49,9 +49,10 @@ export default function AddClassSection({
     await handleCrudAction(postSection, data, {
       successMessage: "Section Created Succesfully",
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["classes", "sections"],
-        });
+        // The classes page is a server component, so its rows come from props
+        // rather than the query cache. invalidateQueries would be a no-op here;
+        // refresh re-renders the page so the new section shows up immediately.
+        router.refresh();
       },
     });
 

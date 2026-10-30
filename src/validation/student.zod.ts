@@ -28,7 +28,8 @@ export const addStudentZod = z.object({
 
   banglaName: z
     .union([z.string().trim().max(200, "Bangla name is too long"), z.null()])
-    .optional(),
+    .optional()
+    .transform((value) => value || null),
 
   gender: z.enum(["MALE", "FEMALE", "OTHER"], {
     error: "Please select a gender",
@@ -53,14 +54,24 @@ export const addStudentZod = z.object({
     ])
     .optional(),
 
-  birthCertificateNo: z.union([z.string().trim().max(50), z.null()]).optional(),
+  // optional: a blank input arrives as "" and is normalised to null so the
+  // column holds one "not provided" value instead of mixing "" and null
+  birthCertificateNo: z
+    .union([z.string().trim().max(50), z.null()])
+    .optional()
+    .transform((value) => value || null),
 
   address: z.string().trim().max(500),
   sessionId: z.uuid().nullable(),
   className: z.string().trim().max(500),
   section: z.string().trim().max(500),
   roll: z.string().trim().max(500),
-  groupId: z.uuid().nullable(),
+  // optional: a missing group arrives as "" from the select, which is not a
+  // uuid, so blank is normalised to null
+  groupId: z
+    .union([z.uuid(), z.literal(""), z.null()])
+    .optional()
+    .transform((value) => value || null),
 
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
 });

@@ -138,6 +138,9 @@ export async function addStudent(data: AddStudentType) {
         details: validated.error.flatten().fieldErrors,
       };
     }
+    // insert the parsed values, not the raw input: parsing normalises optional
+    // fields (a blank birth certificate number becomes null)
+    const values = validated.data;
     const activeSession = await getActiveSession();
     if (!activeSession) {
       return {
@@ -155,20 +158,20 @@ export async function addStudent(data: AddStudentType) {
         .insert(student)
         .values({
           instituteId: profile.id,
-          studentId: data.studentId,
-          englishName: data.englishName,
-          fatherName: data.fatherName,
-          motherName: data.motherName,
-          gender: data.gender,
-          dateOfBirth: data.dateOfBirth,
-          religion: data.religion,
-          phone: data.phone,
-          address: data.address,
-          status: data.status,
-          banglaName: data.banglaName,
-          photoUrl: data.photoUrl || "",
-          birthCertificateNo: data.birthCertificateNo,
-          groupId: data.groupId || null,
+          studentId: values.studentId,
+          englishName: values.englishName,
+          fatherName: values.fatherName,
+          motherName: values.motherName,
+          gender: values.gender,
+          dateOfBirth: values.dateOfBirth,
+          religion: values.religion,
+          phone: values.phone,
+          address: values.address,
+          status: values.status,
+          banglaName: values.banglaName,
+          photoUrl: values.photoUrl || "",
+          birthCertificateNo: values.birthCertificateNo,
+          groupId: values.groupId || null,
         })
         .returning();
 
@@ -179,10 +182,10 @@ export async function addStudent(data: AddStudentType) {
           instituteId: profile.id,
           studentId: newStudent.id,
           sessionId: activeSession.id,
-          classId: data.className,
-          sectionId: data.section,
-          roll: data.roll,
-          groupId: data.groupId,
+          classId: values.className,
+          sectionId: values.section,
+          roll: values.roll,
+          groupId: values.groupId,
         })
         .returning();
 

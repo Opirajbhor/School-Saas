@@ -6,6 +6,7 @@ import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 import { parseWithZod } from "@/src/validation/validator.zod";
+import { compareClassName } from "@/src/validation/classes.zod";
 import { db } from "@/src/drizzle-DB";
 import {
   classesDrizzle,
@@ -91,7 +92,7 @@ export async function getExamOptions() {
 
 // classes the exam is assigned to
 export async function getExamClassOptions(examId: string) {
-  return readMany({
+  const result = await readMany({
     drizzleSchema: examClasses,
     query: ({ db, instituteId }) =>
       db
@@ -105,9 +106,19 @@ export async function getExamClassOptions(examId: string) {
             eq(examClasses.status, "ACTIVE"),
             eq(classesDrizzle.status, "ACTIVE"),
           ),
-        )
-        .orderBy(asc(classesDrizzle.name)),
+        ),
   });
+
+  // "Class 10" must not sort ahead of "Class 6"
+  if (result.success) {
+    return {
+      ...result,
+      data: (result.data as { id: string; name: string }[]).sort(
+        compareClassName,
+      ),
+    };
+  }
+  return result;
 }
 
 // sections + subjects of a class, to fill the step-2 dropdowns

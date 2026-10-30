@@ -45,3 +45,26 @@ export type ClassesWithGroups = classesType & {
 export type ClassWithSectionType = classesType & {
   sections: sectionType[];
 };
+
+/**
+ * Orders classes the way a school names them: by the number inside the name, so
+ * "Class 6" comes before "Class 10". A plain `asc(name)` would sort
+ * lexicographically and put "Class 10" first.
+ *
+ * The first number found in the name is used, which also covers "Class 6-A" and
+ * "Grade 12". A name with no number counts as 0, so "Nursery" and "KG" sort
+ * ahead of the numbered classes. Names with the same number fall back to a
+ * locale compare so the order stays stable.
+ */
+export function compareClassName(
+  a: { name: string },
+  b: { name: string },
+): number {
+  const num = (name: string) => {
+    const match = name.match(/\d+/);
+    return match ? Number(match[0]) : 0;
+  };
+
+  const diff = num(a.name) - num(b.name);
+  return diff !== 0 ? diff : a.name.localeCompare(b.name);
+}

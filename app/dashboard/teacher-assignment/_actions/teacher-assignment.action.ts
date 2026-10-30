@@ -27,6 +27,7 @@ import { Teacherlist } from "../../../../src/validation/teacher.zod";
 import {
   classesTypeWithId,
   ClassWithSectionType,
+  compareClassName,
 } from "../../../../src/validation/classes.zod";
 import { db } from "../../../../src/drizzle-DB";
 import { updateRecord } from "../../../../src/server-actions/crud-funtions/server-update-crud";
@@ -188,7 +189,7 @@ export async function getActiveClassesSection() {
     });
     return {
       success: true as const,
-      data: result.data as ClassSectionType[],
+      data: (result.data as ClassSectionType[]).sort(compareClassName),
     };
   } catch (error) {
     return {

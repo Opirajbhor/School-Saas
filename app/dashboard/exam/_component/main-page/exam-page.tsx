@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { eq, isNull, or } from "drizzle-orm";
 import { exams } from "@/src/drizzle-DB/schema";
-import { OutputExamType } from "../../_schema/exam.zod";
+import { OutputExamType, sortAssignedClasses } from "../../_schema/exam.zod";
 import Link from "next/link";
 import { getExamMonitoringSummaries } from "../../_actions/monitoring.action";
 
@@ -38,6 +38,14 @@ export default async function ExamListPage() {
     return <SpinnerCustom />;
   }
   const examData = result.data as OutputExamType[];
+
+  // the badge list on each exam card must read Class 6, 7, 8..., not
+  // exam_classes insert order
+  for (const exam of examData) {
+    if (exam.assignClasses) {
+      exam.assignClasses = sortAssignedClasses(exam.assignClasses);
+    }
+  }
 
   // progress per exam; missing summaries simply render as not started
   const summaryByExam = new Map(

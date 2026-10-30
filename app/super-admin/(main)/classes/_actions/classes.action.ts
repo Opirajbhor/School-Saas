@@ -9,6 +9,7 @@ import {
   classesTypeWithId,
   ClassesWithGroups,
   classesZod,
+  compareClassName,
 } from "@/src/validation/classes.zod";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 
@@ -20,12 +21,11 @@ export async function getDefaultClasses() {
       query: ({ db }) =>
         db.query.classesDrizzle.findMany({
           where: isNull(classesDrizzle.instituteId),
-          orderBy: (classesDrizzle, { asc }) => [asc(classesDrizzle.createdAt)],
         }),
     });
     return {
       success: true as const,
-      data: result.data as classesTypeWithId[],
+      data: (result.data as classesTypeWithId[]).sort(compareClassName),
     };
   } catch (error) {
     return {
@@ -131,12 +131,11 @@ export async function getClassWithGroups() {
               },
             },
           },
-          orderBy: (classesDrizzle, { asc }) => [asc(classesDrizzle.createdAt)],
         }),
     });
     return {
       success: true as const,
-      data: result.data as ClassesWithGroups[],
+      data: (result.data as ClassesWithGroups[]).sort(compareClassName),
     };
   } catch (error) {
     return {

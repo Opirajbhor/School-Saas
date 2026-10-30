@@ -4,7 +4,9 @@ import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import {
   classesType,
   classesTypeWithId,
+  ClassesWithGroups,
   classesZod,
+  compareClassName,
   sectionType,
   sectionZod,
 } from "@/src/validation/classes.zod";
@@ -25,7 +27,6 @@ export async function getClasses() {
             isNull(classesDrizzle.instituteId),
             eq(classesDrizzle.instituteId, instituteId),
           ),
-          orderBy: (classesDrizzle, { asc }) => [asc(classesDrizzle.createdAt)],
           with: {
             sections: true,
           },
@@ -33,7 +34,7 @@ export async function getClasses() {
     });
     return {
       success: true as const,
-      data: result.data as classesTypeWithId[],
+      data: (result.data as classesTypeWithId[]).sort(compareClassName),
     };
   } catch (error) {
     return {
@@ -67,7 +68,7 @@ export async function getActiveClasses() {
     });
     return {
       success: true as const,
-      data: result.data,
+      data: (result.data as ClassesWithGroups[]).sort(compareClassName),
     };
   } catch (error) {
     return {
@@ -137,7 +138,7 @@ export async function getClassSectionGroups() {
     });
     return {
       success: true as const,
-      data: result.data,
+      data: (result.data as ClassesWithGroups[]).sort(compareClassName),
     };
   } catch (error) {
     return {
