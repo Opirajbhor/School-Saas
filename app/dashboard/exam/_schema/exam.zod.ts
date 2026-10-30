@@ -385,6 +385,67 @@ export type OutputMarkEntrySheetType = {
   }[];
 };
 
+// ------------------- result calculation ------------
+
+// the result page works on one exam + one class at a time
+export const resultQueryZod = z.object({
+  examId: z.uuid("Invalid exam id"),
+  classId: z.uuid("Invalid class id"),
+});
+export type InputResultQueryType = z.infer<typeof resultQueryZod>;
+
+// one result page: the ranked students plus anything that is missing.
+// the calculation itself lives in ../_lib/result-calculator.ts.
+export type OutputExamResultType = {
+  exam: { id: string; name: string; markWorkflow: MarkWorkflow };
+  class: { id: string; name: string };
+  /** every subject that was graded, in display order */
+  subjects: { id: string; name: string; fullMark: number }[];
+  students: {
+    enrollmentId: string;
+    studentId: string;
+    roll: string;
+    englishName: string;
+    banglaName: string | null;
+    sectionId: string;
+    sectionName: string;
+    subjects: {
+      subjectId: string;
+      name: string;
+      obtained: number;
+      fullMark: number;
+      percentage: number;
+      grade: string;
+      GPA: number;
+      failed: boolean;
+      absent: boolean;
+    }[];
+    totalObtained: number;
+    totalFullMark: number;
+    percentage: number;
+    GPA: number;
+    grade: string;
+    passed: boolean;
+    failedSubjects: string[];
+    sectionRank: number;
+    classRank: number;
+  }[];
+  // sections present in this class, so the table can be filtered
+  sections: { id: string; name: string }[];
+  // sections × subjects still missing marks; nothing is ranked until this is
+  // empty or the admin acknowledges it
+  incomplete: {
+    sectionId: string;
+    sectionName: string;
+    subjectId: string;
+    subjectName: string;
+    missing: number;
+    students: number;
+    submitted: boolean;
+  }[];
+  complete: boolean;
+};
+
 // ------------------- mark workflow (lock) ------------
 
 export const markWorkflowZod = z.enum(["OPEN", "FINALIZED", "PUBLISHED"]);

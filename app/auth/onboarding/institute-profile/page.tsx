@@ -35,7 +35,7 @@ export default function Page() {
   });
   const { isSubmitting } = form.formState;
   //   division
-  const selectedDivision = ({
+  const selectedDivision = useWatch({
     control: form.control,
     name: "division",
   });
