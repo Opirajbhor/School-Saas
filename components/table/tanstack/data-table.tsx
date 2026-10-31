@@ -88,7 +88,7 @@ export function DataTable<TData extends RowData>({
       {toolbar?.(table)}
 
       {/* table  body */}
-      <div className="mx-3 rounded-md border">
+      <div className="overflow-x-auto border-t">
         {/* filter */}
 
         {filterColumn && (
@@ -140,9 +140,16 @@ export function DataTable<TData extends RowData>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-32 text-center"
                 >
-                  No results.
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-sm font-medium text-foreground">
+                      No results
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Try a different search, or add a record.
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -150,23 +157,29 @@ export function DataTable<TData extends RowData>({
         </Table>
       </div>
       {/* pagination */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
+      <div className="flex items-center justify-between gap-2 border-t px-4 py-2.5">
+        <p className="text-xs tabular-nums text-muted-foreground">
+          {table.getRowModel().rows.length} of {data.length}{" "}
+          {data.length === 1 ? "row" : "rows"}
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </>
   );

@@ -1,8 +1,13 @@
 "use server";
 import { enrollments, student } from "@/src/drizzle-DB/schema";
+import {
+  groups,
+  subjectAssignSchema,
+  subjectDbSchema,
+} from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { requireInstitute } from "../../profile/_actions/get-institute-profile";
 import { db } from "@/src/drizzle-DB";
 import {
@@ -103,13 +108,54 @@ export async function ToggleStudentStatus(id: string) {
 // get academicInfo
 export async function getAcademicInfo() {
   try {
+    const ctx = await getUserContext();
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No user session found",
+      };
+    }
+
     const currentSession = await getActiveSession();
     const academicInfo = await getClassSectionGroups();
+
+    // what each class actually studies, so the form can show the assigned
+    // subjects the moment a class is picked instead of making the admin go
+    // back to the subjects page to check
+    const classSubjects = await db
+      .select({
+        classId: subjectAssignSchema.classId,
+        subjectId: subjectAssignSchema.subjectId,
+        name: subjectDbSchema.name,
+        shortName: subjectDbSchema.shortName,
+        type: subjectAssignSchema.subject_type,
+        isOptional: subjectAssignSchema.isOptional,
+        isReligion: subjectAssignSchema.isReligion,
+        groupId: subjectAssignSchema.groupId,
+        groupName: groups.name,
+      })
+      .from(subjectAssignSchema)
+      .innerJoin(
+        subjectDbSchema,
+        eq(subjectDbSchema.id, subjectAssignSchema.subjectId),
+      )
+      .leftJoin(groups, eq(groups.id, subjectAssignSchema.groupId))
+      .where(
+        and(
+          eq(subjectAssignSchema.status, "ACTIVE"),
+          or(
+            isNull(subjectAssignSchema.instituteId),
+            eq(subjectAssignSchema.instituteId, ctx.instituteId),
+          ),
+        ),
+      );
+
     return {
       success: true as const,
       data: {
         session: currentSession,
         classes: academicInfo?.data,
+        classSubjects,
       },
     };
   } catch (error) {

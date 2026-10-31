@@ -113,6 +113,19 @@ export type OutputStudentType = AddStudentType & {
   id: string;
 };
 
+export type AcademicSubjectType = {
+  classId: string;
+  subjectId: string;
+  name: string;
+  shortName: string;
+  /** COMPULSORY or GROUP_BASED */
+  type: string;
+  isOptional: boolean;
+  isReligion: boolean;
+  groupId: string | null;
+  groupName: string | null;
+};
+
 export type AcademicInfoType = {
   session: academicSessionType;
   classes: (classesType & {
@@ -124,6 +137,7 @@ export type AcademicInfoType = {
       group: outputGroupType;
     }[];
   })[];
+  classSubjects: AcademicSubjectType[];
 };
 
 export type StudentEnrollment = {

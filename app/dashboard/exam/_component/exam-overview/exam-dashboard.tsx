@@ -3,28 +3,21 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
-  BookOpen,
   CheckCircle2,
   Clock,
+  Gauge,
   Layers,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
+import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/table/tanstack/data-table";
+import { Metric, metricValue } from "@/components/dashboard/metric";
+import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { getExamDashboard } from "../../_actions/monitoring.action";
 import { monitoringUnitColumns } from "../../_table/monitoring-columns";
 import { ProgressBar } from "./monitoring-ui";
 import EditRequestQueue from "./edit-request-queue";
 import MarkWorkflowBar from "./mark-workflow-bar";
-
-const CARD_ICON = "flex size-9 shrink-0 items-center justify-center rounded-lg";
 
 // Detailed progress for one exam. Fetched only after the exam is opened, and
 // student-level data is never pulled here.
@@ -39,12 +32,7 @@ export default function ExamDashboard({ examId }: { examId: string }) {
   });
 
   if (isPending) {
-    return (
-      <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-        <Spinner />
-        Loading progress...
-      </div>
-    );
+    return <PageSkeleton rows={4} />;
   }
 
   if (isError || !data) {
@@ -60,148 +48,146 @@ export default function ExamDashboard({ examId }: { examId: string }) {
 
   const { summary, classes, units } = data;
 
-  const stats = [
-    {
-      label: "Total Units",
-      value: summary.totalUnits,
-      subtext: `${summary.unconfiguredUnits} not configured`,
-      icon: <Layers size={18} />,
-    },
-    {
-      label: "Completed",
-      value: summary.completedUnits,
-      subtext: `${summary.incompleteUnits} incomplete`,
-      icon: <CheckCircle2 size={18} />,
-    },
-    {
-      label: "Pending Requests",
-      value: summary.pendingRequests,
-      subtext: summary.pendingRequests > 0 ? "awaiting approval" : "none",
-      icon: <Clock size={18} />,
-    },
-  ];
+  const remaining = Math.max(summary.totalUnits - summary.completedUnits, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Exam-level mark lock: finalize / publish */}
       <MarkWorkflowBar examId={examId} />
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className={`${CARD_ICON} bg-muted text-muted-foreground`}>
-                  {stat.icon}
-                </div>
-                <CardDescription className="text-sm font-medium">
-                  {stat.label}
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                {stat.subtext}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className={`${CARD_ICON} bg-muted text-muted-foreground`}>
-                <BookOpen size={18} />
-              </div>
-              <CardDescription className="text-sm font-medium">
-                Overall
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-foreground">
-              {summary.completion}%
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Metric
+          label="Papers"
+          value={metricValue(summary.totalUnits)}
+          icon={Layers}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              {summary.unconfiguredUnits} without mark types
             </p>
-            <ProgressBar value={summary.completion} className="mt-2" />
-          </CardContent>
-        </Card>
+          }
+        />
+
+        <Metric
+          label="Complete"
+          value={metricValue(summary.completedUnits)}
+          icon={CheckCircle2}
+          segments={
+            summary.totalUnits > 0
+              ? [
+                  { value: summary.completedUnits, className: "bg-foreground" },
+                  { value: remaining, className: "bg-foreground/20" },
+                ]
+              : undefined
+          }
+          footer={
+            <p className="text-xs text-muted-foreground">
+              {summary.incompleteUnits} incomplete
+            </p>
+          }
+        />
+
+        <Metric
+          label="Overall"
+          value={`${summary.completion}%`}
+          icon={Gauge}
+          segments={[
+            { value: summary.completion, className: "bg-foreground" },
+            { value: Math.max(100 - summary.completion, 0), className: "bg-foreground/20" },
+          ]}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              of all papers entered
+            </p>
+          }
+        />
+
+        <Metric
+          label="Pending requests"
+          value={metricValue(summary.pendingRequests)}
+          icon={Clock}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              {summary.pendingRequests > 0 ? "awaiting approval" : "none"}
+            </p>
+          }
+        />
       </div>
 
       {/* Class-wise and section-wise progress */}
-      <Card className="gap-0 py-0">
-        <CardHeader className="border-b border-border">
-          <CardTitle>Progress by Class & Section</CardTitle>
-          <CardDescription>
-            Only units with students and configured mark types count toward
+      <Card className="gap-0 overflow-hidden p-0">
+        <div className="border-b px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">
+            Progress by class
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Only papers with students and configured mark types count toward
             completion.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
+          </p>
+        </div>
+
+        <div className="divide-y">
           {classes.length === 0 && (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <p className="p-8 text-center text-sm text-muted-foreground">
               No classes are assigned to this exam yet.
             </p>
           )}
 
           {classes.map((classRow) => (
-            <div
-              key={classRow.classId}
-              className="rounded-lg border border-border p-4"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium text-foreground">
+            <div key={classRow.classId} className="px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-medium text-foreground">
                   {classRow.className}
                 </p>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground">
-                    {classRow.completed}/{classRow.units} units complete
+                  <span className="text-[11px] tabular-nums text-muted-foreground">
+                    {classRow.completed}/{classRow.units} papers
                   </span>
-                  <ProgressBar value={classRow.completion} className="w-32" />
+                  <ProgressBar value={classRow.completion} className="w-40" />
+                  <span className="w-9 text-right text-[11px] font-medium tabular-nums text-foreground">
+                    {classRow.completion}%
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-3 space-y-2 border-t border-border pt-3">
-                {classRow.sections.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No sections in this class.
-                  </p>
-                )}
-                {classRow.sections.map((section) => (
-                  <div
-                    key={section.sectionId}
-                    className="flex items-center justify-between gap-3 text-sm"
-                  >
-                    <span className="text-muted-foreground">
-                      {section.sectionName}
-                    </span>
-                    <div className="flex items-center gap-3">
+              {classRow.sections.length > 0 && (
+                <div className="mt-2 space-y-1 border-l pl-3">
+                  {classRow.sections.map((section) => (
+                    <div
+                      key={section.sectionId}
+                      className="flex items-center justify-between gap-3"
+                    >
                       <span className="text-xs text-muted-foreground">
-                        {section.completed}/{section.units}
+                        {section.sectionName}
                       </span>
-                      <ProgressBar
-                        value={section.completion}
-                        className="w-28"
-                        muted={section.units === 0}
-                      />
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] tabular-nums text-muted-foreground">
+                          {section.completed}/{section.units}
+                        </span>
+                        <ProgressBar
+                          value={section.completion}
+                          className="w-28"
+                          muted={section.units === 0}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
-        </CardContent>
+        </div>
       </Card>
 
       {/* Subject-level monitoring */}
-      <Card className="gap-0 py-0">
-        <CardHeader className="border-b border-border">
-          <CardTitle>Subject Monitoring</CardTitle>
-          <CardDescription>
+      <Card className="gap-0 overflow-hidden p-0">
+        <div className="border-b px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">
+            Subject monitoring
+          </h2>
+          <p className="text-xs text-muted-foreground">
             Open a subject to see student-level entry status and missing marks.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
         {units.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">

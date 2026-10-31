@@ -3,7 +3,7 @@
 import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
-import { cn } from "@/utils/utils";
+import { StatusPill } from "@/components/dashboard/status-pill";
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 
 const columnHelper = createColumnHelper<
@@ -15,14 +15,23 @@ export const columns = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
-    cell: ({ row }) => row.index + 1,
+    cell: ({ row }) => (
+      <span className="text-xs tabular-nums text-muted-foreground">
+        {row.index + 1}
+      </span>
+    ),
   }),
+
   columnHelper.accessor("name", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
+      <DataTableColumnHeader column={column} title="Group" />
     ),
     filterFn: "includesString",
+    cell: ({ row }) => (
+      <span className="font-medium text-foreground">{row.original.name}</span>
+    ),
   }),
+
   columnHelper.accessor(
     (row) =>
       row.groupClasses
@@ -32,9 +41,35 @@ export const columns = columnHelper.columns([
     {
       id: "assignClasses",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Assign Classes" />
+        <DataTableColumnHeader column={column} title="Assigned classes" />
       ),
       filterFn: "includesString",
+      cell: ({ row }) => {
+        const classes = (row.original.groupClasses ?? [])
+          .map((gc) => gc.class?.name)
+          .filter((name): name is string => Boolean(name));
+
+        if (classes.length === 0) {
+          return (
+            <span className="text-xs text-muted-foreground">
+              No classes assigned
+            </span>
+          );
+        }
+
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            {classes.map((name) => (
+              <span
+                key={name}
+                className="rounded border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
   ),
 
@@ -42,20 +77,6 @@ export const columns = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ getValue }) => {
-      const status = getValue<"ACTIVE" | "INACTIVE">();
-      return (
-        <span
-          className={cn(
-            "px-2 py-1 rounded text-xs font-medium",
-            status === "ACTIVE"
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground text-background",
-          )}
-        >
-          {status}
-        </span>
-      );
-    },
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
   }),
 ]);

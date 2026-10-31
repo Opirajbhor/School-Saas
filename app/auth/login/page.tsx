@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/login-form";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { currentUser } from "@/src/server-actions/auth/currentUser.action";
 import { redirect } from "next/navigation";
 
@@ -10,10 +11,8 @@ export default async function LoginupPage() {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="w-full max-w-lvh">
-        <LoginForm />;
-      </div>
-    </div>
+    <AuthShell>
+      <LoginForm />
+    </AuthShell>
   );
 }

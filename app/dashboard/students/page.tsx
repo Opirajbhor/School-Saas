@@ -1,21 +1,15 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader } from "@/components/ui/card";
-import { ChevronDown, Download } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card } from "@/components/ui/card";
+import { LayoutGrid, Plus, UserCheck, UserMinus, Users } from "lucide-react";
 import { useState } from "react";
 import { StudentEnrollment } from "@/src/validation/student.zod";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 
 import Link from "next/link";
-import { SpinnerCustom } from "@/components/Spinner";
-import Title from "@/components/Title";
+import { PageSkeleton } from "@/components/dashboard/page-skeleton";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { Metric, metricValue } from "@/components/dashboard/metric";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { studentColumns } from "./_table/columns";
 import {
@@ -24,10 +18,7 @@ import {
 } from "./_table/student-filters";
 import { useQuery } from "@tanstack/react-query";
 import { getStudents, getStudentStats } from "./_actions/student.action";
-import {
-  StudentStatCards,
-  StudentStats,
-} from "@/components/dashboard/stat-cards";
+import type { StudentStats } from "@/components/dashboard/stat-cards";
 
 export default function Page() {
   // applied state — the toolbar edits a draft and commits it on Search
@@ -46,7 +37,7 @@ export default function Page() {
     },
   });
 
-  const { data: statsData } = useQuery<StudentStats>({
+  const { data: stats } = useQuery<StudentStats>({
     queryKey: ["page-Student", "stats"],
     queryFn: async () => {
       const result = await getStudentStats();
@@ -58,57 +49,95 @@ export default function Page() {
   });
 
   if (isPending) {
-    return <SpinnerCustom />;
+    return <PageSkeleton />;
   }
 
   const rows = students ?? [];
 
   return (
-    <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
-      <Title title="Student Management" />
-      <p className="text-muted-foreground ">
-        Manage enrolled students across all classes and sections.
-      </p>
-      <div className=" mb-5">
-        {statsData && <StudentStatCards stats={statsData} />}
+    <main className="my-6 w-full max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
+      <PageHeader
+        title="Students"
+        subtitle={
+          stats
+            ? `${metricValue(stats.total)} enrolled · ${stats.classes} classes · ${stats.sections} sections`
+            : "Enrolment across every class and section."
+        }
+        actions={
+          <Button size="sm" asChild>
+            <Link href="/dashboard/students/add-new">
+              <Plus />
+              Add student
+            </Link>
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Metric
+          label="Total students"
+          value={metricValue(stats?.total)}
+          icon={Users}
+          segments={
+            stats && stats.total > 0
+              ? [
+                  { value: stats.active, className: "bg-foreground" },
+                  { value: stats.inactive, className: "bg-foreground/30" },
+                ]
+              : undefined
+          }
+          footer={
+            <p className="text-xs text-muted-foreground">
+              {stats
+                ? `${stats.active} active · ${stats.inactive} inactive`
+                : "No enrolments yet"}
+            </p>
+          }
+        />
+
+        <Metric
+          label="Active"
+          value={metricValue(stats?.active)}
+          icon={UserCheck}
+          footer={
+            <p className="text-xs text-muted-foreground">currently enrolled</p>
+          }
+        />
+
+        <Metric
+          label="Inactive"
+          value={metricValue(stats?.inactive)}
+          icon={UserMinus}
+          footer={
+            <p className="text-xs text-muted-foreground">no longer enrolled</p>
+          }
+        />
+
+        <Metric
+          label="Classes"
+          value={metricValue(stats?.classes)}
+          icon={LayoutGrid}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              {metricValue(stats?.sections)} sections
+            </p>
+          }
+        />
       </div>
 
-      <Card className="pb-0 gap-0">
-        <CardHeader className="border-b border-border gap-0">
-          {/* tools */}
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="text-sm text-muted-foreground">
-              Filter students by class, section, group and more.
-            </div>
-            <div className="sm:ml-auto flex items-center gap-2 flex-wrap justify-center">
-              <Link href={"/dashboard/students/add-new"}>
-                <Button variant={"default"}>Add Student</Button>
-              </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="outline" />}>
-                  <Download data-icon="inline-start" />
-                  Export
-                  <ChevronDown data-icon="inline-end" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem className="cursor-pointer">
-                      Export as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      Export as Excel
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      Export as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </CardHeader>
+      <Card className="gap-0 overflow-hidden p-0">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">
+            All students
+          </h2>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+            {rows.length}
+          </span>
+          <p className="text-xs text-muted-foreground sm:ml-auto">
+            Filter by class, section, group, gender or status
+          </p>
+        </div>
 
-        {/* the only student list on this page */}
         <DataTable
           columns={studentColumns}
           data={rows}
@@ -116,23 +145,17 @@ export default function Page() {
           onColumnFiltersChange={setColumnFilters}
           initialColumnVisibility={HIDDEN_FILTER_COLUMNS}
           globalFilter={search}
-          toolbar={(table) => (
-            <>
-              <StudentFilters
-                students={rows}
-                filters={columnFilters}
-                onFiltersChange={setColumnFilters}
-                search={search}
-                onSearchChange={setSearch}
-              />
-              <div className="px-3 pt-2 text-xs text-muted-foreground">
-                Showing {table.getRowModel().rows.length} of {rows.length}{" "}
-                students
-              </div>
-            </>
+          toolbar={() => (
+            <StudentFilters
+              students={rows}
+              filters={columnFilters}
+              onFiltersChange={setColumnFilters}
+              search={search}
+              onSearchChange={setSearch}
+            />
           )}
         />
       </Card>
-    </div>
+    </main>
   );
 }

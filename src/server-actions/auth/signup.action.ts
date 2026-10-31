@@ -39,8 +39,15 @@ export async function signUpAction(data: SignUpType) {
       .where(eq(user.id, newUser.user.id));
   } catch (error) {
     console.error("error creating new user", error);
+    // the UI needs a message; returning a bare { success: false } left the
+    // form with nothing to show
     return {
-      success: false,
+      success: false as const,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Could not create the account",
+      details: {},
     };
   }
   redirect("/auth/onboarding/institute-profile");

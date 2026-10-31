@@ -1,103 +1,114 @@
 "use client";
-import { FiPlus } from "react-icons/fi";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { FormInput } from "@/components/forms/form-input";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import {
   classesTypeWithId,
   SectionInputType,
   sectionZod,
 } from "@/src/validation/classes.zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { postSection } from "../_actions/classes.action";
+
+const emptySection = (classId?: string): SectionInputType => ({
+  classId: classId ?? "",
+  name: "",
+  sessionId: "",
+  status: "ACTIVE",
+});
+
 export default function AddClassSection({
   classData,
 }: {
   classData: classesTypeWithId;
 }) {
   const { name, id } = classData;
+  const [isOpen, setIsOpen] = useState(false);
   const [load, setLoad] = useState(false);
   const router = useRouter();
 
-  const [isOpen, setIsOpen] = useState(false);
   const form = useForm<SectionInputType>({
     resolver: zodResolver(sectionZod),
-    defaultValues: {
-      classId: id,
-      name: "",
-      sessionId: "",
-      status: "ACTIVE",
-    },
+    defaultValues: emptySection(id),
   });
-  const addBtn = async (data: SectionInputType) => {
+
+  const submit = async (data: SectionInputType) => {
     setLoad(true);
-    await handleCrudAction(postSection, data, {
-      successMessage: "Section Created Succesfully",
+    const res = await handleCrudAction(postSection, data, {
+      successMessage: "Section created",
       onSuccess: () => {
         // The classes page is a server component, so its rows come from props
-        // rather than the query cache. invalidateQueries would be a no-op here;
-        // refresh re-renders the page so the new section shows up immediately.
+        // rather than the query cache. refresh re-renders the page so the new
+        // section shows up immediately.
         router.refresh();
       },
     });
-
-    setIsOpen(false);
     setLoad(false);
+
+    // dismiss only on success: a duplicate name used to close the dialog and
+    // discard what had been typed
+    if (res.success) {
+      form.reset(emptySection(id));
+      setIsOpen(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <div className="flex items-center  w-full">
-        <DialogTrigger asChild>
-          <Button className=" mb-3">
-            <FiPlus />
-            Section
-          </Button>
-        </DialogTrigger>
-      </div>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            Add Section to -
-            <span className="text-primary font-bold">{name}</span>
-          </DialogTitle>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="cursor-pointer">
+          <Plus />
+          Section
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="gap-0 p-0 sm:max-w-md">
+        <DialogHeader className="border-b px-5 py-4">
+          <DialogTitle>Add section</DialogTitle>
           <DialogDescription>
-            Create Section to this Class. Click save when you&apos;re done.
+            {name} — a new section for this class.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(addBtn)}>
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-sm font-medium">
-              Section Name
-            </Label>
-            <Input
-              {...form.register("name")}
-              type="text"
-              placeholder="eg: A, B"
-              className="mb-5"
-            />
-          </div>
-          <DialogFooter>
-            <Button disabled={load} type="submit" className="w-full">
-              {load && <Spinner />} Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
+
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(submit)}>
+            <div className="p-5">
+              <FormInput
+                control={form.control}
+                name="name"
+                label="Section name"
+                placeholder="e.g. A, B"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t p-4">
+              <DialogClose asChild>
+                <Button type="button" variant="ghost" disabled={load}>
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" size="sm" disabled={load}>
+                {load && <Spinner />} Save section
+              </Button>
+            </div>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

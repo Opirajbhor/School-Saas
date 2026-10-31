@@ -1,15 +1,16 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/src/lib/utils";
+import { Card } from "@/components/ui/card";
 import { readAuditLogs } from "@/src/server-actions/audit-logs/readAuditLog.action";
 import {
   ClipboardList,
   GraduationCap,
+  History,
   PencilLine,
   UserPlus,
 } from "lucide-react";
 
-// Map entity → icon
+// Entity → icon and verb. The old version also gave every entity its own
+// colour, but chart-2/3/4 are all the same green, so the chips read as four
+// shades of nothing. One neutral chip plus the entity word carries it better.
 const entityIcon = {
   TEACHER: UserPlus,
   STUDENT: UserPlus,
@@ -19,17 +20,6 @@ const entityIcon = {
   CLASS: ClipboardList,
 } as const;
 
-// Map entity → color
-const entityStyle = {
-  TEACHER: "bg-chart-2/15 text-chart-2",
-  STUDENT: "bg-chart-2/15 text-chart-2",
-  EXAM: "bg-primary/10 text-primary",
-  MARK: "bg-chart-4/15 text-chart-4",
-  RESULT: "bg-chart-3/10 text-chart-3",
-  CLASS: "bg-primary/10 text-primary",
-} as const;
-
-// Map action → verb
 const actionVerb = {
   CREATE: "created",
   UPDATE: "updated",
@@ -37,16 +27,6 @@ const actionVerb = {
   DELETE: "deleted",
   LOGIN: "logged in",
 } as const;
-
-function getInitials(name?: string | null) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function timeAgo(date: Date) {
   const sec = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -61,66 +41,51 @@ function timeAgo(date: Date) {
 
 export async function ActivityFeed() {
   const result = await readAuditLogs();
-
-  if (!result.success) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recent Activities</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">{result.error}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const activities = result.data;
-
-  if (activities.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recent Activities</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">No activity yet.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const activities = result.success ? result.data : [];
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="text-base">Recent Activities</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1">
-        <ol className="relative flex flex-col gap-5">
+    <Card className="flex h-full flex-col gap-0 overflow-hidden p-0 lg:h-[26rem]">
+      <div className="flex items-center gap-2 border-b px-4 py-3">
+        <h2 className="font-heading font-semibold text-foreground">Activity</h2>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+          {activities.length}
+        </span>
+        <span className="ml-auto text-xs text-muted-foreground">Latest</span>
+      </div>
+
+      {!result.success ? (
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          {result.error}
+        </p>
+      ) : activities.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
+          <History className="size-5 text-muted-foreground/60" strokeWidth={1.75} />
+          <p className="text-sm text-muted-foreground">No activity yet.</p>
+          <p className="text-xs text-muted-foreground/80">
+            Creating a class, student or exam shows up here.
+          </p>
+        </div>
+      ) : (
+        <ul className="min-h-0 flex-1 divide-y overflow-y-auto">
           {activities.map((activity) => {
             const Icon =
               entityIcon[activity.entity as keyof typeof entityIcon] ??
               ClipboardList;
-            const style =
-              entityStyle[activity.entity as keyof typeof entityStyle] ??
-              "bg-muted text-muted-foreground";
             const verb =
               actionVerb[activity.action as keyof typeof actionVerb] ??
               activity.action.toLowerCase();
 
             return (
-              <li key={activity.id} className="flex items-start gap-3">
-                <span
-                  className={cn(
-                    "flex size-8 shrink-0 items-center justify-center rounded-full",
-                    style,
-                  )}
-                >
-                  <Icon className="size-4" />
+              <li
+                key={activity.id}
+                className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/40"
+              >
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  <Icon className="size-3.5" strokeWidth={1.75} />
                 </span>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm leading-snug text-foreground">
+                  <p className="truncate text-[13px] leading-5 text-foreground">
                     <span className="font-medium">
                       {activity.userName ?? "Unknown"}
                     </span>{" "}
@@ -129,21 +94,16 @@ export async function ActivityFeed() {
                       {activity.entity.toLowerCase()}
                     </span>
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {timeAgo(activity.createdAt)}
-                  </p>
                 </div>
 
-                <Avatar className="size-7 shrink-0">
-                  <AvatarFallback className="bg-secondary text-[10px] font-medium text-secondary-foreground">
-                    {getInitials(activity.userName)}
-                  </AvatarFallback>
-                </Avatar>
+                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                  {timeAgo(activity.createdAt)}
+                </span>
               </li>
             );
           })}
-        </ol>
-      </CardContent>
+        </ul>
+      )}
     </Card>
   );
 }

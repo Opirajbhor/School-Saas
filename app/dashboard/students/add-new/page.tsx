@@ -8,18 +8,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Spinner } from "@/components/ui/spinner";
 import {
   AcademicInfoType,
+  AcademicSubjectType,
   AddStudentType,
   addStudentZod,
 } from "@/src/validation/student.zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { SpinnerCustom } from "@/components/Spinner";
+import { PageSkeleton } from "@/components/dashboard/page-skeleton";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { FormSelect } from "@/components/forms/form-select";
 import { FormInput } from "@/components/forms/form-input";
 import { FormTextarea } from "@/components/forms/form-textarea";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addStudent, getAcademicInfo } from "../_actions/student.action";
 
 const randomId = Math.floor(Math.random() * 100) + 1;
@@ -50,6 +52,7 @@ export default function AddStudent() {
     },
   });
   const { isSubmitting } = form.formState;
+  const queryClient = useQueryClient();
   // ----------form Effect------------
 
   const selectedClass = useWatch({
@@ -57,12 +60,44 @@ export default function AddStudent() {
     name: "className",
   });
 
+  // the ID is generated once and never typed, so it is displayed from form
+  // state instead of being hardcoded in the field
+  const studentId = useWatch({ control: form.control, name: "studentId" });
+  const photoUrl = useWatch({ control: form.control, name: "photoUrl" });
+
   // -----for selected sections------------
   const selectedClassData = activeSession?.classes?.find(
     (item) => item.id === selectedClass,
   );
   const selectClassSections = selectedClassData?.sections ?? [];
   const selectClassGroups = selectedClassData?.groupClasses ?? [];
+
+  // what this class studies, split the way a school thinks about it:
+  // compulsory, group-scoped, and religion
+  const classSubjectRows = (activeSession?.classSubjects ?? []).filter(
+    (subject) => subject.classId === selectedClass,
+  );
+  const compulsorySubjects = classSubjectRows.filter(
+    (subject) => !subject.isReligion && subject.groupId === null,
+  );
+  const religionSubjects = classSubjectRows.filter(
+    (subject) => subject.isReligion,
+  );
+  const groupSubjects = classSubjectRows.filter(
+    (subject) => !subject.isReligion && subject.groupId !== null,
+  );
+  const groupBuckets = Array.from(
+    groupSubjects.reduce<Map<string, AcademicSubjectType[]>>(
+      (buckets, subject) => {
+        const key = subject.groupName ?? "Other group";
+        const list = buckets.get(key) ?? [];
+        list.push(subject);
+        buckets.set(key, list);
+        return buckets;
+      },
+      new Map(),
+    ),
+  );
 
   useEffect(() => {
     form.setValue("className", "");
@@ -78,21 +113,22 @@ export default function AddStudent() {
     await handleCrudAction(addStudent, data, {
       successMessage: "Student Created Successfully",
       onSuccess: () => {
-        form.reset();
+        // the list and its stat cards are cached under this prefix, so they
+        // would otherwise still show the old counts until a hard reload
+        queryClient.invalidateQueries({ queryKey: ["page-Student"] });
+        form.reset({ ...form.formState.defaultValues, photoUrl: "" });
       },
     });
   };
   if (isPending) {
-    return <SpinnerCustom />;
+    return <PageSkeleton />;
   }
   return (
-    <div className="w-full mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Add New Student</h1>
-        <p className="text-sm text-muted-foreground">
-          Create a new student and enroll them into a class.
-        </p>
-      </div>
+    <main className="my-6 w-full max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
+      <PageHeader
+        title="Add student"
+        subtitle="Create a student record and enrol them into a class and section."
+      />
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(addBtn)}>
           {/* Academic Information */}
@@ -101,14 +137,11 @@ export default function AddStudent() {
               <CardTitle>Academic Information</CardTitle>
             </CardHeader>
 
-            <CardContent className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {/*------------Session----------- */}
-
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <Label>Session:</Label>
-                  <Input value={activeSession?.session?.year} disabled />
-                </div>
+              <div className="space-y-2">
+                <Label>Session</Label>
+                <Input value={activeSession?.session?.year ?? "—"} disabled />
               </div>
               {/*------------CLASS----------- */}
 
@@ -155,10 +188,12 @@ export default function AddStudent() {
                 control={form.control}
                 name="groupId"
                 label="Group"
-                options={selectClassGroups?.map((item) => ({
-                  label: item?.group.name,
-                  value: item?.group.id,
-                }))}
+                options={
+                  selectClassGroups?.map((item) => ({
+                    label: item?.group.name,
+                    value: item?.group.id,
+                  })) ?? []
+                }
               />
             </CardContent>
           </Card>
@@ -173,17 +208,23 @@ export default function AddStudent() {
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 {/*------------PHOTO----------- */}
 
-                <div className="flex flex-col items-center gap-3">
-                  <Avatar className="h-28 w-28">
-                    <AvatarImage />
-                    <AvatarFallback>Photo</AvatarFallback>
+                <div className="flex w-full flex-col items-center gap-3 sm:w-44">
+                  <Avatar className="size-24">
+                    {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
+                    <AvatarFallback className="bg-muted text-xs text-muted-foreground">
+                      Photo
+                    </AvatarFallback>
                   </Avatar>
 
-                  <Input
-                    {...form.register("photoUrl")}
-                    type="file"
-                    accept="image/*"
-                    className="max-w-55"
+                  {/* the DB column holds a URL, so this is a URL field. The old
+                      <input type="file"> handed a File object to a string
+                      column and failed validation on every submit. */}
+                  <FormInput
+                    control={form.control}
+                    name="photoUrl"
+                    label="Photo URL"
+                    placeholder="https://..."
+                    className="w-full"
                   />
                 </div>
                 {/*------------STUDENT ID----------- */}
@@ -191,7 +232,7 @@ export default function AddStudent() {
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
                     <Label>Student ID</Label>
-                    <Input value={"SID"} disabled />
+                    <Input value={studentId ?? ""} disabled />
                   </div>
                   {/*------------ENGLISH NAME----------- */}
 
@@ -239,9 +280,11 @@ export default function AddStudent() {
                     name="gender"
                     label="Gender"
                     options={[
-                      { label: "MALE", value: "MALE" },
-                      { label: "FEMALE", value: "FEMALE" },
-                      { label: "OTHERS", value: "OTHERS" },
+                      { label: "Male", value: "MALE" },
+                      { label: "Female", value: "FEMALE" },
+                      // the schema enum is OTHER, not OTHERS — this option used
+                      // to fail validation on submit
+                      { label: "Other", value: "OTHER" },
                     ]}
                   />
 
@@ -283,10 +326,58 @@ export default function AddStudent() {
             </CardContent>
           </Card>
 
+          {/* Subjects of the selected class — shown after the student fields
+              so the form reads top-to-bottom: who, then what they will study */}
+          {selectedClassData && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Subjects · {selectedClassData.name}</CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <SubjectList
+                  label="Compulsory"
+                  subjects={compulsorySubjects}
+                />
+
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Group subjects
+                  </p>
+                  {groupBuckets.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      This class has no group-based subjects.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {groupBuckets.map(([groupName, subjects]) => (
+                        <div
+                          key={groupName}
+                          className="flex flex-wrap items-center gap-2"
+                        >
+                          <span className="min-w-24 text-xs font-medium text-foreground">
+                            {groupName}
+                          </span>
+                          {subjects.map((subject) => (
+                            <SubjectChip key={subject.subjectId}>
+                              {subject.name}
+                            </SubjectChip>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <SubjectList label="Religion" subjects={religionSubjects} />
+              </CardContent>
+            </Card>
+          )}
+
           {/* {submit} */}
           <div className="flex justify-end gap-3">
-            <Button variant="outline">
-              <Link href={"/dashboard/students"}>Cancel</Link>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/students">Cancel</Link>
             </Button>
             <Button disabled={isSubmitting} type="submit">
               {isSubmitting && <Spinner />}
@@ -295,6 +386,39 @@ export default function AddStudent() {
           </div>
         </form>
       </FormProvider>
+    </main>
+  );
+}
+
+function SubjectChip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded border bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
+function SubjectList({
+  label,
+  subjects,
+}: {
+  label: string;
+  subjects: AcademicSubjectType[];
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      {subjects.length === 0 ? (
+        <p className="text-xs text-muted-foreground">None assigned.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {subjects.map((subject) => (
+            <SubjectChip key={subject.subjectId}>{subject.name}</SubjectChip>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

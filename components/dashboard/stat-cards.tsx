@@ -1,39 +1,120 @@
-import { Card } from "@/components/ui/card"
-import { cn } from "@/src/lib/utils"
-import { stats } from "@/src/lib/dashboard-data"
-import { TrendingDown, TrendingUp } from "lucide-react"
+import { Metric, metricValue } from "@/components/dashboard/metric";
+import { BookOpen, GraduationCap, LayoutGrid, Users } from "lucide-react";
+import type { DashboardCounts } from "@/app/dashboard/_actions/dashboard.action";
+import type { SectionCoverage } from "@/app/dashboard/_lib/attention";
 
-export function StatCards() {
+type StatCardsProps = {
+  counts?: DashboardCounts;
+  coverage?: SectionCoverage;
+  /** completed units over all units, across every exam in the institute */
+  marks?: { units: number; completedUnits: number; completion: number } | null;
+};
+
+export function StatCards({ counts, coverage, marks }: StatCardsProps) {
+  const uncovered = coverage?.withoutClassTeacher ?? 0;
+  const units = marks?.units ?? 0;
+
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
-      {stats.map((stat) => (
-        <Card key={stat.label} className="gap-0 p-5">
-          <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-            {stat.value}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Metric
+        label="Students"
+        value={metricValue(counts?.students)}
+        icon={Users}
+        segments={
+          counts && counts.students > 0
+            ? [
+                { value: counts.maleStudents, className: "bg-foreground" },
+                {
+                  value: counts.femaleStudents,
+                  className: "bg-foreground/30",
+                },
+              ]
+            : undefined
+        }
+        footer={
+          <p className="text-xs text-muted-foreground">
+            {counts && counts.students > 0
+              ? `${counts.maleStudents} boys · ${counts.femaleStudents} girls`
+              : "No students enrolled yet"}
           </p>
-          <div className="mt-3 flex items-center gap-1.5">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium",
-                stat.trend === "up"
-                  ? "bg-chart-3/10 text-chart-3"
-                  : "bg-destructive/10 text-destructive",
-              )}
-            >
-              {stat.trend === "up" ? (
-                <TrendingUp className="size-3" />
-              ) : (
-                <TrendingDown className="size-3" />
-              )}
-              {stat.delta}
+        }
+      />
+
+      <Metric
+        label="Teachers"
+        value={metricValue(counts?.teachers)}
+        icon={GraduationCap}
+        segments={
+          coverage && coverage.sections > 0
+            ? [
+                {
+                  value: coverage.withClassTeacher,
+                  className: "bg-foreground",
+                },
+                {
+                  value: coverage.withoutClassTeacher,
+                  className: "bg-destructive/50",
+                },
+              ]
+            : undefined
+        }
+        footer={
+          <p className="text-xs text-muted-foreground">
+            {coverage
+              ? uncovered === 0
+                ? "Every section has a class teacher"
+                : `${uncovered} of ${coverage.sections} sections uncovered`
+              : "Coverage unavailable"}
+          </p>
+        }
+      />
+
+      <Metric
+        label="Classes"
+        value={metricValue(counts?.classes)}
+        icon={LayoutGrid}
+        footer={
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>
+              <span className="font-medium tabular-nums text-foreground">
+                {metricValue(counts?.sections)}
+              </span>{" "}
+              sections
             </span>
-            <span className="text-xs text-muted-foreground">{stat.hint}</span>
+            <span>
+              <span className="font-medium tabular-nums text-foreground">
+                {metricValue(counts?.subjects)}
+              </span>{" "}
+              subjects
+            </span>
           </div>
-        </Card>
-      ))}
+        }
+      />
+
+      <Metric
+        label="Papers entered"
+        value={units > 0 ? `${marks?.completion ?? 0}%` : "—"}
+        icon={BookOpen}
+        segments={
+          units > 0
+            ? [
+                {
+                  value: marks?.completedUnits ?? 0,
+                  className: "bg-foreground",
+                },
+              ]
+            : undefined
+        }
+        footer={
+          <p className="text-xs text-muted-foreground">
+            {units > 0
+              ? `${marks?.completedUnits} of ${units} exam papers`
+              : "No papers configured yet"}
+          </p>
+        }
+      />
     </div>
-  )
+  );
 }
 
 // Real counts for one institute, passed in so the caller owns the query.
@@ -44,28 +125,3 @@ export type StudentStats = {
   classes: number;
   sections: number;
 };
-
-export function StudentStatCards({ stats }: { stats: StudentStats }) {
-  const cards = [
-    { label: "Total Students", value: stats.total, hint: "all enrollments" },
-    { label: "Active", value: stats.active, hint: "currently enrolled" },
-    { label: "Inactive", value: stats.inactive, hint: "no longer enrolled" },
-    { label: "Classes", value: stats.classes, hint: "with students" },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
-      {cards.map((card) => (
-        <Card key={card.label} className="gap-0 p-5">
-          <p className="text-sm font-medium text-muted-foreground">
-            {card.label}
-          </p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-            {card.value}
-          </p>
-          <p className="mt-3 text-xs text-muted-foreground">{card.hint}</p>
-        </Card>
-      ))}
-    </div>
-  );
-}

@@ -1,31 +1,21 @@
 "use client";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/utils/utils";
+import { Input } from "@/components/ui/input";
+import { Mars, Search, UserCheck, Users, Venus } from "lucide-react";
+
+import { Teacherlist, TeacherStatsResponse } from "@/src/validation/teacher.zod";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";
-
-import {
-  Teacherlist,
-  TeacherStatsResponse,
-} from "@/src/validation/teacher.zod";
-import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
-import Title from "@/components/Title";
-import TeacherStats from "@/components/dashboard/teachers/teacher-card";
-import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
-import { SpinnerCustom } from "@/components/Spinner";
-
-import { AppTable } from "@/components/table/data-table";
+import { PageSkeleton } from "@/components/dashboard/page-skeleton";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { Metric, metricValue } from "@/components/dashboard/metric";
+import { DataTable } from "@/components/table/tanstack/data-table";
+import { teacherColumns } from "./_table/columns";
 import { useQuery } from "@tanstack/react-query";
 import { getTeacher, getTeacherStats } from "./_actions/teacher.action";
 
 export default function Teacherpage() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const itemsPerPage = 6;
+  const [search, setSearch] = useState("");
 
   // ------------- query fn ---------------
   const { data: teachers = [], isPending } = useQuery<Teacherlist[]>({
@@ -38,178 +28,115 @@ export default function Teacherpage() {
       return result.data as Teacherlist[];
     },
   });
-  const { data: statlist, isPending: isLoading } =
+
+  const { data: stats, isPending: isLoadingStats } =
     useQuery<TeacherStatsResponse>({
       queryKey: ["statlist"],
       queryFn: async () => {
         const result = await getTeacherStats();
         if (!result.success) {
-          throw new Error(result.error);
-        } else {
-          return result as TeacherStatsResponse;
+          throw new Error(result.error ?? "Failed to load teacher stats");
         }
+        return result as TeacherStatsResponse;
       },
     });
-  const totalPages = Math.ceil((teachers?.length ?? 0) / itemsPerPage);
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
-
-  if (isPending || isLoading) {
-    return <SpinnerCustom />;
+  if (isPending || isLoadingStats) {
+    return <PageSkeleton />;
   }
+
+  const rows = teachers ?? [];
+  const data = stats?.data;
+  const inactive = (data?.totalTeachers ?? 0) - (data?.activeTeachers ?? 0);
+
   return (
-    <div className="w-full max-w-7xl space-y-6 my-8 mx-auto px-4 sm:px-6 lg:px-8">
-      <Title title="Teacher Management" />
-      <p className="text-muted-foreground ">
-        Manage teaching staff, assignments, and contact details.
-      </p>
-      <div>{statlist && <TeacherStats stats={statlist} />}</div>
-      {/* Main Card */}
-      <Card className="pb-0 gap-0">
-        {/* Table */}
+    <main className="my-6 w-full max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
+      <PageHeader
+        title="Teachers"
+        subtitle={
+          data
+            ? `${metricValue(data.totalTeachers)} staff · ${data.activeTeachers} active`
+            : "Teaching staff and contact details."
+        }
+        actions={<AddTeacher />}
+      />
 
-        <AppTable
-          data={teachers ?? []}
-          searchable
-          searchPlaceholder="Search teachers..."
-          searchKeys={[
-            "nameEnglish",
-            "nameBangla",
-            "email",
-            "mobile",
-            "designation",
-          ]}
-          selectable
-          selectedIds={selectedUsers}
-          onSelectionChange={setSelectedUsers}
-          toolbar={
-            <>
-              <AddTeacher />
-            </>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Metric
+          label="Total teachers"
+          value={metricValue(data?.totalTeachers)}
+          icon={Users}
+          segments={
+            data && data.totalTeachers > 0
+              ? [
+                  { value: data.activeTeachers, className: "bg-foreground" },
+                  { value: inactive, className: "bg-foreground/30" },
+                ]
+              : undefined
           }
-          columns={[
-            {
-              key: "nameEnglish",
-              label: "Teacher Name",
-              render: (teacher) => (
-                <div className="flex items-center gap-3">
-                  <Avatar className="size-10">
-                    <AvatarImage
-                      src={teacher.photoUrl ?? ""}
-                      alt={teacher.nameEnglish}
-                    />
-
-                    <AvatarFallback>
-                      {getInitials(teacher.nameEnglish)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div>
-                    <div className="font-medium">{teacher.nameBangla}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {teacher.nameEnglish}
-                    </div>
-                  </div>
-                </div>
-              ),
-            },
-
-            {
-              key: "designation",
-              label: "Designation",
-            },
-
-            {
-              key: "gender",
-              label: "Gender",
-            },
-
-            {
-              key: "email",
-              label: "Email",
-            },
-
-            {
-              key: "status",
-              label: "Status",
-              render: (teacher) =>
-                teacher.status === "ACTIVE" ? (
-                  <Badge variant="outline">Active</Badge>
-                ) : (
-                  <span className="text-muted-foreground">-</span>
-                ),
-            },
-
-            {
-              key: "mobile",
-              label: "Phone",
-            },
-
-            {
-              key: "actions",
-              label: "Actions",
-              render: (teacher) => (
-                <div className="flex gap-2">
-                  <EditTeachers user={teacher} />
-                  <DeleteTeacher user={teacher} />
-                </div>
-              ),
-            },
-          ]}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              {data
+                ? `${data.activeTeachers} active · ${inactive} inactive`
+                : "No staff yet"}
+            </p>
+          }
         />
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t border-border">
-          <div className="text-sm text-muted-foreground">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, teachers?.length ?? 0)} of{" "}
-            {teachers?.length ?? 0} entries
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="h-9 w-9 cursor-pointer"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="icon"
-                onClick={() => setCurrentPage(page)}
-                className={cn(
-                  "h-9 w-9",
-                  currentPage === page && "bg-primary",
-                  "cursor-pointer",
-                )}
-              >
-                {page}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, currentPage + 1))
-              }
-              disabled={currentPage === totalPages}
-              className="h-9 w-9 cursor-pointer"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        <Metric
+          label="Active"
+          value={metricValue(data?.activeTeachers)}
+          icon={UserCheck}
+          footer={
+            <p className="text-xs text-muted-foreground">currently employed</p>
+          }
+        />
+
+        <Metric
+          label="Male"
+          value={metricValue(data?.maleTeachers)}
+          icon={Mars}
+          footer={<p className="text-xs text-muted-foreground">of all staff</p>}
+        />
+
+        <Metric
+          label="Female"
+          value={metricValue(data?.femaleTeachers)}
+          icon={Venus}
+          footer={<p className="text-xs text-muted-foreground">of all staff</p>}
+        />
+      </div>
+
+      <Card className="gap-0 overflow-hidden p-0">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">All teachers</h2>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+            {rows.length}
+          </span>
+          <p className="text-xs text-muted-foreground sm:ml-auto">
+            Search by name, email, phone or designation
+          </p>
         </div>
+
+        <DataTable
+          columns={teacherColumns}
+          data={rows}
+          globalFilter={search}
+          toolbar={() => (
+            <div className="px-4 py-3">
+              <div className="relative max-w-sm">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search teachers..."
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          )}
+        />
       </Card>
-    </div>
+    </main>
   );
 }

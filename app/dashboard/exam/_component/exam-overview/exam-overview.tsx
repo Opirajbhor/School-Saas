@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
-  Calendar,
   BookOpen,
   Layers,
   Users,
@@ -12,17 +11,8 @@ import { getSingleExamData } from "../../_actions/examOverview.action";
 import { ExamOverViewType } from "../../_schema/exam.zod";
 import ExamDashboard from "./exam-dashboard";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -31,9 +21,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const CARD_ICON =
-  "flex size-10 shrink-0 items-center justify-center rounded-lg";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { Metric, metricValue } from "@/components/dashboard/metric";
+import { StatusPill } from "@/components/dashboard/status-pill";
 
 export default async function ExamOverview({ id }: { id: string }) {
   const result = await getSingleExamData(id);
@@ -59,183 +50,130 @@ export default async function ExamOverview({ id }: { id: string }) {
   }
 
   const classRows = currentData.assignClasses ?? [];
+
   const totalSections = classRows.reduce(
     (sum, row) => sum + (row.class?.sections?.length ?? 0),
-    0,
-  );
-  const totalSubjects = classRows.reduce(
-    (sum, row) => sum + (row.class?.subjects?.length ?? 0),
     0,
   );
   const totalStudents = classRows.reduce(
     (sum, row) => sum + (row.class?.students?.length ?? 0),
     0,
   );
+  // one paper per class–subject pair; the same subject in two classes is two
+  // mark sheets to enter
+  const totalPapers = classRows.reduce(
+    (sum, row) => sum + (row.class?.subjects?.length ?? 0),
+    0,
+  );
   const activeClasses = classRows.filter(
     (row) => row.status === "ACTIVE",
   ).length;
-  const activePercentage =
-    classRows.length > 0
-      ? Math.round((activeClasses / classRows.length) * 100)
-      : 0;
-  const sectionNames = classRows
-    .flatMap((row) => row.class?.sections ?? [])
-    .map((section) => section.name);
-
-  const stats = [
-    {
-      label: "Assigned Classes",
-      value: classRows.length,
-      subtext: `${activeClasses} active`,
-      icon: <BookOpen size={18} />,
-    },
-    {
-      label: "Total Sections",
-      value: totalSections,
-      subtext: sectionNames.join(", ") || "—",
-      icon: <Layers size={18} />,
-    },
-    {
-      label: "Total Students",
-      value: totalStudents,
-      subtext: `${totalSubjects} subjects assigned`,
-      icon: <Users size={18} />,
-    },
-  ];
+  const inactiveClasses = classRows.length - activeClasses;
 
   return (
-    <div className="min-h-screen bg-background p-6 text-foreground md:p-8">
-      <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header Section */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-start gap-4">
-              <div
-                className={`${CARD_ICON} bg-primary text-primary-foreground`}
+    <main className="my-6 w-full max-w-6xl space-y-4 px-4 sm:px-6 lg:px-8">
+      <PageHeader
+        title={currentData.name}
+        subtitle={`Created ${formatDateTime(currentData.createdAt)} · updated ${formatDateTime(
+          currentData.updatedAt,
+        )}`}
+        actions={
+          <div className="flex items-center gap-2">
+            <StatusPill status={currentData.status} />
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard/exam">
+                <ArrowLeft />
+                Exams
+              </Link>
+            </Button>
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Metric
+          label="Classes"
+          value={metricValue(classRows.length)}
+          icon={BookOpen}
+          segments={
+            classRows.length > 0
+              ? [
+                  { value: activeClasses, className: "bg-foreground" },
+                  { value: inactiveClasses, className: "bg-foreground/25" },
+                ]
+              : undefined
+          }
+          footer={
+            <p className="text-xs text-muted-foreground">
+              {activeClasses} active
+            </p>
+          }
+        />
+
+        <Metric
+          label="Sections"
+          value={metricValue(totalSections)}
+          icon={Layers}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              across {classRows.length} classes
+            </p>
+          }
+        />
+
+        <Metric
+          label="Students"
+          value={metricValue(totalStudents)}
+          icon={Users}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              enrolled in these classes
+            </p>
+          }
+        />
+
+        <Metric
+          label="Subject papers"
+          value={metricValue(totalPapers)}
+          icon={BookOpen}
+          footer={
+            <p className="text-xs text-muted-foreground">
+              mark sheets to enter
+            </p>
+          }
+        />
+      </div>
+
+      <Card className="gap-0 overflow-hidden p-0">
+        <Tabs defaultValue="classes">
+          <div className="border-b px-4">
+            <TabsList variant="line" className="h-auto bg-transparent p-0">
+              <TabsTrigger
+                value="classes"
+                className="cursor-pointer px-3 py-2.5 text-sm"
               >
-                <BookOpen size={20} />
-              </div>
-              <div className="space-y-1">
-                <CardTitle className="text-xl">{currentData.name}</CardTitle>
-                <CardDescription className="flex flex-wrap items-center gap-2 text-xs">
-                  <Calendar size={14} />
-                  <span>Created {formatDateTime(currentData.createdAt)}</span>
-                  <span className="text-muted-foreground/50">•</span>
-                  <span>Updated {formatDateTime(currentData.updatedAt)}</span>
-                </CardDescription>
-              </div>
-            </div>
-            <CardAction className="flex items-center gap-2">
-              <StatusBadge status={currentData.status} />
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard/exam">
-                  <ArrowLeft />
-                  Back to Exams
-                </Link>
-              </Button>
-            </CardAction>
-          </CardHeader>
-        </Card>
+                Classes
+              </TabsTrigger>
+              <TabsTrigger
+                value="progress"
+                className="cursor-pointer px-3 py-2.5 text-sm"
+              >
+                Mark entry progress
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <Card key={stat.label}>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`${CARD_ICON} bg-muted text-muted-foreground`}
-                  >
-                    {stat.icon}
-                  </div>
-                  <CardDescription className="text-sm font-medium">
-                    {stat.label}
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-foreground">
-                  {stat.value}
-                </p>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {stat.subtext}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Active Classes Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className={`${CARD_ICON} bg-muted text-muted-foreground`}>
-                  <BookOpen size={18} />
-                </div>
-                <CardDescription className="text-sm font-medium">
-                  Active Classes
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between gap-4">
-              <div className="flex items-baseline gap-1">
-                <p className="text-2xl font-bold text-foreground">
-                  {activeClasses}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  / {classRows.length}
-                </p>
-              </div>
-              <div className="flex flex-1 flex-col items-end gap-1.5">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${activePercentage}%` }}
-                  />
-                </div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  {activePercentage}% active
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Table Section */}
-        <Card className="gap-0 py-0">
-          <Tabs defaultValue="classes">
-            <div className="border-b border-border px-4">
-              <TabsList variant="line" className="h-auto bg-transparent p-0">
-                <TabsTrigger value="classes" className="px-3 py-3">
-                  Classes Overview
-                </TabsTrigger>
-                <TabsTrigger value="progress" className="px-3 py-3">
-                  Mark Entry Progress
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="classes" className="mt-0">
+          <TabsContent value="classes" className="mt-0">
+            <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/50">
+                <TableHeader>
                   <TableRow>
-                    <TableHead className="px-4 text-xs uppercase">
-                      Class
-                    </TableHead>
-                    <TableHead className="px-4 text-xs uppercase">
-                      Sections
-                    </TableHead>
-                    <TableHead className="px-4 text-center text-xs uppercase">
-                      Subjects
-                    </TableHead>
-                    <TableHead className="px-4 text-center text-xs uppercase">
-                      Students
-                    </TableHead>
-                    <TableHead className="px-4 text-xs uppercase">
-                      Status
-                    </TableHead>
-                    <TableHead className="px-4 text-xs uppercase">
-                      Action
-                    </TableHead>
+                    <TableHead className="px-4">Class</TableHead>
+                    <TableHead className="px-4">Sections</TableHead>
+                    <TableHead className="px-4 text-center">Papers</TableHead>
+                    <TableHead className="px-4 text-center">Students</TableHead>
+                    <TableHead className="px-4">Status</TableHead>
+                    <TableHead className="px-4" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -243,7 +181,7 @@ export default async function ExamOverview({ id }: { id: string }) {
                     <TableRow>
                       <TableCell
                         colSpan={6}
-                        className="py-8 text-center text-muted-foreground"
+                        className="h-32 text-center text-sm text-muted-foreground"
                       >
                         No classes assigned to this exam yet.
                       </TableCell>
@@ -254,26 +192,26 @@ export default async function ExamOverview({ id }: { id: string }) {
                       <TableCell className="px-4 font-medium text-foreground">
                         {row.class?.name ?? "—"}
                       </TableCell>
-                      <TableCell className="px-4 text-muted-foreground">
+                      <TableCell className="px-4 text-xs text-muted-foreground">
                         {row.class?.sections?.map((s) => s.name).join(", ") ||
                           "—"}
                       </TableCell>
-                      <TableCell className="px-4 text-center">
+                      <TableCell className="px-4 text-center tabular-nums">
                         {row.class?.subjects?.length ?? 0}
                       </TableCell>
-                      <TableCell className="px-4 text-center">
+                      <TableCell className="px-4 text-center tabular-nums">
                         {row.class?.students?.length ?? 0}
                       </TableCell>
                       <TableCell className="px-4">
-                        <StatusBadge status={row.status} />
+                        <StatusPill status={row.status} />
                       </TableCell>
-                      <TableCell className="px-4">
-                        <Button variant="outline" size="xs" asChild>
+                      <TableCell className="px-4 text-right">
+                        <Button variant="outline" size="sm" asChild>
                           <Link
                             href={`/dashboard/exam/mark-input?examId=${currentData.id}&classId=${row.classId}`}
                           >
-                            Enter Marks
-                            <ArrowRight data-icon="inline-end" />
+                            Enter marks
+                            <ArrowRight />
                           </Link>
                         </Button>
                       </TableCell>
@@ -281,17 +219,15 @@ export default async function ExamOverview({ id }: { id: string }) {
                   ))}
                 </TableBody>
               </Table>
-            </TabsContent>
+            </div>
+          </TabsContent>
 
-            <TabsContent value="progress" className="mt-0">
-              <div className="p-4">
-                <ExamDashboard examId={currentData.id} />
-              </div>
-            </TabsContent>
-          </Tabs>
-        </Card>
-      </div>
-    </div>
+          <TabsContent value="progress" className="mt-0 p-4">
+            <ExamDashboard examId={currentData.id} />
+          </TabsContent>
+        </Tabs>
+      </Card>
+    </main>
   );
 }
 
@@ -304,16 +240,4 @@ function formatDateTime(value: Date | string | null | undefined) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-// --- Reusable Status Badge ---
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <Badge
-      variant={status === "ACTIVE" ? "default" : "secondary"}
-      className="h-auto px-2.5 py-0.5 text-[11px] font-semibold"
-    >
-      {status === "ACTIVE" ? "Active" : "Inactive"}
-    </Badge>
-  );
 }

@@ -35,4 +35,12 @@ export async function loginAction(data: LogInType) {
     }
     redirect("/dashboard");
   }
+
+  // wrong credentials used to return undefined, which left the form looking like
+  // the button did nothing
+  return {
+    success: false as const,
+    error: "Invalid email or password",
+    details: {},
+  };
 }

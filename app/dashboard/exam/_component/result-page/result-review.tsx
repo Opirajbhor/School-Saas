@@ -200,7 +200,8 @@ export default function ResultReview({
           <DialogHeader>
             <DialogTitle>Publish these results?</DialogTitle>
             <DialogDescription>
-              The sheet is frozen as a snapshot and the exam's marks are locked.
+              The sheet is frozen as a snapshot and the exam&apos;s marks are
+              locked.
               {!ready && " Results are incomplete — publishing will record them as they stand."}
             </DialogDescription>
           </DialogHeader>

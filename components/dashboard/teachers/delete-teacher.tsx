@@ -15,9 +15,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangleIcon } from "lucide-react";
+import { AlertTriangleIcon, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { RiDeleteBin6Line } from "react-icons/ri";
 import { toast } from "sonner";
 
 export interface DeleteTeacherProps {
@@ -45,8 +44,13 @@ export default function DeleteTeacher({ user }: DeleteTeacherProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" className="cursor-pointer">
-          <RiDeleteBin6Line />
+        <Button
+          size="sm"
+          variant="outline"
+          className="cursor-pointer text-destructive hover:text-destructive"
+          aria-label="Delete teacher"
+        >
+          <Trash2 />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
