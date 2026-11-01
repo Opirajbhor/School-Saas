@@ -1,6 +1,6 @@
 import { type Column, type RowData } from "@tanstack/react-table";
 import { cn } from "cn";
-import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
+import { IoArrowDownOutline as ArrowDown, IoArrowUpOutline as ArrowUp, IoSwapVerticalOutline as ChevronsUpDown } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import {

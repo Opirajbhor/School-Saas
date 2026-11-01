@@ -400,7 +400,13 @@ export type OutputExamResultType = {
   exam: { id: string; name: string; markWorkflow: MarkWorkflow };
   class: { id: string; name: string };
   /** every subject that was graded, in display order */
-  subjects: { id: string; name: string; fullMark: number }[];
+  subjects: {
+    id: string;
+    name: string;
+    /** short label for the table header */
+    shortName?: string;
+    fullMark: number;
+  }[];
   students: {
     enrollmentId: string;
     studentId: string;

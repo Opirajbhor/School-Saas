@@ -15,7 +15,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangleIcon, Trash2 } from "lucide-react";
+import { FcEmptyTrash as Trash2 } from "react-icons/fc";
+import { IoWarningOutline as AlertTriangleIcon } from "react-icons/io5";
 import { useState } from "react";
 import { toast } from "sonner";
 

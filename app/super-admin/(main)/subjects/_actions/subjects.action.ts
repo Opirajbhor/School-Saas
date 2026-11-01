@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
+import { ValidationResult } from "@/src/validation/validator.zod";
 import {
   ClassSubjectsType,
   combineSubjectsZod,
@@ -25,19 +26,16 @@ import { compareClassName } from "@/src/validation/classes.zod";
 // get Default Subjects
 export async function getDefaultSubjects() {
   try {
-    const result = await readMany({
-      drizzleSchema: subjectDbSchema,
-      query: ({ db }) =>
-        db.query.subjectDbSchema.findMany({
-          where: isNull(subjectDbSchema.instituteId),
-          orderBy: (subjectDbSchema, { asc }) => [
-            asc(subjectDbSchema.createdAt),
-          ],
-        }),
+    // direct read: readMany() needs a tenant teacher row, and a superadmin has
+    // no institute to resolve one from
+    const rows = await db.query.subjectDbSchema.findMany({
+      where: isNull(subjectDbSchema.instituteId),
+      orderBy: (table, { asc }) => [asc(table.createdAt)],
     });
+
     return {
       success: true as const,
-      data: result.data as OutputSubjectType[],
+      data: rows as OutputSubjectType[],
     };
   } catch (error) {
     return {
@@ -350,11 +348,14 @@ export async function getDefaultAssignSubjects() {
       orderBy: (t, { asc }) => [asc(t.createdAt)],
     });
 
-    // Group by class + group (composite key)
     const subjects = result
       .filter((row) => row.class && row.subject)
       .map((row) => ({
+        // the ids are needed by the unassign action; the composite id stays for
+        // table row keys
         id: `${row.class!.id}-${row.subject!.id}`,
+        classId: row.class!.id,
+        subjectId: row.subject!.id,
         className: row.class!.name,
         groupName: row.group?.name ?? "",
         subjectName: row.subject!.name,
@@ -370,22 +371,11 @@ export async function getDefaultAssignSubjects() {
   }
 }
 
-// ------------subject assignment *** custom server action-----------
-export async function subjectAssignment(data: inputSubAssignType) {
-  const { subjectIds, ...rest } = data;
-
-  // ----Validate that at least one subject was selected-------.
-  if (!subjectIds.length) {
-    return {
-      success: false as const,
-      error: "Please select at least one subject",
-      details: {},
-    };
-  }
-
-  // Assignment is a platform-wide default when a superadmin runs it from
-  // /super-admin (matching getDefaultAssignSubjects, which filters
-  // instituteId IS NULL), and an institute-scoped row on the tenant dashboard.
+/** Remove one class↔subject pair. Defaults for a superadmin, tenant rows for an institute. */
+export async function unassignSubject(input: {
+  classId: string;
+  subjectId: string;
+}): Promise<ValidationResult<number>> {
   const ctx = await getUserContext();
   if (!ctx) {
     return {
@@ -394,32 +384,119 @@ export async function subjectAssignment(data: inputSubAssignType) {
       details: {},
     };
   }
-  const instituteId = ctx.role === "superadmin" ? null : ctx.instituteId;
 
   try {
-    const result = await db.transaction(async (tx) => {
-      return await Promise.all(
-        subjectIds.map(async (subjectId) => {
-          const payload = {
-            instituteId,
-            classId: rest.classId,
-            groupId: rest.groupId,
-            // the column is subject_type; writing subjectType here silently
-            // dropped the choice and left every row on the COMPULSORY default
-            subject_type: rest.subject_type,
-            isOptional: rest.isOptional,
-            isReligion: rest.isReligion,
-            subjectId,
-            status: "ACTIVE" as const,
-          };
-          const [data] = await tx
-            .insert(subjectAssignSchema)
-            .values(payload)
-            .returning();
-          return data;
-        }),
-      );
-    });
+    const scope =
+      ctx.role === "superadmin"
+        ? isNull(subjectAssignSchema.instituteId)
+        : eq(subjectAssignSchema.instituteId, ctx.instituteId);
+
+    const deleted = await db
+      .delete(subjectAssignSchema)
+      .where(
+        and(
+          eq(subjectAssignSchema.classId, input.classId),
+          eq(subjectAssignSchema.subjectId, input.subjectId),
+          scope,
+        ),
+      )
+      .returning({ id: subjectAssignSchema.id });
+
+    if (deleted.length === 0) {
+      return {
+        success: false as const,
+        error: "That assignment no longer exists",
+        details: {},
+      };
+    }
+
+    revalidatePath("/super-admin/subjects/assignment");
+    return { success: true as const, data: deleted.length };
+  } catch (error) {
+    console.error("unassignSubject failed:", error);
+    return { success: false as const, error: "Failed to unassign", details: {} };
+  }
+}
+
+// ------------subject assignment *** custom server action-----------
+export async function subjectAssignment(data: inputSubAssignType) {
+  const { subjectIds, ...rest } = data;
+
+  if (!subjectIds.length) {
+    return {
+      success: false as const,
+      error: "Please select at least one subject",
+      details: {},
+    };
+  }
+
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session found",
+      details: {},
+    };
+  }
+
+  // platform default when a superadmin runs it from /super-admin, tenant row on
+  // the institute dashboard
+  const instituteId = ctx.role === "superadmin" ? null : ctx.instituteId;
+  const scope =
+    instituteId === null
+      ? isNull(subjectAssignSchema.instituteId)
+      : eq(subjectAssignSchema.instituteId, instituteId);
+
+  // A compulsory paper is taken by every student of the class, so it must not
+  // carry a group — result-calculator keeps groupId NULL for everyone and
+  // filters anything else against the student's own group.
+  const groupId =
+    rest.subject_type === "GROUP_BASED" ? (rest.groupId ?? null) : null;
+
+  try {
+    // (class_id, group_id, subject_id) is unique, but Postgres treats NULLs as
+    // distinct, so re-assigning a compulsory subject would insert duplicates.
+    // diff against what already exists instead.
+    const existing = await db
+      .select({
+        subjectId: subjectAssignSchema.subjectId,
+        groupId: subjectAssignSchema.groupId,
+      })
+      .from(subjectAssignSchema)
+      .where(and(eq(subjectAssignSchema.classId, rest.classId), scope));
+
+    const taken = new Set(
+      existing.map((row) => `${row.subjectId}:${row.groupId ?? ""}`),
+    );
+    const fresh = subjectIds.filter(
+      (subjectId) => !taken.has(`${subjectId}:${groupId ?? ""}`),
+    );
+
+    if (fresh.length === 0) {
+      return {
+        success: false as const,
+        error: "Those subjects are already assigned to this class",
+        details: {},
+      };
+    }
+
+    const result = await db
+      .insert(subjectAssignSchema)
+      .values(
+        fresh.map((subjectId) => ({
+          instituteId,
+          classId: rest.classId,
+          groupId,
+          // the column is subject_type; writing subjectType silently dropped the
+          // choice and left every row on the COMPULSORY default
+          subject_type: rest.subject_type,
+          isOptional: rest.isOptional,
+          isReligion: rest.isReligion,
+          subjectId,
+          status: "ACTIVE" as const,
+        })),
+      )
+      .returning();
 
     revalidatePath("/dashboard/subjects/assignment");
     revalidatePath("/super-admin/subjects/assignment");

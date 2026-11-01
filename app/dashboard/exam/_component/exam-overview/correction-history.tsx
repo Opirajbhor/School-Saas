@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, History } from "lucide-react";
+import { FcTimeline as History } from "react-icons/fc";
+import { IoChevronDownOutline as ChevronDown } from "react-icons/io5";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

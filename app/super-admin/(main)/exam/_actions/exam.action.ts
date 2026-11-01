@@ -21,7 +21,6 @@ import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
 import { db } from "@/src/drizzle-DB";
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import {
   examZod,
   InputExamType,
@@ -35,23 +34,21 @@ import {
 // =============== Exam ================
 export async function getDefaultExams() {
   try {
-    const result = await readMany({
-      drizzleSchema: exams,
-      query: ({ db }) =>
-        db.query.exams.findMany({
-          where: isNull(exams.instituteId),
+    // platform exams are the institute_id NULL rows; readMany() needs a user
+    // context (and a teachers row), which a superadmin does not have
+    const rows = await db.query.exams.findMany({
+      where: isNull(exams.instituteId),
+      with: {
+        assignClasses: {
           with: {
-            assignClasses: {
-              with: {
-                class: true,
-              },
-            },
+            class: true,
           },
-          orderBy: (exams, { asc }) => [asc(exams.createdAt)],
-        }),
+        },
+      },
+      orderBy: (exams, { asc }) => [asc(exams.createdAt)],
     });
 
-    const rawData = result.data as OutputExamType[];
+    const rawData = rows as OutputExamType[];
     const data = rawData.map((exam) => ({
       ...exam,
       assignClasses: exam.assignClasses
@@ -86,8 +83,7 @@ export async function postExams(data: InputExamType) {
       data,
     );
 
-    revalidatePath("/super-admn/exam/create");
-    revalidatePath("/dashboard/exam/create");
+    revalidatePath("/super-admin/exam");
 
     return { success: true as const, data: result };
   } catch (error) {
@@ -117,8 +113,7 @@ export async function ToggleExamStatus(id: string) {
         .where(eq(exams.id, id))
         .returning();
     });
-    revalidatePath("/super-admn/exam/create");
-    revalidatePath("/dashboard/exam/create");
+    revalidatePath("/super-admin/exam");
     return { success: true as const, data: result };
   } catch (error) {
     console.error("change exam  status failed:", error);
@@ -185,7 +180,6 @@ export async function assignExamToClasses(data: InputExamMarkType) {
         );
       }
       revalidatePath("/super-admin/exam");
-      revalidatePath("/super-admin/exam/create");
       revalidatePath("/dashboard/exam");
     });
     return {
@@ -207,19 +201,15 @@ export async function assignExamToClasses(data: InputExamMarkType) {
 // get Default exam mark types
 export async function getDefaultMarkTypes() {
   try {
-    const result = await readMany({
-      drizzleSchema: examMarkTypesDrizzle,
-      query: ({ db }) =>
-        db.query.examMarkTypesDrizzle.findMany({
-          where: isNull(examMarkTypesDrizzle.instituteId),
-          orderBy: (examMarkTypesDrizzle, { asc }) => [
-            asc(examMarkTypesDrizzle.createdAt),
-          ],
-        }),
+    const rows = await db.query.examMarkTypesDrizzle.findMany({
+      where: isNull(examMarkTypesDrizzle.instituteId),
+      orderBy: (examMarkTypesDrizzle, { asc }) => [
+        asc(examMarkTypesDrizzle.createdAt),
+      ],
     });
     return {
       success: true as const,
-      data: result.data as OutputExamMarkTypes[],
+      data: rows as OutputExamMarkTypes[],
     };
   } catch (error) {
     return {
@@ -242,7 +232,7 @@ export async function postMarkTypes(data: InputExamMarkTypes) {
       data,
     );
 
-    revalidatePath("/super-admn/exam/mark-types");
+    revalidatePath("/super-admin/exam/mark-types");
     revalidatePath("/dashboard/exam/mark-types");
 
     return { success: true as const, data: result };
@@ -274,7 +264,7 @@ export async function ToggleExamtypeStatus(id: string) {
         .where(eq(examMarkTypesDrizzle.id, id))
         .returning();
     });
-    revalidatePath("/super-admn/exam/mark-types");
+    revalidatePath("/super-admin/exam/mark-types");
     revalidatePath("/dashboard/exam/mark-types");
     return { success: true as const, data: result };
   } catch (error) {
@@ -293,19 +283,15 @@ export async function ToggleExamtypeStatus(id: string) {
 // get Default exam mark types
 export async function getDefaultGradeRange() {
   try {
-    const result = await readMany({
-      drizzleSchema: examGradeRangeDrizzle,
-      query: ({ db }) =>
-        db.query.examGradeRangeDrizzle.findMany({
-          where: isNull(examGradeRangeDrizzle.instituteId),
-          orderBy: (examGradeRangeDrizzle, { asc }) => [
-            asc(examGradeRangeDrizzle.createdAt),
-          ],
-        }),
+    const rows = await db.query.examGradeRangeDrizzle.findMany({
+      where: isNull(examGradeRangeDrizzle.instituteId),
+      orderBy: (examGradeRangeDrizzle, { asc }) => [
+        asc(examGradeRangeDrizzle.createdAt),
+      ],
     });
     return {
       success: true as const,
-      data: result.data as OutputExamGradeRangeType[],
+      data: rows as OutputExamGradeRangeType[],
     };
   } catch (error) {
     return {
@@ -329,7 +315,7 @@ export async function postGradeRange(data: InputExamGradeRangeType) {
       data,
     );
 
-    revalidatePath("/super-admn/exam/grade-ranges");
+    revalidatePath("/super-admin/exam/grade-ranges");
     revalidatePath("/dashboard/exam/grade-ranges");
 
     return { success: true as const, data: result };
@@ -362,7 +348,7 @@ export async function ToggleGradeRangeStatus(id: string) {
         .where(eq(examGradeRangeDrizzle.id, id))
         .returning();
     });
-    revalidatePath("/super-admn/exam/grade-ranges");
+    revalidatePath("/super-admin/exam/grade-ranges");
     revalidatePath("/dashboard/exam/grade-ranges");
     return { success: true as const, data: result };
   } catch (error) {
@@ -379,35 +365,22 @@ export async function ToggleGradeRangeStatus(id: string) {
 // server action — Fixed: remove the lying cast; let inference flow
 export async function getClassSubjectWithExamType(data: examClassSearchType) {
   try {
-    const [subjectsResult, markTypes] = await Promise.all([
-      readMany({
-        drizzleSchema: subjectAssignSchema,
-        query: ({ db }) =>
-          db.query.subjectAssignSchema.findMany({
-            where: and(
-              isNull(subjectAssignSchema.instituteId),
-              eq(subjectAssignSchema.classId, data.classId),
-            ),
-            with: { subject: true },
-            orderBy: (s, { asc }) => [asc(s.createdAt)],
-          }),
+    const [subjects, markTypesData] = await Promise.all([
+      db.query.subjectAssignSchema.findMany({
+        where: and(
+          isNull(subjectAssignSchema.instituteId),
+          eq(subjectAssignSchema.classId, data.classId),
+        ),
+        with: { subject: true },
+        orderBy: (s, { asc }) => [asc(s.createdAt)],
       }),
-      getDefaultMarkTypes(),
+      getDefaultMarkTypes().then((res) => (res.success ? res.data : [])),
     ]);
 
-    if (!subjectsResult.success) {
-      return {
-        success: false as const,
-        error: "Failed to get subjects",
-        details: {},
-      };
-    }
-
     // Fixed: subjectsResult.data is already the correct row shape
-    const subjects = subjectsResult.data as ClassesSubjectsType[];
-    const markTypesData = markTypes.success ? markTypes.data : [];
+    const subjectRows = subjects as ClassesSubjectsType[];
 
-    const combined: ClassSubjectRowType[] = subjects.map((subject) => ({
+    const combined: ClassSubjectRowType[] = subjectRows.map((subject) => ({
       id: subject.id,
       classId: subject.classId,
       groupId: subject.groupId,

@@ -4,7 +4,10 @@ import { DataTableFeatures } from "@/components/table/tanstack/data-table-featur
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { createColumnHelper } from "@tanstack/react-table";
+import Link from "next/link";
+import { FcGraduationCap as GraduationCap } from "react-icons/fc";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import EditTeachers from "@/components/dashboard/teachers/edit-teachers";
 import DeleteTeacher from "@/components/dashboard/teachers/delete-teacher";
@@ -118,7 +121,13 @@ export const teacherColumns = columnHelper.columns([
     id: "actions",
     header: "Actions",
     cell: ({ row }) => (
-      <div className="flex gap-2">
+      <div className="flex items-center justify-end gap-1">
+        <Button variant="ghost" size="icon-sm" asChild title="ID card">
+          <Link href={`/print/teachers/${row.original.id}/id-card`}>
+            <GraduationCap />
+            <span className="sr-only">ID card</span>
+          </Link>
+        </Button>
         <EditTeachers user={row.original} />
         <DeleteTeacher user={row.original} />
       </div>

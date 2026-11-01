@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Lock, LockOpen, Send, TriangleAlert } from "lucide-react";
+import { FcLock as Lock, FcUnlock as LockOpen } from "react-icons/fc";
+import { IoPaperPlaneOutline as Send, IoWarningOutline as TriangleAlert } from "react-icons/io5";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

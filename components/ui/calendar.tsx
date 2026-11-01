@@ -10,9 +10,7 @@ import {
 
 import { cn } from "@/utils/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react"
-
-function Calendar({
+import { IoChevronBackOutline as ChevronLeftIcon, IoChevronDownOutline as ChevronDownIcon, IoChevronForwardOutline as ChevronRightIcon } from "react-icons/io5";function Calendar({
   className,
   classNames,
   showOutsideDays = true,

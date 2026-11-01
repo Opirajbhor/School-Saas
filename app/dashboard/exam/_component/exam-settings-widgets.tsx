@@ -1,4 +1,4 @@
-import { GraduationCap, Tags } from "lucide-react";
+import { FcBookmark as Tags, FcGraduationCap as GraduationCap } from "react-icons/fc";
 
 import { Card } from "@/components/ui/card";
 import {

@@ -2,12 +2,8 @@ import { Button } from "@/components/ui/button";
 import { InstituteOutput } from "@/src/validation/auth.zod";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 
-import {
-  BarChart3,
-  PencilLine,
-  Plus,
-  UserRound,
-} from "lucide-react";
+import { FcBarChart as BarChart3, FcBusinessman as UserRound, FcEditImage as PencilLine } from "react-icons/fc";
+import { IoAddOutline as Plus } from "react-icons/io5";
 import Link from "next/link";
 
 interface ProfileComponentProps {

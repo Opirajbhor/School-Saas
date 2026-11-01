@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { IoSearchOutline as Search } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

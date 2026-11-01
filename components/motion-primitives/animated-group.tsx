@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
 interface AnimatedGroupProps {
   children: React.ReactNode;
   variants?: {
-    container?: any;
-    item?: any;
+    container?: Variants;
+    item?: Variants;
   };
   className?: string;
 }
@@ -17,7 +17,7 @@ export function AnimatedGroup({
   variants,
   className,
 }: AnimatedGroupProps) {
-  const defaultVariants = {
+  const defaultVariants: { container: Variants; item: Variants } = {
     container: {
       hidden: { opacity: 0 },
       visible: {

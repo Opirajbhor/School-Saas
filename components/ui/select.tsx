@@ -4,9 +4,7 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 
 import { cn } from "@/src/lib/utils"
-import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
-
-const Select = SelectPrimitive.Root
+import { IoCheckmarkOutline as CheckIcon, IoChevronDownOutline as ChevronDownIcon, IoChevronUpOutline as ChevronUpIcon } from "react-icons/io5";const Select = SelectPrimitive.Root
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (

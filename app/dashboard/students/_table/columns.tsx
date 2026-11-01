@@ -6,7 +6,8 @@ import { StudentEnrollment } from "@/src/validation/student.zod";
 import { createColumnHelper } from "@tanstack/react-table";
 import { cn } from "@/utils/utils";
 import Link from "next/link";
-import { Eye, Pen } from "lucide-react";
+import { FcEditImage as Pen, FcGraduationCap as IdCard } from "react-icons/fc";
+import { IoEyeOutline as Eye } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { ToggleStudentStatus } from "../_actions/student.action";
@@ -170,6 +171,14 @@ function ActionsCell({ item }: { item: StudentEnrollment }) {
           aria-label="Edit student"
         >
           <Pen />
+        </Link>
+      </Button>
+      <Button size="sm" variant="outline" asChild>
+        <Link
+          href={`/print/students/${item.student.id}/id-card`}
+          aria-label="Print ID card"
+        >
+          <IdCard />
         </Link>
       </Button>
       <StatusToggleModal

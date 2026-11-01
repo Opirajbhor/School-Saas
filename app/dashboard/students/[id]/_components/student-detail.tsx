@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Pen } from "lucide-react";
+import { FcEditImage as Pen } from "react-icons/fc";
+import { FcGraduationCap as GraduationCap } from "react-icons/fc";
+import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -85,6 +87,12 @@ export default function StudentDetailView({ id }: { id: string }) {
             <Link href="/dashboard/students">
               <ArrowLeft />
               Back
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/print/students/${student.id}/id-card`}>
+              <GraduationCap />
+              ID card
             </Link>
           </Button>
           <Button asChild>

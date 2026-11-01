@@ -1,8 +1,7 @@
 import type { PgTable } from "drizzle-orm/pg-core";
-import { AnyColumn, and, eq } from "drizzle-orm";
+import { AnyColumn, and, eq, isNull } from "drizzle-orm";
 import { db } from "@/src/drizzle-DB";
 import { getUserContext } from "../shared/get-user-context.action";
-import { auditLogs } from "@/src/drizzle-DB/schema";
 import {
   AuditEntity,
   createAuditLog,
@@ -33,7 +32,8 @@ export async function deleteRecord<T extends InstituteTable>(
         details: {},
       };
     }
-    const { userId, instituteId } = ctx;
+    const { userId, instituteId, role } = ctx;
+    const isSuperAdmin = role === "superadmin";
 
     return await db.transaction(async (tx) => {
       const [record] = await tx
@@ -41,7 +41,10 @@ export async function deleteRecord<T extends InstituteTable>(
         .where(
           and(
             eq(config.drizzleSchema.id, id),
-            eq(config.drizzleSchema.instituteId, instituteId),
+            // a superadmin may only delete platform defaults
+            isSuperAdmin
+              ? isNull(config.drizzleSchema.instituteId)
+              : eq(config.drizzleSchema.instituteId, instituteId),
           ),
         )
         .returning();
@@ -54,13 +57,15 @@ export async function deleteRecord<T extends InstituteTable>(
         };
       }
       // ====== audit logs ==========
-      await createAuditLog(tx, {
-        instituteId,
-        userId,
-        action: "DELETED",
-        entity: config.entity,
-        entityId: (record as { id: string }).id,
-      });
+      if (!isSuperAdmin) {
+        await createAuditLog(tx, {
+          instituteId,
+          userId,
+          action: "DELETED",
+          entity: config.entity,
+          entityId: (record as { id: string }).id,
+        });
+      }
 
       return {
         success: true as const,

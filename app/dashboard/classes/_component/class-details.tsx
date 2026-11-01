@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import DeleteModal from "@/components/modal/delete-modal";
-import { Eye } from "lucide-react";
+import { IoEyeOutline as Eye } from "react-icons/io5";
 import { useQueryClient } from "@tanstack/react-query";
 import { deleteSection } from "../_actions/classes.action";
 import AddClassSection from "./add-section";

@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import type { LucideIcon } from "lucide-react";
+import type { IconType } from "react-icons";
+
 
 export type BarSegment = { value: number; className: string };
 
@@ -17,7 +18,7 @@ export function Metric({
 }: {
   label: string;
   value: string;
-  icon: LucideIcon;
+  icon: IconType;
   segments?: BarSegment[];
   footer: React.ReactNode;
 }) {
@@ -28,7 +29,6 @@ export function Metric({
       <div className="flex items-center gap-2">
         <Icon
           className="size-4 shrink-0 text-muted-foreground/70"
-          strokeWidth={1.75}
         />
         <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}

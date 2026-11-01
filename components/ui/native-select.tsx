@@ -1,9 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/utils/utils"
-import { ChevronDownIcon } from "lucide-react"
-
-type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
+import { IoChevronDownOutline as ChevronDownIcon } from "react-icons/io5";type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
   size?: "sm" | "default"
 }
 

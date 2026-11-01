@@ -1,11 +1,12 @@
 "use client";
 
-import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { createColumnHelper } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
-import { cn } from "@/utils/utils";
-import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
+import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
+import { StatusPill } from "@/components/dashboard/status-pill";
+import StatusToggleModal from "@/components/modal/status-modal";
 import DeleteModal from "@/components/modal/delete-modal";
 import { classesType } from "@/src/validation/classes.zod";
 import { changeStatusClass, deleteClass } from "../_actions/classes.action";
@@ -16,76 +17,59 @@ export const ClassesColumn = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
-    cell: ({ row }) => row.index + 1,
+    cell: ({ row }) => (
+      <span className="text-xs tabular-nums text-muted-foreground">
+        {row.index + 1}
+      </span>
+    ),
   }),
+
   columnHelper.accessor("name", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Classes Name" />
+      <DataTableColumnHeader column={column} title="Class" />
     ),
     filterFn: "includesString",
+    cell: ({ row }) => (
+      <span className="font-medium text-foreground">{row.original.name}</span>
+    ),
   }),
 
   columnHelper.accessor("status", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ getValue }) => {
-      const status = getValue<"ACTIVE" | "INACTIVE">();
-      return (
-        <span
-          className={cn(
-            "px-2 py-1 rounded text-xs font-medium",
-            status === "ACTIVE"
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground text-background",
-          )}
-        >
-          {status}
-        </span>
-      );
-    },
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
   }),
 
   columnHelper.display({
-    header: "Actions",
     id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return (
-        <div className="flex items-center gap-2">
-          <ActionsCell item={item} />
-        </div>
-      );
-    },
+    header: "",
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <ActionsCell item={row.original} />
+      </div>
+    ),
   }),
 ]);
 
-//===== actions ====
 function ActionsCell({ item }: { item: classesType }) {
   const queryClient = useQueryClient();
 
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ["default-classes"] });
+
   return (
-    <div className="flex gap-2">
-      {item?.id && (
-        <StatusToggleModal
-          id={item.id}
-          onDelete={changeStatusClass}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["classes", "sections"],
-            });
-          }}
-        />
-      )}
-      {item?.id && item.status === "INACTIVE" && (
+    <div className="flex items-center gap-2">
+      <StatusToggleModal
+        id={item.id as string}
+        onDelete={changeStatusClass}
+        onSuccess={refresh}
+      />
+      {item.status === "INACTIVE" && (
         <DeleteModal
-          id={item.id}
+          id={item.id as string}
           onDelete={deleteClass}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["classes", "sections"],
-            });
-          }}
+          onSuccess={refresh}
         />
       )}
     </div>

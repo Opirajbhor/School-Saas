@@ -1,9 +1,10 @@
 "use client";
 
-import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { createColumnHelper } from "@tanstack/react-table";
+
+import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
-import { cn } from "@/utils/utils";
+import { StatusPill } from "@/components/dashboard/status-pill";
 import StatusToggleModal from "@/components/modal/status-modal";
 import DeleteModal from "@/components/modal/delete-modal";
 import { OutputSubjectType } from "@/src/validation/subjects.zod";
@@ -19,25 +20,38 @@ export const subjectsColumn = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
-    cell: ({ row }) => row.index + 1,
+    cell: ({ row }) => (
+      <span className="text-xs tabular-nums text-muted-foreground">
+        {row.index + 1}
+      </span>
+    ),
   }),
+
   columnHelper.accessor("name", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="subjects Name" />
+      <DataTableColumnHeader column={column} title="Subject" />
     ),
     filterFn: "includesString",
+    cell: ({ row }) => (
+      <div className="min-w-0">
+        <p className="font-medium text-foreground">{row.original.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {row.original.shortName}
+        </p>
+      </div>
+    ),
   }),
+
   columnHelper.accessor("code", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Code" />
     ),
     filterFn: "includesString",
-  }),
-  columnHelper.accessor("shortName", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Short Name" />
+    cell: ({ row }) => (
+      <span className="rounded border bg-muted/40 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+        {row.original.code}
+      </span>
     ),
-    filterFn: "includesString",
   }),
 
   columnHelper.accessor("combineLabel", {
@@ -48,9 +62,11 @@ export const subjectsColumn = columnHelper.columns([
     cell: ({ row }) => {
       const item = row.original;
       // only the first paper is the anchor; the second points at it
-      if (!item.combineLabel) return <span>—</span>;
+      if (!item.combineLabel) {
+        return <span className="text-xs text-muted-foreground">—</span>;
+      }
       return (
-        <span className="text-xs">
+        <span className="text-xs text-muted-foreground">
           {item.combineLabel}
           {item.combineWith ? " (2nd)" : " (1st)"}
         </span>
@@ -62,48 +78,32 @@ export const subjectsColumn = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ getValue }) => {
-      const status = getValue<"ACTIVE" | "INACTIVE">();
-      return (
-        <span
-          className={cn(
-            "px-2 py-1 rounded text-xs font-medium",
-            status === "ACTIVE"
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground text-background",
-          )}
-        >
-          {status}
-        </span>
-      );
-    },
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
   }),
+
   columnHelper.display({
-    header: "Actions",
     id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return (
-        <div className="flex items-center gap-2">
-          <ActionsCell item={item} />
-        </div>
-      );
-    },
+    header: "",
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <ActionsCell item={row.original} />
+      </div>
+    ),
   }),
 ]);
 
-//===== actions ====
 function ActionsCell({ item }: { item: OutputSubjectType }) {
   return (
-    <div className="flex gap-2">
-      {item?.id && (
-        <StatusToggleModal id={item.id} onDelete={changeStatussubjects} />
+    <div className="flex items-center gap-2">
+      <StatusToggleModal
+        id={item.id as string}
+        onDelete={changeStatussubjects}
+      />
+      {item.status === "INACTIVE" && (
+        <DeleteModal id={item.id as string} onDelete={deletesubjects} />
       )}
-      {item?.id && item.status === "INACTIVE" && (
-        <DeleteModal id={item.id} onDelete={deletesubjects} />
-      )}
-      {item?.id && item.combineLabel && (
-        <UncombineButton id={item.id} label={item.combineLabel} />
+      {item.combineLabel && (
+        <UncombineButton id={item.id as string} label={item.combineLabel} />
       )}
     </div>
   );

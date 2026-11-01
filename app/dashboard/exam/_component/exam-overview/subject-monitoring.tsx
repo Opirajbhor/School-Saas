@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, PenLine, Search, UserX } from "lucide-react";
+import { FcEditImage as PenLine } from "react-icons/fc";
+import { IoArrowBackOutline as ArrowLeft, IoPersonRemoveOutline as UserX, IoSearchOutline as Search } from "react-icons/io5";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

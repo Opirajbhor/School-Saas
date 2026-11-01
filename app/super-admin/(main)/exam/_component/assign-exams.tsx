@@ -1,6 +1,7 @@
 "use client";
-import { ArrowBigRight } from "lucide-react";
+import { IoArrowForwardOutline as ArrowBigRight } from "react-icons/io5";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,14 +20,21 @@ import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { getDefaultClasses } from "../../classes/_actions/classes.action";
 import { assignExamToClasses } from "../_actions/exam.action";
 import { examAssignZod, InputExamMarkType } from "../_schema/exam.zod";
-import { OutputExamType } from "@/app/dashboard/exam/_schema/exam.zod";
+
+/** only these three things are read off the exam */
+export type AssignableExam = {
+  id: string;
+  name: string;
+  assignClasses: { class: { id: string } | null }[];
+};
 
 export default function AssignExamToClasses({
   exam,
 }: {
-  exam: OutputExamType;
+  exam: AssignableExam;
 }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   // ------------- query fn ---------------
   const queryClient = useQueryClient();
   const { data: classes = [] } = useQuery<classesTypeWithId[]>({
@@ -66,6 +74,8 @@ export default function AssignExamToClasses({
           classIds: [],
         });
         setOpen(false);
+        // the exam list is server-rendered, so refresh to show the new classes
+        router.refresh();
       },
     });
   };
@@ -76,7 +86,9 @@ export default function AssignExamToClasses({
     if (value) {
       form.reset({
         examId: exam.id,
-        classIds: exam.assignClasses.map((item) => item.class.id),
+        classIds: exam.assignClasses
+          .map((item) => item.class?.id)
+          .filter((id): id is string => Boolean(id)),
       });
 
       return;

@@ -1,7 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LayoutGrid, Plus, UserCheck, UserMinus, Users } from "lucide-react";
+import { FcConferenceCall as Users, FcGrid as LayoutGrid } from "react-icons/fc";
+import { IoAddOutline as Plus, IoCheckmarkDoneOutline as UserCheck, IoPersonRemoveOutline as UserMinus } from "react-icons/io5";
 import { useState } from "react";
 import { StudentEnrollment } from "@/src/validation/student.zod";
 import type { ColumnFiltersState } from "@tanstack/react-table";
@@ -12,6 +13,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { studentColumns } from "./_table/columns";
+import { FcBusinessContact as IdCard } from "react-icons/fc";
 import {
   HIDDEN_FILTER_COLUMNS,
   StudentFilters,
@@ -64,12 +66,20 @@ export default function Page() {
             : "Enrolment across every class and section."
         }
         actions={
-          <Button size="sm" asChild>
-            <Link href="/dashboard/students/add-new">
-              <Plus />
-              Add student
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/dashboard/id-cards">
+                <IdCard />
+                ID cards
+              </Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href="/dashboard/students/add-new">
+                <Plus />
+                Add student
+              </Link>
+            </Button>
+          </div>
         }
       />
 

@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Layers, LayoutGrid, School } from "lucide-react";
+import { FcDepartment as School, FcGrid as LayoutGrid, FcOrgUnit as Layers } from "react-icons/fc";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { getClasses } from "./_actions/classes.action";

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { RotateCcw } from "lucide-react";
+import { IoRefreshOutline as RotateCcw } from "react-icons/io5";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { IoSearchOutline as Search } from "react-icons/io5";
 import { StudentEnrollment } from "@/src/validation/student.zod";
 
 type Option = { label: string; value: string };

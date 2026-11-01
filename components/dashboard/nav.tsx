@@ -1,28 +1,16 @@
 "use client";
 
 import { cn } from "@/src/lib/utils";
-import {
-  BarChart3,
-  BookOpen,
-  CalendarRange,
-  ClipboardCheck,
-  FileText,
-  GraduationCap,
-  Layers,
-  LayoutDashboard,
-  PencilLine,
-  School,
-  UserRound,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import type { IconType } from "react-icons";
+import { FcApproval as ClipboardCheck, FcBarChart as BarChart3, FcBusinessContact as IdCard, FcBusinessman as UserRound, FcConferenceCall as Users, FcDepartment as School, FcDocument as FileText, FcEditImage as PencilLine, FcGraduationCap as GraduationCap, FcGrid as LayoutDashboard, FcLibrary as BookOpen, FcOrgUnit as Layers } from "react-icons/fc";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { authClient } from "@/src/better-auth/auth-client";
 
-// One icon set (lucide only) and one distinct glyph per destination. The
-// previous list mixed lucide with filled react-icons duotone glyphs, and three
-// different pages shared the same icon, so the menu was unreadable at a glance.
-type NavItem = { name: string; link: string; icon: LucideIcon };
+// Flat Color Icons (react-icons/fc): full-colour glyphs, one distinct mark per
+// destination. Chrome-sized glyphs elsewhere in the app use react-icons/io5,
+// which stays legible at 12-16px where the flat set turns to mush.
+type NavItem = { name: string; link: string; icon: IconType };
 
 export const navGroups: { group: string; items: NavItem[] }[] = [
   {
@@ -34,16 +22,12 @@ export const navGroups: { group: string; items: NavItem[] }[] = [
     items: [
       { name: "Students", link: "/dashboard/students", icon: Users },
       { name: "Teachers", link: "/dashboard/teachers", icon: UserRound },
+      { name: "ID cards", link: "/dashboard/id-cards", icon: IdCard },
     ],
   },
   {
     group: "Academics",
     items: [
-      {
-        name: "Sessions",
-        link: "/dashboard/academic-sessions",
-        icon: CalendarRange,
-      },
       { name: "Classes", link: "/dashboard/classes", icon: School },
       { name: "Subjects", link: "/dashboard/subjects", icon: BookOpen },
       { name: "Groups", link: "/dashboard/groups", icon: Layers },
@@ -69,6 +53,19 @@ export const navGroups: { group: string; items: NavItem[] }[] = [
 ];
 
 export function DashboardBrand({ collapsed = false }: { collapsed?: boolean }) {
+  const { data: session } = authClient.useSession();
+
+  // the second line tells you which seat you are in — several people share one
+  // institute and the role decides what the sidebar lets you open
+  const roleLabel =
+    session?.user?.role === "admin"
+      ? "Institute admin"
+      : session?.user?.role === "teacher" || session?.user?.role === "user"
+        ? "Teacher"
+        : session?.user?.role === "superadmin"
+          ? "Platform admin"
+          : "School management";
+
   return (
     <Link
       href="/dashboard"
@@ -78,9 +75,11 @@ export function DashboardBrand({ collapsed = false }: { collapsed?: boolean }) {
         <GraduationCap className="size-5" />
       </div>
       {!collapsed && (
-        <div className="flex flex-col leading-tight">
+        <div className="flex min-w-0 flex-col leading-tight">
           <span className="text-sm font-semibold text-foreground">Educare</span>
-          <span className="text-xs text-muted-foreground">School management</span>
+          <span className="truncate text-xs text-muted-foreground">
+            {roleLabel}
+          </span>
         </div>
       )}
     </Link>
@@ -130,7 +129,6 @@ export function DashboardNav({
                     )}
                     <item.icon
                       className="size-4 shrink-0"
-                      strokeWidth={active ? 2 : 1.75}
                     />
                     {!collapsed && <span className="truncate">{item.name}</span>}
                   </Link>

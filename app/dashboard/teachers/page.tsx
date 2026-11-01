@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Mars, Search, UserCheck, Users, Venus } from "lucide-react";
+import { FcBusinessman as Mars, FcBusinesswoman as Venus, FcConferenceCall as Users } from "react-icons/fc";
+import { IoCheckmarkDoneOutline as UserCheck, IoSearchOutline as Search } from "react-icons/io5";
 
 import { Teacherlist, TeacherStatsResponse } from "@/src/validation/teacher.zod";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";

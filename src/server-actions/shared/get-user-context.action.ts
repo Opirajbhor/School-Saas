@@ -24,6 +24,19 @@ export async function getUserContext() {
   });
 
   if (!userInfo) {
+    // A superadmin governs platform-wide defaults and belongs to no institute,
+    // so it has no teachers row. It still needs a context: the CRUD helpers
+    // branch on `role` and scope it to `institute_id IS NULL` rows, which keeps
+    // institute data out of reach.
+    if (role === "superadmin") {
+      return {
+        userId,
+        role,
+        instituteId: "",
+        teacherId: "",
+      };
+    }
+
     return null;
   }
 

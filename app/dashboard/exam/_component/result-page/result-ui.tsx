@@ -1,6 +1,9 @@
-import { AlertTriangle } from "lucide-react";
+import {
+  IoCheckmarkCircleOutline as Checkmark,
+  IoWarningOutline as AlertTriangle,
+} from "react-icons/io5";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { OutputExamResultType } from "../../_schema/exam.zod";
 
 // --- A+ / A / F badge, red when the subject or the student failed ---
@@ -24,7 +27,8 @@ export function ResultGradeBadge({
 }
 
 // --- The list of sections × subjects still missing marks ---
-// Shown above the result table and collapsed into one line when complete.
+// One dense line per subject so it reads at a glance without pushing the table
+// down the page. Collapses to one line when nothing is missing.
 export function IncompleteMarksPanel({
   incomplete,
   sections,
@@ -34,8 +38,9 @@ export function IncompleteMarksPanel({
 }) {
   if (incomplete.length === 0) {
     return (
-      <div className="rounded-md border border-border bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
-        All marks are entered. Positions below are final for this exam.
+      <div className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-1.5 text-xs text-foreground">
+        <Checkmark className="size-3.5 text-emerald-600 dark:text-emerald-500" />
+        All marks are entered — positions below are final.
       </div>
     );
   }
@@ -48,64 +53,90 @@ export function IncompleteMarksPanel({
   }
 
   const totalMissing = incomplete.reduce((sum, unit) => sum + unit.missing, 0);
+  const partly = incomplete.filter((unit) => unit.submitted).length;
 
   return (
-    <Card className="gap-0 border-destructive/40 py-0">
-      <CardHeader className="border-b border-destructive/30 bg-destructive/5">
-        <CardTitle className="flex items-center gap-2 text-sm text-destructive">
-          <AlertTriangle className="size-4" />
+    <Card className="gap-0 overflow-hidden border-amber-500/40 py-0">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-amber-500/30 bg-amber-500/5 px-3 py-1.5">
+        <AlertTriangle className="size-3.5 shrink-0 text-amber-600 dark:text-amber-500" />
+        <span className="text-xs font-semibold text-foreground">
           Incomplete marks
-          <span className="font-normal text-muted-foreground">
-            {totalMissing} {totalMissing === 1 ? "mark" : "marks"} missing
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="divide-y divide-border py-0">
+        </span>
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {totalMissing} {totalMissing === 1 ? "cell" : "cells"} ·{" "}
+          {bySubject.size} {bySubject.size === 1 ? "subject" : "subjects"}
+          {partly > 0 ? ` · ${partly} partly submitted` : ""}
+        </span>
+        <span className="ml-auto text-[11px] text-muted-foreground">
+          missing cells count as 0
+        </span>
+      </div>
+
+      <ul className="divide-y divide-border/60">
         {[...bySubject.values()].map((units) => {
           const subject = units[0];
-          const anySubmitted = units.some((unit) => unit.submitted);
+          const subjectMissing = units.reduce(
+            (sum, unit) => sum + unit.missing,
+            0,
+          );
+
           return (
-            <div
+            <li
               key={subject.subjectId}
-              className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm"
+              className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5 text-xs"
             >
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-foreground">
-                  {subject.subjectName}
-                </span>
-                {anySubmitted && (
-                  <Badge
-                    variant="outline"
-                    className="h-auto px-1.5 py-0 text-[11px]"
-                  >
-                    partly submitted
-                  </Badge>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">
-                  {units.map((unit) => unit.sectionName).join(", ")}
-                </span>
-                <Badge
-                  variant="destructive"
-                  className="h-auto px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-                >
-                  {units.reduce((sum, unit) => sum + unit.missing, 0)} missing
-                </Badge>
-              </div>
-            </div>
+              <span className="min-w-0 flex-1 truncate font-medium text-foreground">
+                {subject.subjectName}
+              </span>
+
+              <span className="flex flex-wrap items-center gap-1">
+                {units.map((unit) => {
+                  const entered = Math.max(unit.students - unit.missing, 0);
+                  const percent = unit.students
+                    ? Math.round((entered / unit.students) * 100)
+                    : 0;
+
+                  return (
+                    <span
+                      key={`${unit.sectionId}-${unit.subjectId}`}
+                      className="flex items-center gap-1 rounded border bg-muted/40 px-1 py-0.5 text-[10px] tabular-nums text-muted-foreground"
+                      title={`Section ${unit.sectionName} — ${entered} of ${unit.students} entered`}
+                    >
+                      {unit.sectionName}
+                      <span className="h-1 w-6 overflow-hidden rounded-full bg-border">
+                        <span
+                          className={
+                            percent === 0
+                              ? "block h-full bg-destructive/70"
+                              : "block h-full bg-amber-500"
+                          }
+                          style={{ width: `${Math.max(percent, 6)}%` }}
+                        />
+                      </span>
+                      {entered}/{unit.students}
+                    </span>
+                  );
+                })}
+              </span>
+
+              <span className="shrink-0 rounded border border-destructive/30 bg-destructive/10 px-1 py-0.5 text-[10px] font-semibold tabular-nums text-destructive">
+                {subjectMissing} missing
+              </span>
+            </li>
           );
         })}
-        <p className="py-2.5 text-xs text-muted-foreground">
-          Sections with incomplete marks:{" "}
-          {sections
-            .filter((section) =>
-              incomplete.some((unit) => unit.sectionId === section.id),
-            )
-            .map((section) => section.name)
-            .join(", ")}
-        </p>
-      </CardContent>
+      </ul>
+
+      <p className="border-t bg-muted/30 px-3 py-1 text-[10px] text-muted-foreground">
+        Sections affected:{" "}
+        {sections
+          .filter((section) =>
+            incomplete.some((unit) => unit.sectionId === section.id),
+          )
+          .map((section) => section.name)
+          .join(", ") || "—"}
+        . Totals and positions move once the marks are entered.
+      </p>
     </Card>
   );
 }

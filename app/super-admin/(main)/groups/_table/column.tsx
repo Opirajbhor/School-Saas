@@ -1,11 +1,12 @@
 "use client";
 
-import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { createColumnHelper } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
-import { cn } from "@/utils/utils";
-import StatusToggleModal from "@/components/modal/status-modal";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
+import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
+import { StatusPill } from "@/components/dashboard/status-pill";
+import StatusToggleModal from "@/components/modal/status-modal";
 import DeleteModal from "@/components/modal/delete-modal";
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import { changeStatusGroups, deleteGroups } from "../_actions/groups.action";
@@ -20,26 +21,61 @@ export const GroupsColumn = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
-    cell: ({ row }) => row.index + 1,
+    cell: ({ row }) => (
+      <span className="text-xs tabular-nums text-muted-foreground">
+        {row.index + 1}
+      </span>
+    ),
   }),
+
   columnHelper.accessor("name", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Groups Name" />
+      <DataTableColumnHeader column={column} title="Group" />
     ),
     filterFn: "includesString",
+    cell: ({ row }) => (
+      <span className="font-medium text-foreground">{row.original.name}</span>
+    ),
   }),
+
   columnHelper.accessor(
     (row) =>
       row.groupClasses
-        ?.map((gc) => gc.class?.name)
+        ?.map((groupClass) => groupClass.class?.name)
         .filter(Boolean)
         .join(", ") ?? "",
     {
       id: "assignClasses",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Assign Classes" />
+        <DataTableColumnHeader column={column} title="Classes" />
       ),
       filterFn: "includesString",
+      cell: ({ row }) => {
+        const names = (row.original.groupClasses ?? [])
+          .map((groupClass) => groupClass.class?.name)
+          .filter((name): name is string => Boolean(name));
+
+        if (names.length === 0) {
+          return (
+            <span className="text-xs text-muted-foreground">
+              No classes assigned
+            </span>
+          );
+        }
+
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            {names.map((name) => (
+              <span
+                key={name}
+                className="rounded border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
   ),
 
@@ -47,66 +83,41 @@ export const GroupsColumn = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ getValue }) => {
-      const status = getValue<"ACTIVE" | "INACTIVE">();
-      return (
-        <span
-          className={cn(
-            "px-2 py-1 rounded text-xs font-medium",
-            status === "ACTIVE"
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground text-background",
-          )}
-        >
-          {status}
-        </span>
-      );
-    },
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
   }),
 
   columnHelper.display({
-    header: "Actions",
     id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return (
-        <div className="flex items-center gap-2">
-          <ActionsCell item={item} />
-        </div>
-      );
-    },
+    header: "",
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <ActionsCell item={row.original} />
+      </div>
+    ),
   }),
 ]);
 
-//===== actions ====
 function ActionsCell({ item }: { item: OutputGroupClassType }) {
   const queryClient = useQueryClient();
 
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ["default-groups"] });
+
   return (
-    <div className="flex gap-2">
-      {item?.id && (
-        <StatusToggleModal
-          id={item.id}
-          onDelete={changeStatusGroups}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["Groups", "sections"],
-            });
-          }}
-        />
-      )}
-      {item?.id && item.status === "INACTIVE" && (
+    <div className="flex items-center gap-2">
+      <AssignGroups group={item} />
+      <StatusToggleModal
+        id={item.id as string}
+        onDelete={changeStatusGroups}
+        onSuccess={refresh}
+      />
+      {item.status === "INACTIVE" && (
         <DeleteModal
-          id={item.id}
+          id={item.id as string}
           onDelete={deleteGroups}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["Groups", "sections"],
-            });
-          }}
+          onSuccess={refresh}
         />
       )}
-      <AssignGroups group={item as OutputGroupClassType} />
     </div>
   );
 }

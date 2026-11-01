@@ -38,7 +38,7 @@ export default async function Page({
   }
 
   return (
-    <div className="min-h-screen bg-background p-6 text-foreground md:p-8">
+    <div className="p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
         <SubjectMonitoring
           examId={examId}

@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { Unlink } from "lucide-react";
+import { FcBrokenLink as Unlink } from "react-icons/fc";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";

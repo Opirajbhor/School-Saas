@@ -1,4 +1,4 @@
-import { LoaderIcon } from "lucide-react";
+import { IoReloadOutline as LoaderIcon } from "react-icons/io5";
 
 import { cn } from "@/utils/utils";
 

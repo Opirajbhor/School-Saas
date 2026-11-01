@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { FcCalendar as CalendarIcon } from "react-icons/fc";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";

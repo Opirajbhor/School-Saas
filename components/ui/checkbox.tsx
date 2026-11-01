@@ -4,9 +4,7 @@ import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
 import { cn } from "@/utils/utils"
-import { CheckIcon } from "lucide-react"
-
-function Checkbox({
+import { IoCheckmarkOutline as CheckIcon } from "react-icons/io5";function Checkbox({
   className,
   ...props
 }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {

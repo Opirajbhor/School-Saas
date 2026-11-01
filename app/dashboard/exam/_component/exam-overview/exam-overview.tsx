@@ -1,12 +1,7 @@
 "use server";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Layers,
-  Users,
-} from "lucide-react";
+import { FcConferenceCall as Users, FcLibrary as BookOpen, FcOrgUnit as Layers } from "react-icons/fc";
+import { IoArrowBackOutline as ArrowLeft, IoArrowForwardOutline as ArrowRight } from "react-icons/io5";
 import { getSingleExamData } from "../../_actions/examOverview.action";
 import { ExamOverViewType } from "../../_schema/exam.zod";
 import ExamDashboard from "./exam-dashboard";

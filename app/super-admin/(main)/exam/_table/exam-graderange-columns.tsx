@@ -1,15 +1,14 @@
 "use client";
 
-import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { createColumnHelper } from "@tanstack/react-table";
+
+import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
-import { cn } from "@/utils/utils";
+import { StatusPill } from "@/components/dashboard/status-pill";
 import StatusToggleModal from "@/components/modal/status-modal";
-import { useQueryClient } from "@tanstack/react-query";
 import { OutputExamGradeRangeType } from "../_schema/exam.zod";
 import { ToggleGradeRangeStatus } from "../_actions/exam.action";
 
-// Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<
   DataTableFeatures,
   OutputExamGradeRangeType
@@ -19,27 +18,43 @@ export const ExamGradeRangeColumn = columnHelper.columns([
   columnHelper.display({
     id: "serial",
     header: "SL",
-    cell: ({ row }) => row.index + 1,
+    cell: ({ row }) => (
+      <span className="text-xs tabular-nums text-muted-foreground">
+        {row.index + 1}
+      </span>
+    ),
   }),
+
   columnHelper.accessor("name", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
+      <DataTableColumnHeader column={column} title="Grade" />
     ),
     filterFn: "includesString",
-  }),
-  columnHelper.accessor("minMark", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Minimum Mark" />
+    cell: ({ row }) => (
+      <span className="inline-flex min-w-7 items-center justify-center rounded border bg-muted/40 px-1.5 py-0.5 text-[11px] font-semibold text-foreground">
+        {row.original.name}
+      </span>
     ),
   }),
-  columnHelper.accessor("maxMark", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Maximum Mark" />
+
+  columnHelper.display({
+    id: "range",
+    header: "Mark range",
+    cell: ({ row }) => (
+      <span className="text-sm tabular-nums text-foreground">
+        {row.original.minMark}–{row.original.maxMark}
+      </span>
     ),
   }),
+
   columnHelper.accessor("GPA", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="GPA" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm tabular-nums">
+        {Number(row.original.GPA).toFixed(2)}
+      </span>
     ),
   }),
 
@@ -47,49 +62,23 @@ export const ExamGradeRangeColumn = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ getValue }) => {
-      const status = getValue<"ACTIVE" | "INACTIVE">();
-      return (
-        <span
-          className={cn(
-            "px-2 py-1 rounded text-xs font-medium",
-            status === "ACTIVE"
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground text-background",
-          )}
-        >
-          {status}
-        </span>
-      );
-    },
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
   }),
+
   columnHelper.display({
-    header: "Actions",
     id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return <ActionsCell item={item} />;
-    },
+    header: "",
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        {row.original.id && (
+          <StatusToggleModal
+            id={row.original.id}
+            onDelete={ToggleGradeRangeStatus}
+            title="Change grade band status"
+            description="Inactive bands are skipped when a GPA is calculated."
+          />
+        )}
+      </div>
+    ),
   }),
 ]);
-
-//===== actions ====
-function ActionsCell({ item }: { item: OutputExamGradeRangeType }) {
-  const queryClient = useQueryClient();
-
-  return (
-    <div className="flex gap-2">
-      {item?.id && (
-        <StatusToggleModal
-          id={item.id}
-          onDelete={ToggleGradeRangeStatus}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["classes", "sections"],
-            });
-          }}
-        />
-      )}
-    </div>
-  );
-}

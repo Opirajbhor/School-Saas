@@ -32,6 +32,8 @@ export type MarkTypeRule = {
 export type SubjectRule = {
   id: string;
   name: string;
+  /** short label for the result table header, e.g. "BAN 1" */
+  shortName?: string;
   /** COMPULSORY or GROUP_BASED */
   subjectType: string;
   /** an optional subject only counts when the student actually took it */
@@ -162,21 +164,20 @@ export type CalculationOutput = {
  * to an F/0.00 result when the scale is empty.
  */
 export function gradeFor(percentage: number, scales: GradeScale[]) {
-  const band = scales.find(
-    (scale) => percentage >= scale.minMark && percentage <= scale.maxMark,
-  );
+  if (scales.length === 0) return { grade: "F", GPA: 0 };
+
+  // Bands are written as integer ranges (70-79, 80-100), so a mark of 79.5
+  // matches neither. Read the floor instead: the band with the highest minMark
+  // the mark has reached. That also absorbs gaps and decimal marks.
+  const sorted = [...scales].sort((a, b) => a.minMark - b.minMark);
+  const band = [...sorted].reverse().find((scale) => percentage >= scale.minMark);
 
   if (band) {
     return { grade: band.name, GPA: Number(band.GPA) };
   }
 
-  // under the lowest band: use the weakest band so the grade still has a name
-  const lowest = [...scales].sort((a, b) => a.minMark - b.minMark)[0];
-  if (lowest && percentage < lowest.minMark) {
-    return { grade: lowest.name, GPA: Number(lowest.GPA) };
-  }
-
-  return { grade: "F", GPA: 0 };
+  // under the lowest band: the weakest band, so the grade still has a name
+  return { grade: sorted[0].name, GPA: Number(sorted[0].GPA) };
 }
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
@@ -346,7 +347,7 @@ export function calculateResults(input: CalculationInput): CalculationOutput {
         percentage,
         grade,
         GPA,
-        failed: failedComponents.length > 0 || absent,
+        failed: failedComponents.length > 0 || absent || grade === "F",
         absent,
         failedComponents,
       });
@@ -363,10 +364,10 @@ export function calculateResults(input: CalculationInput): CalculationOutput {
       totalFullMark > 0 ? round2((totalObtained / totalFullMark) * 100) : 0;
 
     // GPA is the mean of the counted subjects' grade points, to 2 decimals.
-    // A failed compulsory subject forces 0.00 and F, the rule the national
-    // scale implies.
+    // Failing any subject zeroes it, except an optional paper: that one only
+    // costs its own grade point, it does not fail the student.
     const failedSubjects = subjectResults
-      .filter((subject) => subject.failed && !subject.isOptional && !subject.isReligion)
+      .filter((subject) => subject.failed && !subject.isOptional)
       .map((subject) => subject.name);
 
     const rawGpa =

@@ -51,9 +51,15 @@ export const resultColumns = (subjects: SubjectColumn[]) =>
     ...subjects.map((subject) =>
       columnHelper.display({
         id: `subject-${subject.id}`,
+        // short label in the header, the full paper name on hover
         header: () => (
-          <div className="text-center">
-            {subject.name}
+          <div
+            className="cursor-help text-center"
+            title={`${subject.name} · full mark ${subject.fullMark}`}
+          >
+            <span className="underline decoration-dotted decoration-muted-foreground/40 underline-offset-2">
+              {subject.shortName ?? subject.name}
+            </span>
             <span className="block text-xs font-normal text-muted-foreground">
               / {subject.fullMark}
             </span>
@@ -103,17 +109,50 @@ export const resultColumns = (subjects: SubjectColumn[]) =>
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="GPA" />
       ),
-      cell: ({ row }) => row.original.GPA.toFixed(2),
+      cell: ({ row }) => {
+        const failed = row.original.failedSubjects.length;
+        return (
+          <span
+            className={
+              failed > 0
+                ? "font-medium tabular-nums text-destructive"
+                : "tabular-nums text-foreground"
+            }
+            title={
+              failed > 0
+                ? `0.00 — failed in ${row.original.failedSubjects.join(", ")}`
+                : undefined
+            }
+          >
+            {row.original.GPA.toFixed(2)}
+          </span>
+        );
+      },
     }),
     columnHelper.accessor("grade", {
       header: "Grade",
-      cell: ({ row }) => (
-        <ResultGradeBadge
-          grade={row.original.grade}
-          failed={!row.original.passed}
-          absent={false}
-        />
-      ),
+      cell: ({ row }) => {
+        const failed = row.original.failedSubjects.length;
+
+        return (
+          <div className="flex items-center gap-1">
+            <ResultGradeBadge
+              grade={row.original.grade}
+              failed={!row.original.passed}
+              absent={false}
+            />
+            {/* how many papers the F came from */}
+            {failed > 0 && (
+              <span
+                className="text-[11px] font-medium tabular-nums text-destructive"
+                title={`Failed in ${failed} subject${failed === 1 ? "" : "s"}: ${row.original.failedSubjects.join(", ")}`}
+              >
+                ×{failed}
+              </span>
+            )}
+          </div>
+        );
+      },
     }),
     columnHelper.accessor("classRank", {
       header: ({ column }) => (

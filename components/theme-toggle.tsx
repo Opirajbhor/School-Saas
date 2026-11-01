@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { IoMoonOutline as Moon, IoSunnyOutline as Sun } from "react-icons/io5";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,

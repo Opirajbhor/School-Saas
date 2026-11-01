@@ -1,5 +1,5 @@
 "use client";
-import { Plus } from "lucide-react";
+import { IoAddOutline as Plus } from "react-icons/io5";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";

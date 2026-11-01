@@ -1,5 +1,5 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TriangleAlertIcon } from "lucide-react";
+import { IoWarningOutline as TriangleAlertIcon } from "react-icons/io5";
 
 const RedAlert = ({
   title = "Something is Wrong",

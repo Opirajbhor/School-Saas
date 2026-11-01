@@ -3,7 +3,7 @@ import { FormInput } from "@/components/forms/form-input";
 import { FormSelect } from "@/components/forms/form-select";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Plus } from "lucide-react";
+import { IoAddOutline as Plus } from "react-icons/io5";
 import {
   examGradeRangeZod,
   InputExamGradeRangeType,

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Search } from "lucide-react";
+import { IoSearchOutline as Search } from "react-icons/io5";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { columns } from "./columns";

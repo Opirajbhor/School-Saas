@@ -38,7 +38,7 @@ import {
 import { getTeacher } from "../../teachers/_actions/teacher.action";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
-import { getActiveSession } from "../../academic-sessions/_actions/session.action";
+import { getActiveSession } from "../../_actions/session.action";
 import { revalidatePath } from "next/cache";
 
 // ---------------- class teacher ---------------

@@ -1,86 +1,105 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
+
+import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { Label } from "@/components/ui/label";
-import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { IoAddOutline as Plus } from "react-icons/io5";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 import { FormInput } from "@/components/forms/form-input";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { addGroupZod, inputGroupType } from "@/src/validation/groups.zod";
 import { createAcademicGroups } from "./_actions/groups.action";
 
+const emptyGroup: inputGroupType = { name: "", status: "ACTIVE" };
+
 export default function CreateGroups() {
-  // RHF
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   const form = useForm<inputGroupType>({
     resolver: zodResolver(addGroupZod),
-    defaultValues: {
-      name: "",
-      status: "ACTIVE",
-    },
+    defaultValues: emptyGroup,
   });
   const { isSubmitting } = form.formState;
 
-  // add button
   const addBtn = async (data: inputGroupType) => {
-    await handleCrudAction(createAcademicGroups, data, {
-      successMessage: "Group Created Successfully",
+    const res = await handleCrudAction(createAcademicGroups, data, {
+      successMessage: "Group created",
       onSuccess: () => {
-        form.reset();
+        queryClient.invalidateQueries({ queryKey: ["default-groups"] });
+        form.reset(emptyGroup);
       },
     });
+
+    if (res.success) setOpen(false);
   };
 
   return (
-    <div className="max-w-7xl lg:w-full mx-auto p-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-3xl font-bold text-foreground mb-1">
-            Academic Groups
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Manage school years, terms, and active Groups.
-          </p>
-        </div>
-      </div>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) form.reset(emptyGroup);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" className="cursor-pointer">
+          <Plus />
+          New group
+        </Button>
+      </DialogTrigger>
 
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* <!--  Add Groups Form --> */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
-            Add Groups
-          </h3>
+      <DialogContent className="gap-0 p-0 sm:max-w-sm">
+        <DialogHeader className="border-b px-5 py-4">
+          <DialogTitle>New academic group</DialogTitle>
+          <DialogDescription>
+            A platform-wide stream such as Science or Business Studies. Assign it
+            to classes afterwards.
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* add Groups form */}
-          <FormProvider {...form}>
-            <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
-              <div>
-                <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                  Academic Groups Name
-                </Label>
-                <FormInput
-                  control={form.control}
-                  name="name"
-                  label="Class Name"
-                  placeholder="Enter Class name"
-                  description={form.formState.errors.name?.message}
-                />
-              </div>
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(addBtn)}>
+            <div className="p-5">
+              <FormInput
+                control={form.control}
+                name="name"
+                label="Group name"
+                placeholder="e.g. Science"
+                autoFocus
+              />
+            </div>
 
-              <Button disabled={isSubmitting} variant="default" type="submit">
-                {isSubmitting ? (
-                  <Spinner className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="mr-2 h-4 w-4" />
-                )}{" "}
-                Add Groups
+            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting && <Spinner />} Create group
               </Button>
-            </form>
-          </FormProvider>
-        </div>
-      </div>
-    </div>
+            </div>
+          </form>
+        </FormProvider>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,93 +1,110 @@
 "use client";
+
+import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { IoAddOutline as Plus } from "react-icons/io5";
+
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { FormInput } from "@/components/forms/form-input";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import {
   academicSessionType,
   academicSessionZod,
 } from "@/src/validation/academicSessions.zod";
-import { Input } from "@base-ui/react/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { Label } from "@/components/ui/label";
-import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { createAcademicSession } from "./_actions/academicSession.action";
 
+const emptySession: academicSessionType = { year: "", status: "ACTIVE" };
+
 export default function CreateAcademicSession() {
-  // RHF
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   const form = useForm<academicSessionType>({
     resolver: zodResolver(academicSessionZod),
-    defaultValues: {
-      year: "",
-      status: "ACTIVE",
-    },
+    defaultValues: emptySession,
   });
   const { isSubmitting } = form.formState;
 
-  // add button
   const addBtn = async (data: academicSessionType) => {
-    await handleCrudAction(createAcademicSession, data, {
-      successMessage: "Session Created Successfully",
+    const res = await handleCrudAction(createAcademicSession, data, {
+      successMessage: "Session created",
       onSuccess: () => {
-        form.reset();
+        queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        form.reset(emptySession);
       },
     });
+
+    if (res.success) setOpen(false);
   };
 
   return (
-    <div className="max-w-7xl lg:w-full mx-auto p-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-3xl font-bold text-foreground mb-1">
-            Academic Sessions
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Manage school years, terms, and active sessions.
-          </p>
-        </div>
-      </div>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) form.reset(emptySession);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" className="cursor-pointer">
+          <Plus />
+          New session
+        </Button>
+      </DialogTrigger>
 
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* <!--  Add session Form --> */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
-            Add Session
-          </h3>
+      <DialogContent className="gap-0 p-0 sm:max-w-sm">
+        <DialogHeader className="border-b px-5 py-4">
+          <DialogTitle>New academic session</DialogTitle>
+          <DialogDescription>
+            One year, e.g. 2027. Institutes enrol students into whichever year is
+            active.
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* add session form */}
-          <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
-            <div>
-              <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                Academic Session Name
-              </Label>
-              <Input
-                {...form.register("year", {
-                  required: "Session name is required",
-                })}
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="e.g., 2026"
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(addBtn)}>
+            <div className="p-5">
+              <FormInput
+                control={form.control}
+                name="year"
+                label="Session year"
+                placeholder="2027"
+                inputMode="numeric"
+                maxLength={4}
+                autoFocus
               />
-              {form.formState.errors.year && (
-                <p className="mt-1 text-sm text-destructive">
-                  {form.formState.errors.year.message}
-                </p>
-              )}
             </div>
 
-            <Button disabled={isSubmitting} variant="default" type="submit">
-              {isSubmitting ? (
-                <Spinner className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="mr-2 h-4 w-4" />
-              )}{" "}
-              Add Session
-            </Button>
+            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting && <Spinner />} Create session
+              </Button>
+            </div>
           </form>
-        </div>
-      </div>
-    </div>
+        </FormProvider>
+      </DialogContent>
+    </Dialog>
   );
 }

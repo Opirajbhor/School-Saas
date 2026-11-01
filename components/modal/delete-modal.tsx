@@ -11,7 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { AlertTriangleIcon, Trash } from "lucide-react";
+import { FcFullTrash as Trash } from "react-icons/fc";
+import { IoWarningOutline as AlertTriangleIcon } from "react-icons/io5";
 import { ReactNode, useState } from "react";
 import { toast } from "sonner";
 

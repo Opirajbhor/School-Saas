@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileSpreadsheet, Printer, ScrollText, Trophy, UserSquare } from "lucide-react";
+import { FcContacts as UserSquare, FcDataSheet as FileSpreadsheet, FcDocument as ScrollText, FcPrint as Printer, FcRating as Trophy } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
 
 // Shortcuts from the results page into the printable reports for the exam and

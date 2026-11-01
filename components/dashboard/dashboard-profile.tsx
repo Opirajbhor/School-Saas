@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ChevronDown } from "lucide-react";
+import { IoChevronDownOutline as ChevronDown } from "react-icons/io5";
 import { FaRegUserCircle } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import Link from "next/link";

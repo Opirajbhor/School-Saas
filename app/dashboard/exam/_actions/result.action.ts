@@ -4,6 +4,7 @@ import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { parseWithZod } from "@/src/validation/validator.zod";
 import { db } from "@/src/drizzle-DB";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import {
   classesDrizzle,
   enrollments,
@@ -35,6 +36,46 @@ import {
 } from "../_lib/result-calculator";
 
 /**
+ * Sections of one class, so the result page can scope a calculation to a
+ * section instead of listing the whole class.
+ */
+export async function getClassSectionOptions(classId: string) {
+  try {
+    const ctx = await getUserContext();
+    if (!ctx) {
+      return {
+        success: false as const,
+        error: "No User session found",
+        details: {},
+      };
+    }
+
+    const rows = await db
+      .select({ id: sectionDrizzle.id, name: sectionDrizzle.name })
+      .from(sectionDrizzle)
+      .where(
+        and(
+          eq(sectionDrizzle.classId, classId),
+          eq(sectionDrizzle.status, "ACTIVE"),
+          ctx.role === "superadmin"
+            ? isNull(sectionDrizzle.instituteId)
+            : eq(sectionDrizzle.instituteId, ctx.instituteId),
+        ),
+      )
+      .orderBy(asc(sectionDrizzle.name));
+
+    return { success: true as const, data: rows };
+  } catch (error) {
+    console.error("section options failed:", error);
+    return {
+      success: false as const,
+      error: "Could not load sections",
+      details: {},
+    };
+  }
+}
+
+/**
  * Calculates the result sheet for one exam and one class.
  *
  * Nothing is stored: the sheet is built from the marks as they stand, so it
@@ -46,6 +87,7 @@ import {
  * numbers on screen stay exactly as they were published even if a mark was
  * corrected afterwards.
  */
+
 export async function getExamResult(data: InputResultQueryType) {
   const parsed = parseWithZod(resultQueryZod, data);
   if (!parsed.success) {
@@ -395,6 +437,7 @@ async function getClassSubjects(
           assignId: subjectAssignSchema.id,
           subjectId: subjectDbSchema.id,
           name: subjectDbSchema.name,
+          shortName: subjectDbSchema.shortName,
           subjectType: subjectAssignSchema.subject_type,
           isOptional: subjectAssignSchema.isOptional,
           isReligion: subjectAssignSchema.isReligion,
@@ -429,6 +472,7 @@ async function getClassSubjects(
         assignId: string;
         subjectId: string;
         name: string;
+        shortName: string;
         subjectType: string;
         isOptional: boolean;
         isReligion: boolean;
@@ -451,6 +495,7 @@ async function getClassSubjects(
   const rules: SubjectRule[] = assignments.map((row) => ({
     id: row.subjectId,
     name: row.name,
+    shortName: row.shortName,
     subjectType: row.subjectType,
     isOptional: row.isOptional,
     isReligion: row.isReligion,
@@ -580,7 +625,15 @@ function resultColumns(
   students: OutputExamResultType["students"],
   subjects: SubjectRule[],
 ) {
-  const columns = new Map<string, { id: string; name: string; fullMark: number }>();
+  const columns = new Map<
+    string,
+    { id: string; name: string; shortName: string; fullMark: number }
+  >();
+
+  // the header shows the short name, the full name is the hover title
+  const shortById = new Map(
+    subjects.map((subject) => [subject.id, subject.shortName ?? subject.name]),
+  );
 
   for (const student of students) {
     for (const subject of student.subjects) {
@@ -588,6 +641,7 @@ function resultColumns(
         columns.set(subject.subjectId, {
           id: subject.subjectId,
           name: subject.name,
+          shortName: shortById.get(subject.subjectId) ?? subject.name,
           fullMark: subject.fullMark,
         });
       }
@@ -601,6 +655,7 @@ function resultColumns(
       columns.set(subject.id, {
         id: subject.id,
         name: subject.name,
+        shortName: subject.shortName ?? subject.name,
         fullMark: subject.markTypes.reduce((sum, type) => sum + type.fullMark, 0),
       });
     }

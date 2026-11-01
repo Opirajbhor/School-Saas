@@ -16,13 +16,16 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    // The shell owns the viewport: the rail and the topbar stay put and only
+    // the content column scrolls. Relying on position: sticky on the rail left
+    // it scrolling with the page.
+    <div className="flex h-dvh overflow-hidden bg-background">
       <Sidebar collapsed={collapsed} />
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent
           side="left"
-          className="gap-0 bg-sidebar p-0 text-sidebar-foreground data-[side=left]:w-72"
+          className="dark gap-0 bg-sidebar p-0 text-sidebar-foreground data-[side=left]:w-72"
         >
           <SheetTitle className="sr-only">Main navigation</SheetTitle>
           <Sidebar variant="mobile" onNavigate={() => setMobileOpen(false)} />
@@ -35,7 +38,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           onOpenMobile={() => setMobileOpen(true)}
         />
 
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

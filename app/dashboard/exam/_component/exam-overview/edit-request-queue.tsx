@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Clock, X } from "lucide-react";
+import { IoCheckmarkOutline as Check, IoCloseOutline as X, IoTimeOutline as Clock } from "react-icons/io5";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

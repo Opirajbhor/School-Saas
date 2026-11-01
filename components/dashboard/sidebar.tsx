@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/src/lib/utils";
-import { Settings } from "lucide-react";
+import { FcSettings as Settings } from "react-icons/fc";
 import Link from "next/link";
 import { DashboardBrand, DashboardNav } from "./nav";
 
@@ -20,12 +20,14 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "flex-col border-sidebar-border bg-sidebar",
+        // `dark` puts the rail on the dark token set even in a light theme, so
+        // it always reads as the app's navigation surface
+        "dark flex-col border-sidebar-border bg-sidebar text-sidebar-foreground",
         variant === "desktop"
-          ? // sticky keeps the rail in view while the content column scrolls;
-            // h-screen + self-start stops it stretching to the page height,
-            // which is what made it scroll away before
-            "sticky top-0 hidden h-screen shrink-0 self-start border-r transition-[width] duration-200 md:flex"
+          ? // the shell fixes the page at viewport height and scrolls the
+            // content column, so the rail is pinned by layout rather than by
+            // position: sticky (which was not holding)
+            "hidden h-full shrink-0 border-r transition-[width] duration-200 md:flex"
           : "flex h-full w-full",
         variant === "desktop" && (collapsed ? "w-19" : "w-64"),
       )}
@@ -43,7 +45,7 @@ export function Sidebar({
             collapsed && "justify-center px-0",
           )}
         >
-          <Settings className="size-4 shrink-0" strokeWidth={1.75} />
+          <Settings className="size-4 shrink-0" />
           {!collapsed && <span>Settings</span>}
         </Link>
       </div>

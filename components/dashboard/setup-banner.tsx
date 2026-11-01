@@ -1,5 +1,5 @@
 import { cn } from "@/src/lib/utils";
-import { CircleCheck, Loader } from "lucide-react";
+import { IoCheckmarkCircleOutline as CircleCheck, IoReloadOutline as Loader } from "react-icons/io5";
 import Link from "next/link";
 import type { SetupSummary } from "@/app/dashboard/_actions/dashboard.action";
 
@@ -35,7 +35,9 @@ export function SetupBanner({ setup }: { setup?: SetupSummary }) {
               : "No active academic session."}
           </span>
           <span className="ml-1 text-muted-foreground">
-            {setup?.sessionYear ? "Quick steps: " : "Start by creating a session."}
+            {setup?.sessionYear
+              ? "Quick steps: "
+              : "Ask your platform admin to activate one."}
           </span>
           {setup?.sessionYear &&
             steps.map((step, index) => (
@@ -56,12 +58,6 @@ export function SetupBanner({ setup }: { setup?: SetupSummary }) {
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        <Link
-          href="/dashboard/academic-sessions"
-          className="font-mono text-xs font-semibold text-primary hover:underline"
-        >
-          Manage Session
-        </Link>
         {(setup?.examsOpen ?? 0) > 0 && (
           <span className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
             <Loader className="size-3" />

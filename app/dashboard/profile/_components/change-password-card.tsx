@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { KeyRound } from "lucide-react";
+import { FcKey as KeyRound } from "react-icons/fc";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";

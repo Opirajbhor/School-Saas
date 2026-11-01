@@ -1,86 +1,104 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
+
+import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { Label } from "@/components/ui/label";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { IoAddOutline as Plus } from "react-icons/io5";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
+import { FormInput } from "@/components/forms/form-input";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { classesType, classesZod } from "@/src/validation/classes.zod";
-import { FormInput } from "@/components/forms/form-input";
 import { createAcademicClass } from "./_actions/classes.action";
 
+const emptyClass: classesType = { name: "", status: "ACTIVE" };
+
 export default function CreateClasses() {
-  // RHF
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   const form = useForm<classesType>({
     resolver: zodResolver(classesZod),
-    defaultValues: {
-      name: "",
-      status: "ACTIVE",
-    },
+    defaultValues: emptyClass,
   });
   const { isSubmitting } = form.formState;
 
-  // add button
   const addBtn = async (data: classesType) => {
-    await handleCrudAction(createAcademicClass, data, {
-      successMessage: "Class Created Successfully",
+    const res = await handleCrudAction(createAcademicClass, data, {
+      successMessage: "Class created",
       onSuccess: () => {
-        form.reset();
+        queryClient.invalidateQueries({ queryKey: ["default-classes"] });
+        form.reset(emptyClass);
       },
     });
+
+    if (res.success) setOpen(false);
   };
 
   return (
-    <div className="max-w-7xl lg:w-full mx-auto p-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-3xl font-bold text-foreground mb-1">
-            Academic Classes
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Manage school years, terms, and active Classes.
-          </p>
-        </div>
-      </div>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) form.reset(emptyClass);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" className="cursor-pointer">
+          <Plus />
+          New class
+        </Button>
+      </DialogTrigger>
 
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* <!--  Add Classes Form --> */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
-            Add Classes
-          </h3>
+      <DialogContent className="gap-0 p-0 sm:max-w-sm">
+        <DialogHeader className="border-b px-5 py-4">
+          <DialogTitle>New class</DialogTitle>
+          <DialogDescription>
+            A platform-wide class every institute inherits, e.g. Class 10.
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* add Classes form */}
-          <FormProvider {...form}>
-            <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
-              <div>
-                <Label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                  Academic Classes Name
-                </Label>
-                <FormInput
-                  control={form.control}
-                  name="name"
-                  label="Class Name"
-                  placeholder="Enter Class name"
-                  description={form.formState.errors.name?.message}
-                />
-              </div>
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(addBtn)}>
+            <div className="p-5">
+              <FormInput
+                control={form.control}
+                name="name"
+                label="Class name"
+                placeholder="e.g. Class 10"
+                autoFocus
+              />
+            </div>
 
-              <Button disabled={isSubmitting} variant="default" type="submit">
-                {isSubmitting ? (
-                  <Spinner className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="mr-2 h-4 w-4" />
-                )}{" "}
-                Add Classes
+            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting && <Spinner />} Create class
               </Button>
-            </form>
-          </FormProvider>
-        </div>
-      </div>
-    </div>
+            </div>
+          </form>
+        </FormProvider>
+      </DialogContent>
+    </Dialog>
   );
 }

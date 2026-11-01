@@ -1,11 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  CheckCircle2,
-  CircleAlert,
-  CircleDot,
-  Info,
-} from "lucide-react";
+import { IoArrowForwardOutline as ArrowRight, IoCheckmarkCircleOutline as CheckCircle2, IoEllipseOutline as CircleDot, IoInformationCircleOutline as Info, IoWarningOutline as CircleAlert } from "react-icons/io5";
 import { cn } from "@/src/lib/utils";
 import type {
   AttentionItem,

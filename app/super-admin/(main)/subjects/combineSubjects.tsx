@@ -1,34 +1,51 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 
+import { useState } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { FcLink as Link2 } from "react-icons/fc";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
+import { FormInput } from "@/components/forms/form-input";
+import { FormSelect } from "@/components/forms/form-select";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import {
   InputCombineSubjectsType,
   OutputSubjectType,
   combineSubjectsZod,
 } from "@/src/validation/subjects.zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link as LinkIcon } from "lucide-react";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
-import { FormInput } from "@/components/forms/form-input";
-import { FormSelect } from "@/components/forms/form-select";
 import { combineSubjects } from "./_actions/subjects.action";
 
 // Two papers (English 1st + 2nd) are combined for display only. Both stay
 // ordinary subjects in the list, in subject assignment and in mark entry.
+const emptyCombine: InputCombineSubjectsType = {
+  firstSubjectId: "",
+  secondSubjectId: "",
+  label: "",
+};
+
 export default function CombineSubjects({
   subjects,
 }: {
   subjects: OutputSubjectType[];
 }) {
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   const form = useForm<InputCombineSubjectsType>({
     resolver: zodResolver(combineSubjectsZod),
-    defaultValues: {
-      firstSubjectId: "",
-      secondSubjectId: "",
-      label: "",
-    },
+    defaultValues: emptyCombine,
   });
   const { isSubmitting } = form.formState;
 
@@ -67,63 +84,88 @@ export default function CombineSubjects({
   };
 
   const addBtn = async (data: InputCombineSubjectsType) => {
-    await handleCrudAction(combineSubjects, data, {
-      successMessage: "Subjects Combined Successfully",
+    const res = await handleCrudAction(combineSubjects, data, {
+      successMessage: "Subjects combined",
       onSuccess: () => {
-        form.reset();
+        queryClient.invalidateQueries({ queryKey: ["default-subjects"] });
+        form.reset(emptyCombine);
       },
     });
+
+    if (res.success) setOpen(false);
   };
 
   return (
-    <div className="max-w-7xl lg:w-full mx-auto p-6">
-      <div className=" rounded-xl border border-border bg-card p-6 shadow-sm">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
-          Combine Two Papers
-        </h3>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Marks are still entered paper by paper. The pair is only shown
-          together when marks are displayed.
-        </p>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) form.reset(emptyCombine);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="cursor-pointer">
+          <Link2 />
+          Combine papers
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="gap-0 p-0 sm:max-w-md">
+        <DialogHeader className="border-b px-5 py-4">
+          <DialogTitle>Combine two papers</DialogTitle>
+          <DialogDescription>
+            Marks stay paper by paper — the pair is only shown together when
+            results are displayed.
+          </DialogDescription>
+        </DialogHeader>
 
         <FormProvider {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
-            <FormSelect
-              control={form.control}
-              name="firstSubjectId"
-              label="First Paper"
-              placeholder="e.g., English 1st Paper"
-              options={options}
-              onChange={() => form.setValue("secondSubjectId", "")}
-            />
+          <form onSubmit={form.handleSubmit(addBtn)}>
+            <div className="space-y-4 p-5">
+              <FormSelect
+                control={form.control}
+                name="firstSubjectId"
+                label="First paper"
+                placeholder="e.g. English 1st Paper"
+                options={options}
+                onChange={() => form.setValue("secondSubjectId", "")}
+              />
 
-            <FormSelect
-              control={form.control}
-              name="secondSubjectId"
-              label="Second Paper"
-              placeholder="e.g., English 2nd Paper"
-              options={secondOptions}
-              onChange={suggestLabel}
-            />
+              <FormSelect
+                control={form.control}
+                name="secondSubjectId"
+                label="Second paper"
+                placeholder="e.g. English 2nd Paper"
+                options={secondOptions}
+                onChange={suggestLabel}
+              />
 
-            <FormInput
-              control={form.control}
-              name="label"
-              label="Combined Label"
-              placeholder="e.g., English"
-            />
+              <FormInput
+                control={form.control}
+                name="label"
+                label="Combined label"
+                placeholder="e.g. English"
+              />
+            </div>
 
-            <Button disabled={isSubmitting} variant="default" type="submit">
-              {isSubmitting ? (
-                <Spinner className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <LinkIcon className="mr-2 h-4 w-4" />
-              )}
-              Combine Subjects
-            </Button>
+            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting && <Spinner />} Combine
+              </Button>
+            </div>
           </form>
         </FormProvider>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

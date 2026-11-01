@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { BookMarked, BookOpen, Layers, PencilLine } from "lucide-react";
+import { FcBookmark as BookMarked, FcEditImage as PencilLine, FcLibrary as BookOpen, FcOrgUnit as Layers } from "react-icons/fc";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { getSubjects } from "../_actions/subjects.action";

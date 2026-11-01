@@ -73,13 +73,15 @@ export function buildAttentionItems({
   if (setup && !setup.sessionYear) {
     items.push({
       id: "no-session",
+      // session years are created by the platform admin, so this is a notice for
+      // the institute rather than something it can act on
       severity: "critical",
       tag: "Setup",
       title: "No active academic session",
       detail:
-        "Students, classes and exams all hang off a session year. Nothing can be enrolled until one is active.",
-      href: "/dashboard/academic-sessions",
-      cta: "Create session",
+        "Students, classes and exams all hang off a session year. Session years are created by your platform admin — ask them to activate one.",
+      href: "/dashboard",
+      cta: "Back to dashboard",
     });
   }
 

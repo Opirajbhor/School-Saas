@@ -1,5 +1,5 @@
 import { db } from "@/src/drizzle-DB";
-import { and, AnyColumn, eq } from "drizzle-orm";
+import { and, AnyColumn, eq, isNull } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import {
@@ -37,7 +37,8 @@ export async function updateRecord<
         details: {},
       };
     }
-    const { userId, instituteId } = ctx;
+    const { userId, instituteId, role } = ctx;
+    const isSuperAdmin = role === "superadmin";
 
     const parsed = config.zodSchema.safeParse(data);
 
@@ -61,7 +62,10 @@ export async function updateRecord<
         .where(
           and(
             eq(config.drizzleSchema.id, id),
-            eq(config.drizzleSchema.instituteId, instituteId),
+            // a superadmin may only touch platform defaults, never a tenant row
+            isSuperAdmin
+              ? isNull(config.drizzleSchema.instituteId)
+              : eq(config.drizzleSchema.instituteId, instituteId),
           ),
         )
         .returning();
@@ -75,13 +79,16 @@ export async function updateRecord<
       }
 
       // ====== audit logs ==========
-      await createAuditLog(tx, {
-        instituteId,
-        userId,
-        action: "UPDATED",
-        entity: config.entity,
-        entityId: (record as { id: string }).id,
-      });
+      // a platform default has no institute to attribute the change to
+      if (!isSuperAdmin) {
+        await createAuditLog(tx, {
+          instituteId,
+          userId,
+          action: "UPDATED",
+          entity: config.entity,
+          entityId: (record as { id: string }).id,
+        });
+      }
 
       return {
         success: true as const,

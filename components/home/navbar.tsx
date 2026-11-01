@@ -1,17 +1,15 @@
 "use client";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { IoCloseOutline as X, IoMenuOutline as Menu } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { cn } from "@/src/lib/utils";
-import Image from "next/image";
 import { PiShieldChevronBold } from "react-icons/pi";
 
 const menuItems = [
-  { name: "Features", href: "#link" },
-  { name: "Solution", href: "#link" },
-  { name: "Pricing", href: "#link" },
-  { name: "About", href: "#link" },
+  { name: "Features", href: "#features" },
+  { name: "How it works", href: "#how" },
+  { name: "Why Educare", href: "#why" },
 ];
 
 export const HeroHeader = () => {
@@ -106,9 +104,10 @@ export const HeroHeader = () => {
                 </Link>
                 <Button
                   size="sm"
+                  asChild
                   className={cn(isScrolled ? "lg:inline-flex" : "hidden")}
                 >
-                  <Link href="#">
+                  <Link href="/auth/onboarding/signup">
                     <span>Get Started</span>
                   </Link>
                 </Button>

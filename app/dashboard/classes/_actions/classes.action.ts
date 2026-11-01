@@ -14,7 +14,7 @@ import { and, eq, isNull, or } from "drizzle-orm";
 import { createRecord } from "@/src/server-actions/crud-funtions/server-create-crud";
 import { deleteRecord } from "@/src/server-actions/crud-funtions/server-delete-crud";
 import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.action";
-import { getActiveSession } from "../../academic-sessions/_actions/session.action";
+import { getActiveSession } from "../../_actions/session.action";
 
 // get classes and sections
 export async function getClasses() {

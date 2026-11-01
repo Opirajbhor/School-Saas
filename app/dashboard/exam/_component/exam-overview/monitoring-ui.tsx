@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/utils/utils";
-import { ArrowRight } from "lucide-react";
+import { IoArrowForwardOutline as ArrowRight } from "react-icons/io5";
 import Link from "next/link";
 import {
   MarkEntryStatus,

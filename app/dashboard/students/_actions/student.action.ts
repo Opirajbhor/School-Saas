@@ -16,7 +16,7 @@ import {
   EditStudentType,
   editStudentZod,
 } from "@/src/validation/student.zod";
-import { getActiveSession } from "../../academic-sessions/_actions/session.action";
+import { getActiveSession } from "../../_actions/session.action";
 import { getClassSectionGroups } from "../../classes/_actions/classes.action";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";

@@ -1,12 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { readAuditLogs } from "@/src/server-actions/audit-logs/readAuditLog.action";
-import {
-  ClipboardList,
-  GraduationCap,
-  History,
-  PencilLine,
-  UserPlus,
-} from "lucide-react";
+import { FcEditImage as PencilLine, FcGraduationCap as GraduationCap, FcTimeline as History, FcTodoList as ClipboardList } from "react-icons/fc";
+import { IoPersonAddOutline as UserPlus } from "react-icons/io5";
 
 // Entity → icon and verb. The old version also gave every entity its own
 // colour, but chart-2/3/4 are all the same green, so the chips read as four
@@ -59,7 +54,7 @@ export async function ActivityFeed() {
         </p>
       ) : activities.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
-          <History className="size-5 text-muted-foreground/60" strokeWidth={1.75} />
+          <History className="size-5 text-muted-foreground/60" />
           <p className="text-sm text-muted-foreground">No activity yet.</p>
           <p className="text-xs text-muted-foreground/80">
             Creating a class, student or exam shows up here.
@@ -81,7 +76,7 @@ export async function ActivityFeed() {
                 className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/40"
               >
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                  <Icon className="size-3.5" strokeWidth={1.75} />
+                  <Icon className="size-3.5" />
                 </span>
 
                 <div className="min-w-0 flex-1">

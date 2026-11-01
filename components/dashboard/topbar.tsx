@@ -2,10 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 
-import { Bell, Menu, PanelLeft } from "lucide-react";
+import { IoMenuOutline as Menu, IoNotificationsOutline as Bell, IoReorderTwoOutline as PanelLeft } from "react-icons/io5";
 import { currentSession } from "@/src/lib/utils/current-session";
 import { authClient } from "@/src/better-auth/auth-client";
 import DashboardProfile from "./dashboard-profile";
+import { Breadcrumbs } from "./breadcrumbs";
 import { ModeToggle } from "../theme-toggle";
 
 export function Topbar({
@@ -38,6 +39,8 @@ export function Topbar({
       >
         <PanelLeft className="size-5" />
       </Button>
+
+      <Breadcrumbs />
 
       <div className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
         <span className="size-1.5 rounded-full bg-primary" />

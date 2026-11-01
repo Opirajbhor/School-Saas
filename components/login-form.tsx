@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { IoEyeOffOutline as EyeOff, IoEyeOutline as Eye } from "react-icons/io5";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";

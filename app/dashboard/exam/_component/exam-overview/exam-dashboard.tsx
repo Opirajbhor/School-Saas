@@ -1,13 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Gauge,
-  Layers,
-} from "lucide-react";
+import { FcOrgUnit as Layers, FcPieChart as Gauge } from "react-icons/fc";
+import { IoAlertCircleOutline as AlertCircle, IoCheckmarkCircleOutline as CheckCircle2, IoTimeOutline as Clock } from "react-icons/io5";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/table/tanstack/data-table";

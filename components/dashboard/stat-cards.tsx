@@ -1,5 +1,5 @@
 import { Metric, metricValue } from "@/components/dashboard/metric";
-import { BookOpen, GraduationCap, LayoutGrid, Users } from "lucide-react";
+import { FcConferenceCall as Users, FcGraduationCap as GraduationCap, FcGrid as LayoutGrid, FcLibrary as BookOpen } from "react-icons/fc";
 import type { DashboardCounts } from "@/app/dashboard/_actions/dashboard.action";
 import type { SectionCoverage } from "@/app/dashboard/_lib/attention";
 

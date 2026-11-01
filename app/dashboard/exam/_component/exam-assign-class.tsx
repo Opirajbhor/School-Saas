@@ -1,5 +1,5 @@
 "use client";
-import { ArrowBigRight } from "lucide-react";
+import { IoArrowForwardOutline as ArrowBigRight } from "react-icons/io5";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {

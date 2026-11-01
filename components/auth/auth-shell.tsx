@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GraduationCap, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { FcConferenceCall as Users, FcGraduationCap as GraduationCap, FcIdea as Sparkles, FcPrivacy as ShieldCheck } from "react-icons/fc";
 
 /**
  * Split auth screen: a brand panel on the left (TailAdmin-style) and the form

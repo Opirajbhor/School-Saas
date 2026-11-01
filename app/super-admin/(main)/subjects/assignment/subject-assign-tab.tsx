@@ -1,174 +1,169 @@
 "use client";
-import { FormSelect } from "@/components/forms/form-select";
+
+import { useRouter } from "next/navigation";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
+import { IoAddOutline as Plus } from "react-icons/io5";
+
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { FormSelect } from "@/components/forms/form-select";
+import { FormCheckbox } from "@/components/forms/form-checkbox";
+import { FormCheckboxGroup } from "@/components/forms/form-checkbox-group";
+import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
+import { ClassesWithGroups } from "@/src/validation/classes.zod";
 import {
   inputSubAssignType,
   OutputSubjectType,
   subjectAssignmentZod,
 } from "@/src/validation/subjects.zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getClassWithGroups } from "../../classes/_actions/classes.action";
-import { ClassesWithGroups } from "@/src/validation/classes.zod";
 import {
   getDefaultSubjects,
   subjectAssignment,
 } from "../_actions/subjects.action";
-import { FormCheckboxGroup } from "@/components/forms/form-checkbox-group";
-import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
-import { FormCheckbox } from "@/components/forms/form-checkbox";
+
+const emptyAssign: inputSubAssignType = {
+  classId: "",
+  groupId: null,
+  subjectIds: [],
+  isOptional: false,
+  isReligion: false,
+  subject_type: "COMPULSORY",
+};
 
 export function SubjectAssign() {
-  // --------------query ------------------
-  const queryClient = useQueryClient();
+  const router = useRouter();
 
-  // get active class data
   const { data: classData = [] } = useQuery<ClassesWithGroups[]>({
     queryKey: ["page-subject", "classGroups"],
     queryFn: async () => {
       const result = await getClassWithGroups();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+      if (!result.success) throw new Error(result.error);
       return result.data as ClassesWithGroups[];
     },
   });
-  // get active subject data
+
   const { data: subjectData = [] } = useQuery<OutputSubjectType[]>({
-    queryKey: ["page-subject", "subjectAssignment"],
+    queryKey: ["page-subject", "subjectOptions"],
     queryFn: async () => {
       const result = await getDefaultSubjects();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+      if (!result.success) throw new Error(result.error);
       return result.data as OutputSubjectType[];
     },
   });
 
-  // --------form----------------
   const form = useForm<inputSubAssignType>({
     resolver: zodResolver(subjectAssignmentZod),
-    defaultValues: {
-      groupId: null,
-      subjectIds: [],
-      isOptional: false,
-      isReligion: false,
-      subject_type: "COMPULSORY",
-    },
+    defaultValues: emptyAssign,
   });
   const { isSubmitting } = form.formState;
 
-  // ----------- selected Class assigned groups list-------------
-  const selectedClassId = useWatch({
-    control: form.control,
-    name: "classId",
-  });
-
-  const selectedClassData = classData?.find(
+  const selectedClassId = useWatch({ control: form.control, name: "classId" });
+  const subjectType = useWatch({ control: form.control, name: "subject_type" });
+  const selectedClassData = classData.find(
     (item) => item.id === selectedClassId,
   );
 
-  // --------- subject assign to class button -------------
+  const groupOptions = (selectedClassData?.groupClasses ?? [])
+    .map((item) => ({
+      label: item?.group?.name ?? "",
+      value: item?.group?.id ?? "",
+    }))
+    .filter((option) => option.value);
+
   const addBtn = async (data: inputSubAssignType) => {
     await handleCrudAction(subjectAssignment, data, {
-      successMessage: "Subjects Assigned Successfully",
+      successMessage: "Subjects assigned",
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["page-subject", "assignSubjects"],
-        });
+        // the table is server-rendered, so refresh is the only reliable update
+        router.refresh();
+        form.reset(emptyAssign);
       },
     });
   };
 
   return (
-    <div className=" rounded-xl border border-border bg-card p-3 shadow-sm">
-      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
-        Subject Assignment
-      </h3>
+    <Card className="gap-0 overflow-hidden p-0">
+      <div className="border-b px-4 py-3">
+        <h2 className="text-sm font-semibold text-foreground">
+          Assign subjects
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Adds the selected subjects to one class.
+        </p>
+      </div>
 
-      {/*  subject assign form */}
       <FormProvider {...form}>
-        <form className="space-y-4" onSubmit={form.handleSubmit(addBtn)}>
-          {/* -----------------Classes---------------- */}
+        <form className="space-y-4 p-4" onSubmit={form.handleSubmit(addBtn)}>
           <FormSelect
             control={form.control}
             name="classId"
-            label="Classes Name"
-            options={(classData ?? [])
-              .filter((item) => item.id !== undefined)
-              .map((item) => ({
-                label: item?.name,
-                value: item?.id as string,
-              }))}
-            description={form.formState.errors.classId?.message}
+            label="Class"
+            placeholder="Select a class"
+            options={classData
+              .filter((item) => item.id)
+              .map((item) => ({ label: item.name, value: item.id as string }))}
           />
 
-          {/* ----------------Groups-------------- */}
           <FormSelect
             control={form.control}
             name="groupId"
-            label="Group Name"
-            options={(selectedClassData?.groupClasses ?? []).map((item) => ({
-              label: item?.group?.name,
-              value: item?.group?.id,
-            }))}
-            description={form.formState.errors.groupId?.message}
+            label="Group"
+            placeholder={
+              subjectType !== "GROUP_BASED"
+                ? "Compulsory subjects apply to every group"
+                : groupOptions.length
+                  ? "Pick the group this subject belongs to"
+                  : "This class has no groups yet"
+            }
+            disabled={subjectType !== "GROUP_BASED" || groupOptions.length === 0}
+            options={groupOptions}
           />
-          {/* ----------------subject type-------------- */}
+
           <FormSelect
             control={form.control}
             name="subject_type"
-            label="Subject Type"
+            label="Subject type"
             options={[
-              { value: "COMPULSORY", label: "COMPULSORY" },
-              { value: "GROUP_BASED", label: "GROUP_BASED" },
+              { value: "COMPULSORY", label: "Compulsory" },
+              { value: "GROUP_BASED", label: "Group based" },
             ]}
-            description={form.formState.errors.groupId?.message}
-          />
-          {/* is religion */}
-          <FormCheckbox
-            control={form.control}
-            name="isReligion"
-            label="Check if Religion Subjjct"
-            description={form.formState.errors.isReligion?.message}
-          />
-          {/* is optional */}
-          <FormCheckbox
-            control={form.control}
-            name="isOptional"
-            label="Check if Optional Subjjct"
-            description={form.formState.errors.isOptional?.message}
           />
 
-          {/* --------subjects list-------------- */}
+          <div className="space-y-2.5 rounded-lg border p-3">
+            <FormCheckbox
+              control={form.control}
+              name="isReligion"
+              label="Religion subject"
+              description="Counts as the religion paper for this class."
+            />
+            <FormCheckbox
+              control={form.control}
+              name="isOptional"
+              label="Optional subject"
+              description="Students may pick it instead of a compulsory paper."
+            />
+          </div>
 
           <FormCheckboxGroup
             control={form.control}
             name="subjectIds"
-            label="Select Subjects"
-            options={
-              subjectData?.map((item) => ({
-                label: item.name,
-                value: item.id,
-                disabled: item.status !== "ACTIVE",
-              })) ?? []
-            }
-            description={form.formState.errors.subjectIds?.message}
+            label="Subjects"
+            options={subjectData.map((item) => ({
+              label: item.status === "ACTIVE" ? item.name : `${item.name} (inactive)`,
+              value: item.id,
+            }))}
           />
 
-          <Button disabled={isSubmitting} variant="default" type="submit">
-            {isSubmitting ? (
-              <Spinner className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="mr-2 h-4 w-4" />
-            )}{" "}
-            Add Subject
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? <Spinner /> : <Plus />}
+            Assign subjects
           </Button>
         </form>
       </FormProvider>
-    </div>
+    </Card>
   );
 }

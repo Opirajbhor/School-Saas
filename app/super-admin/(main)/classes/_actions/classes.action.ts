@@ -11,21 +11,20 @@ import {
   classesZod,
   compareClassName,
 } from "@/src/validation/classes.zod";
-import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 
 // get Default Classes
 export async function getDefaultClasses() {
   try {
-    const result = await readMany({
-      drizzleSchema: classesDrizzle,
-      query: ({ db }) =>
-        db.query.classesDrizzle.findMany({
-          where: isNull(classesDrizzle.instituteId),
-        }),
+    // readMany() resolves the tenant through getUserContext(), which needs a
+    // teachers row — a superadmin has none, so it returned success:false with
+    // no data and the sort below blew up. Platform defaults are read directly.
+    const rows = await db.query.classesDrizzle.findMany({
+      where: isNull(classesDrizzle.instituteId),
     });
+
     return {
       success: true as const,
-      data: (result.data as classesTypeWithId[]).sort(compareClassName),
+      data: (rows as classesTypeWithId[]).sort(compareClassName),
     };
   } catch (error) {
     return {
@@ -48,8 +47,8 @@ export async function createAcademicClass(data: classesType) {
       data,
     );
 
-    revalidatePath("/super-admin/academic-Class");
-    revalidatePath("/dashboard/academic-Class");
+    revalidatePath("/super-admin/classes");
+    revalidatePath("/dashboard/classes");
     return { success: true as const, data: result };
   } catch (error) {
     console.error("createAcademicClass failed:", error);
@@ -79,8 +78,8 @@ export async function changeStatusClass(id: string) {
         .where(eq(classesDrizzle.id, id))
         .returning();
     });
-    revalidatePath("/super-admin/academic-Class");
-    revalidatePath("/dashboard/academic-Class");
+    revalidatePath("/super-admin/classes");
+    revalidatePath("/dashboard/classes");
     return { success: true as const, data: result };
   } catch (error) {
     console.error("createAcademicClass failed:", error);
@@ -102,8 +101,8 @@ export async function deleteClass(id: string) {
         .where(eq(classesDrizzle.id, id))
         .returning();
     });
-    revalidatePath("/super-admin/academic-Class");
-    revalidatePath("/dashboard/academic-Class");
+    revalidatePath("/super-admin/classes");
+    revalidatePath("/dashboard/classes");
     return { success: true as const, data: result };
   } catch (error) {
     console.error("createAcademicClass failed:", error);
@@ -119,23 +118,20 @@ export async function deleteClass(id: string) {
 // get Default class subjects
 export async function getClassWithGroups() {
   try {
-    const result = await readMany({
-      drizzleSchema: classesDrizzle,
-      query: ({ db }) =>
-        db.query.classesDrizzle.findMany({
-          where: isNull(classesDrizzle.instituteId),
+    const rows = await db.query.classesDrizzle.findMany({
+      where: isNull(classesDrizzle.instituteId),
+      with: {
+        groupClasses: {
           with: {
-            groupClasses: {
-              with: {
-                group: true,
-              },
-            },
+            group: true,
           },
-        }),
+        },
+      },
     });
+
     return {
       success: true as const,
-      data: (result.data as ClassesWithGroups[]).sort(compareClassName),
+      data: (rows as ClassesWithGroups[]).sort(compareClassName),
     };
   } catch (error) {
     return {

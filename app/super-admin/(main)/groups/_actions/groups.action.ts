@@ -11,35 +11,25 @@ import {
   OutputGroupClassType,
 } from "@/src/validation/groups.zod";
 import { groupClasses, groups } from "@/src/drizzle-DB/schema";
-import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 
 // get Default Groups and Classes
 export async function getDefaultGroupClasses() {
   try {
-    const result = await readMany({
-      drizzleSchema: groups,
-      query: ({ db }) =>
-        db.query.groups.findMany({
-          where: isNull(groups.instituteId),
+    // not readMany(): that resolves a tenant teacher, which a superadmin does
+    // not have
+    const rows = await db.query.groups.findMany({
+      where: isNull(groups.instituteId),
+      with: {
+        groupClasses: {
           with: {
-            groupClasses: {
-              with: {
-                class: true,
-              },
-            },
+            class: true,
           },
-          orderBy: (groups, { asc }) => [asc(groups.createdAt)],
-        }),
+        },
+      },
+      orderBy: (table, { asc }) => [asc(table.createdAt)],
     });
-    if (!result.success) {
-      return {
-        success: false as const,
-        error: "failed to get group data",
-        details: {},
-      };
-    }
-    const rawData = result.data as OutputGroupClassType[];
-    const data = rawData.map((group) => ({
+
+    const data = (rows as OutputGroupClassType[]).map((group) => ({
       ...group,
       groupClasses: group.groupClasses
         .filter((gc) => gc?.status === "ACTIVE")

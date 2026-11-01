@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PenLine } from "lucide-react";
+import { FcEditImage as PenLine } from "react-icons/fc";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {

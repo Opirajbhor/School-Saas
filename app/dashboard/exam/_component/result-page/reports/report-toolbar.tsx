@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Printer } from "lucide-react";
+import { FcPrint as Printer } from "react-icons/fc";
+import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 
 // On-screen controls for a print report: go back to the results page, jump to
