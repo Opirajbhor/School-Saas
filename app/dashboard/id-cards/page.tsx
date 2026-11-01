@@ -3,20 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { FcBusinessContact as IdCardIcon } from "react-icons/fc";
-import { IoPrintOutline as Printer } from "react-icons/io5";
-import { IoSearchOutline as Search } from "react-icons/io5";
+import { IdentificationCard as IdCardIcon, Printer, MagnifyingGlass as Search } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { StudentIdCard, TeacherIdCard } from "@/app/print/_components/id-card";
@@ -131,58 +124,42 @@ export default function Page() {
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Class
               </label>
-              <Select
-                value={classId}
+              <Combobox
+                options={classes.map((item) => ({
+                  label: item.name,
+                  value: item.id,
+                }))}
+                value={classId || null}
                 onValueChange={(value) => {
                   setClassId(value ?? "");
                   setSectionId("");
                 }}
-              >
-                <SelectTrigger className="h-9 w-full">
-                  <SelectValue placeholder="Select a class">
-                    {classes.find((item) => item.id === classId)?.name ??
-                      "Select a class"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((item) => (
-                    <SelectItem key={item.id} value={item.id as string}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select a class"
+                searchPlaceholder="Search class…"
+              />
             </div>
 
             <div className="w-full sm:w-56">
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Section
               </label>
-              <Select
-                value={sectionId}
+              <Combobox
+                options={sections
+                  .filter((section: sectionType) => section.id)
+                  .map((section: sectionType) => ({
+                    label: `Section ${section.name}`,
+                    value: section.id as string,
+                  }))}
+                value={sectionId || null}
                 onValueChange={(value) => setSectionId(value ?? "")}
+                placeholder={
+                  sections.length === 0
+                    ? "No sections in this class"
+                    : "Select a section"
+                }
+                searchPlaceholder="Search section…"
                 disabled={sections.length === 0}
-              >
-                <SelectTrigger className="h-9 w-full">
-                  <SelectValue placeholder="Select a section">
-                    {sections.find((section) => section.id === sectionId)?.name
-                      ? `Section ${
-                          sections.find((section) => section.id === sectionId)
-                            ?.name
-                        }`
-                      : sections.length === 0
-                        ? "No sections in this class"
-                        : "Select a section"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {sections.map((section) => (
-                    <SelectItem key={section.id} value={section.id}>
-                      Section {section.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             <p className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">

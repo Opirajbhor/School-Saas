@@ -10,7 +10,8 @@ import {
 
 import { cn } from "@/utils/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { IoChevronBackOutline as ChevronLeftIcon, IoChevronDownOutline as ChevronDownIcon, IoChevronForwardOutline as ChevronRightIcon } from "react-icons/io5";function Calendar({
+import { CaretLeft as ChevronLeftIcon, CaretDown as ChevronDownIcon, CaretRight as ChevronRightIcon } from "@phosphor-icons/react/ssr";
+function Calendar({
   className,
   classNames,
   showOutsideDays = true,

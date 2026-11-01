@@ -1,7 +1,8 @@
 import * as React from "react"
 
 import { cn } from "@/utils/utils"
-import { IoChevronDownOutline as ChevronDownIcon } from "react-icons/io5";type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
+import { CaretDown as ChevronDownIcon } from "@phosphor-icons/react/ssr";
+type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
   size?: "sm" | "default"
 }
 

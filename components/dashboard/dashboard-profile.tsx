@@ -10,11 +10,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { IoChevronDownOutline as ChevronDown } from "react-icons/io5";
-import { FaRegUserCircle } from "react-icons/fa";
-import { IoMdSettings } from "react-icons/io";
+import { CaretDown as ChevronDown, UserCircle as FaRegUserCircle, Gear as IoMdSettings, Power as MdPowerSettingsNew } from "@phosphor-icons/react/ssr";
+
 import Link from "next/link";
-import { MdPowerSettingsNew } from "react-icons/md";
 import { authClient } from "@/src/better-auth/auth-client";
 import { useRouter } from "next/navigation";
 import RedBadge from "./alert-notice/red-badge";

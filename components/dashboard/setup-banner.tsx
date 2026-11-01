@@ -1,5 +1,6 @@
 import { cn } from "@/src/lib/utils";
-import { IoCheckmarkCircleOutline as CircleCheck, IoReloadOutline as Loader } from "react-icons/io5";
+import { CheckCircle as CircleCheck, ArrowClockwise as Loader } from "@phosphor-icons/react/ssr";
+
 import Link from "next/link";
 import type { SetupSummary } from "@/app/dashboard/_actions/dashboard.action";
 

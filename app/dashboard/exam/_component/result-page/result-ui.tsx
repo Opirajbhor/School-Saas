@@ -1,7 +1,5 @@
-import {
-  IoCheckmarkCircleOutline as Checkmark,
-  IoWarningOutline as AlertTriangle,
-} from "react-icons/io5";
+import { CheckCircle as Checkmark, Warning as AlertTriangle } from "@phosphor-icons/react/ssr";
+
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { OutputExamResultType } from "../../_schema/exam.zod";

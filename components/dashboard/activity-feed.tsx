@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { readAuditLogs } from "@/src/server-actions/audit-logs/readAuditLog.action";
-import { FcEditImage as PencilLine, FcGraduationCap as GraduationCap, FcTimeline as History, FcTodoList as ClipboardList } from "react-icons/fc";
-import { IoPersonAddOutline as UserPlus } from "react-icons/io5";
+import { PencilSimple as PencilLine, GraduationCap, ChartLine as History, ListChecks as ClipboardList, UserPlus } from "@phosphor-icons/react/ssr";
+
 
 // Entity → icon and verb. The old version also gave every entity its own
 // colour, but chart-2/3/4 are all the same green, so the chips read as four

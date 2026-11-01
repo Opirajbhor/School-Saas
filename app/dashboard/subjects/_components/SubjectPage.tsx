@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { FcBookmark as BookMarked, FcEditImage as PencilLine, FcLibrary as BookOpen, FcOrgUnit as Layers } from "react-icons/fc";
+import { BookmarkSimple as BookMarked, PencilSimple as PencilLine, Books as BookOpen, TreeStructure as Layers } from "@phosphor-icons/react/ssr";
+
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { getSubjects } from "../_actions/subjects.action";

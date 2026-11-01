@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { FcEmptyTrash as Trash } from "react-icons/fc";
+import { Trash } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import {

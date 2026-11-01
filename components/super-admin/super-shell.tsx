@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FcGraduationCap as GraduationCap } from "react-icons/fc";
-import { IoMenuOutline as Menu, IoReorderTwoOutline as PanelLeft } from "react-icons/io5";
+import { GraduationCap, List as Menu, DotsSixVertical as PanelLeft } from "@phosphor-icons/react/ssr";
+
 
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";

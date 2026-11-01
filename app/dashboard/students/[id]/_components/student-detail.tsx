@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { FcEditImage as Pen } from "react-icons/fc";
-import { FcGraduationCap as GraduationCap } from "react-icons/fc";
-import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
+import { PencilSimple as Pen, GraduationCap, ArrowLeft } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
 import { StudentDetail } from "@/src/validation/student.zod";
-import { StatusBadge } from "../../_table/columns";
+import { StatusPill } from "@/components/dashboard/status-pill";
 import { getStudentEnrollment } from "../../_actions/student.action";
 
 const formatDate = (value: Date | null | undefined) =>
@@ -134,7 +133,7 @@ export default function StudentDetailView({ id }: { id: string }) {
                 Record Status
               </p>
               <div className="mt-1">
-                <StatusBadge status={enrollment.status} />
+                <StatusPill status={enrollment.status} />
               </div>
             </div>
           </div>

@@ -1,6 +1,5 @@
-import { FcKey as Key } from "react-icons/fc";
-import { IoAddCircleOutline as Added } from "react-icons/io5";
-import { IoTimeOutline as Oldest } from "react-icons/io5";
+import { Key, PlusCircle as Added, Clock as Oldest } from "@phosphor-icons/react/ssr";
+
 
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/dashboard/page-header";

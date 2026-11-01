@@ -11,7 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { FcBrokenLink as Unlink } from "react-icons/fc";
+import { LinkBreak as Unlink } from "@phosphor-icons/react/ssr";
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";

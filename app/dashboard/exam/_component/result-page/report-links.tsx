@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FcContacts as UserSquare, FcDataSheet as FileSpreadsheet, FcDocument as ScrollText, FcPrint as Printer, FcRating as Trophy } from "react-icons/fc";
+import { AddressBook as UserSquare, Table as FileSpreadsheet, FileText as ScrollText, Printer, Star as Trophy } from "@phosphor-icons/react/ssr";
+
 import { Button } from "@/components/ui/button";
 
 // Shortcuts from the results page into the printable reports for the exam and

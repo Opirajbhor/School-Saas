@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
+import { ArrowLeft } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

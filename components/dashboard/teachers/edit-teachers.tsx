@@ -13,7 +13,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FcEditImage as Pen } from "react-icons/fc";
+import { PencilSimple as Pen } from "@phosphor-icons/react/ssr";
+
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

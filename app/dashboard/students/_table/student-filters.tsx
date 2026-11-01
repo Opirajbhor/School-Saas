@@ -2,18 +2,12 @@
 
 import { useMemo, useState } from "react";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { IoRefreshOutline as RotateCcw } from "react-icons/io5";
+import { ArrowsClockwise as RotateCcw, MagnifyingGlass as Search } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { IoSearchOutline as Search } from "react-icons/io5";
+import { Combobox } from "@/components/ui/combobox";
 import { StudentEnrollment } from "@/src/validation/student.zod";
 
 type Option = { label: string; value: string };
@@ -210,36 +204,17 @@ export function StudentFilters({
       <label className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
-      <Select
-        items={options}
-        // `items` is what makes the trigger show the label instead of the raw
-        // value, which is why "All …" and the id-based options render as names.
+      <Combobox
+        options={options}
         value={draft[id]}
-        onValueChange={(next) => setDraftValue(id, next as string | null)}
+        onValueChange={(next) => setDraftValue(id, next)}
+        // null clears the filter; the clear row is the "All …" entry
+        clearLabel={`All ${label}`}
+        placeholder={disabledHint ?? `All ${label}`}
+        searchPlaceholder={`Search ${label.toLowerCase()}…`}
         disabled={disabled}
-      >
-        <SelectTrigger
-          size="sm"
-          className="w-full min-w-32 cursor-pointer disabled:cursor-not-allowed"
-        >
-          <SelectValue placeholder={disabledHint ?? `All ${label}`} />
-        </SelectTrigger>
-        <SelectContent>
-          {/* null clears the filter — otherwise the value itself is rendered */}
-          <SelectItem className="cursor-pointer" value={null}>
-            All {label}
-          </SelectItem>
-          {options.map((option) => (
-            <SelectItem
-              className="cursor-pointer"
-              key={option.value}
-              value={option.value}
-            >
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        size="sm"
+      />
     </div>
   );
 

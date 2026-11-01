@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import type { IconType } from "react-icons";
+import type { Icon } from "@phosphor-icons/react";
 
 
 export type BarSegment = { value: number; className: string };
@@ -18,7 +18,7 @@ export function Metric({
 }: {
   label: string;
   value: string;
-  icon: IconType;
+  icon: Icon;
   segments?: BarSegment[];
   footer: React.ReactNode;
 }) {

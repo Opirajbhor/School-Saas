@@ -1,6 +1,7 @@
 import { type Column, type RowData } from "@tanstack/react-table";
 import { cn } from "cn";
-import { IoArrowDownOutline as ArrowDown, IoArrowUpOutline as ArrowUp, IoSwapVerticalOutline as ChevronsUpDown } from "react-icons/io5";
+import { ArrowDown, ArrowUp, ArrowsDownUp as ChevronsUpDown } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import {

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FcBookmark as Tags, FcBusinessman as UserRound, FcConferenceCall as Users, FcDepartment as Building2, FcDocument as FileText, FcGlobe as MapPin, FcGraduationCap as GraduationCap, FcOrgUnit as Layers, FcPlanner as CalendarRange } from "react-icons/fc";
+import { BookmarkSimple as Tags, GenderMale as UserRound, UsersThree as Users, Buildings as Building2, FileText, Globe as MapPin, GraduationCap, TreeStructure as Layers, CalendarCheck as CalendarRange } from "@phosphor-icons/react/ssr";
+
 
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/dashboard/page-header";

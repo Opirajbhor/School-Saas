@@ -1,5 +1,6 @@
 "use client";
-import { IoArrowForwardOutline as ArrowBigRight } from "react-icons/io5";
+import { ArrowRight as ArrowBigRight } from "@phosphor-icons/react/ssr";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";

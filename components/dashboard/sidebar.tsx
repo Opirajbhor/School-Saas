@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "@/src/lib/utils";
-import { FcSettings as Settings } from "react-icons/fc";
+import { Gear as Settings } from "@phosphor-icons/react/ssr";
+
 import Link from "next/link";
 import { DashboardBrand, DashboardNav } from "./nav";
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { FcApproval as BadgeCheck, FcApproval as ClipboardCheck, FcDataSheet as FileSpreadsheet, FcDepartment as Building2, FcGraduationCap as GraduationCap, FcLibrary as BookOpen, FcLock as Lock, FcOrgUnit as Layers } from "react-icons/fc";
-import { IoArrowForwardOutline as ArrowRight, IoCheckmarkCircleOutline as CheckCircle2 } from "react-icons/io5";
+import { SealCheck as BadgeCheck, SealCheck as ClipboardCheck, Table as FileSpreadsheet, Buildings as Building2, GraduationCap, Books as BookOpen, Lock, TreeStructure as Layers, ArrowRight, CheckCircle as CheckCircle2 } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { IoSearchOutline as Search } from "react-icons/io5";
+import { MagnifyingGlass as Search } from "@phosphor-icons/react/ssr";
+
 import type { ColumnDef, RowData } from "@tanstack/react-table";
 
 import { Card } from "@/components/ui/card";

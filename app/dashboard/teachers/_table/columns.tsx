@@ -5,7 +5,8 @@ import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-head
 import { Teacherlist } from "@/src/validation/teacher.zod";
 import { createColumnHelper } from "@tanstack/react-table";
 import Link from "next/link";
-import { FcGraduationCap as GraduationCap } from "react-icons/fc";
+import { GraduationCap } from "@phosphor-icons/react/ssr";
+
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

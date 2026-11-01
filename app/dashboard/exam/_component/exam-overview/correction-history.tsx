@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FcTimeline as History } from "react-icons/fc";
-import { IoChevronDownOutline as ChevronDown } from "react-icons/io5";
+import { ChartLine as History, CaretDown as ChevronDown } from "@phosphor-icons/react/ssr";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

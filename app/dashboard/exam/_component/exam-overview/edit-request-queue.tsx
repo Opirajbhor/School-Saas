@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { IoCheckmarkOutline as Check, IoCloseOutline as X, IoTimeOutline as Clock } from "react-icons/io5";
+import { Check, X, Clock } from "@phosphor-icons/react/ssr";
+
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

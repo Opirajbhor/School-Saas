@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { FcCalendar as Calendar, FcTodoList as ClipboardList } from "react-icons/fc";
-import { IoArrowForwardOutline as ArrowRight } from "react-icons/io5";
+import { CalendarDots as Calendar, ListChecks as ClipboardList, ArrowRight } from "@phosphor-icons/react/ssr";
+
 import {
   ExamMonitoringSummaryType,
   OutputExamType,

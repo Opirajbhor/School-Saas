@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
+import { ArrowLeft, Star as Rating, Checks as ActiveIcon, Flag as LowestIcon } from "@phosphor-icons/react/ssr";
 
-import { FcRating as Rating } from "react-icons/fc";
-import { IoCheckmarkDoneOutline as ActiveIcon } from "react-icons/io5";
-import { IoFlagOutline as LowestIcon } from "react-icons/io5";
+
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FcConferenceCall as Users, FcGraduationCap as GraduationCap, FcIdea as Sparkles, FcPrivacy as ShieldCheck } from "react-icons/fc";
+import { UsersThree as Users, GraduationCap, Lightbulb as Sparkles, ShieldCheck } from "@phosphor-icons/react/ssr";
+
 
 /**
  * Split auth screen: a brand panel on the left (TailAdmin-style) and the form

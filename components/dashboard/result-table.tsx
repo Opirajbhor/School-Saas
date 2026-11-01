@@ -2,8 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/src/lib/utils";
 import Link from "next/link";
-import { FcApproval as ClipboardCheck } from "react-icons/fc";
-import { IoArrowForwardOutline as ArrowUpRight, IoTimeOutline as Clock } from "react-icons/io5";
+import { SealCheck as ClipboardCheck, ArrowRight as ArrowUpRight, Clock } from "@phosphor-icons/react/ssr";
+
 import type { ExamProgress } from "@/app/dashboard/_lib/attention";
 
 // Lifecycle vocabulary shared with the exam feature. The badge colour is the

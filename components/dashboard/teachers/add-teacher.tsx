@@ -1,5 +1,6 @@
 "use client";
-import { IoAddOutline as Plus } from "react-icons/io5";
+import { Plus } from "@phosphor-icons/react/ssr";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {

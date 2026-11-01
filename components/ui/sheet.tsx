@@ -5,7 +5,8 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "@/utils/utils"
 import { Button } from "@/components/ui/button"
-import { IoCloseOutline as XIcon } from "react-icons/io5";function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+import { X as XIcon } from "@phosphor-icons/react/ssr";
+function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 

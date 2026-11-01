@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { FcSettings as Settings } from "react-icons/fc";
-import { IoCheckmarkDoneOutline as Checked } from "react-icons/io5";
-import { IoLayersOutline as Papers } from "react-icons/io5";
-import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
+import { Gear as Settings, Checks as Checked, Stack as Papers, ArrowLeft } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

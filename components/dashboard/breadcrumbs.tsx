@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FcHome as House } from "react-icons/fc";
-import { IoChevronForwardOutline as ChevronRight } from "react-icons/io5";
+import { House, CaretRight as ChevronRight } from "@phosphor-icons/react/ssr";
+
 
 import { navGroups } from "./nav";
 import { superNavGroups } from "../super-admin/super-nav";

@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { FcCalendar as CalendarIcon } from "react-icons/fc";
+import { CalendarDots as CalendarIcon } from "@phosphor-icons/react/ssr";
+
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";

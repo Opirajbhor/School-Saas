@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FcLock as Lock, FcUnlock as LockOpen } from "react-icons/fc";
-import { IoPaperPlaneOutline as Send, IoWarningOutline as TriangleAlert } from "react-icons/io5";
+import { Lock, LockOpen, PaperPlaneTilt as Send, Warning as TriangleAlert } from "@phosphor-icons/react/ssr";
+
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

@@ -4,11 +4,11 @@ import { DataTableFeatures } from "@/components/table/tanstack/data-table-featur
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
 import { StudentEnrollment } from "@/src/validation/student.zod";
 import { createColumnHelper } from "@tanstack/react-table";
-import { cn } from "@/utils/utils";
 import Link from "next/link";
-import { FcEditImage as Pen, FcGraduationCap as IdCard } from "react-icons/fc";
-import { IoEyeOutline as Eye } from "react-icons/io5";
+import { PencilSimple as Pen, GraduationCap as IdCard, Eye } from "@phosphor-icons/react/ssr";
+
 import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/dashboard/status-pill";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { ToggleStudentStatus } from "../_actions/student.action";
 
@@ -94,7 +94,7 @@ export const studentColumns = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
   }),
   columnHelper.display({
     id: "actions",
@@ -141,21 +141,6 @@ export const filterOnlyColumnIds = [
   "gender",
   "religion",
 ];
-
-export function StatusBadge({ status }: { status: "ACTIVE" | "INACTIVE" }) {
-  return (
-    <span
-      className={cn(
-        "px-2 py-1 rounded text-xs font-medium",
-        status === "ACTIVE"
-          ? "bg-primary text-primary-foreground"
-          : "bg-foreground text-background",
-      )}
-    >
-      {status}
-    </span>
-  );
-}
 
 function ActionsCell({ item }: { item: StudentEnrollment }) {
   return (

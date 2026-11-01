@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 
-import { IoMenuOutline as Menu, IoNotificationsOutline as Bell, IoReorderTwoOutline as PanelLeft } from "react-icons/io5";
+import { List as Menu, Bell, DotsSixVertical as PanelLeft } from "@phosphor-icons/react/ssr";
+
 import { currentSession } from "@/src/lib/utils/current-session";
 import { authClient } from "@/src/better-auth/auth-client";
 import DashboardProfile from "./dashboard-profile";

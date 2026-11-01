@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { IoArrowForwardOutline as ArrowRight, IoCheckmarkCircleOutline as CheckCircle2, IoEllipseOutline as CircleDot, IoInformationCircleOutline as Info, IoWarningOutline as CircleAlert } from "react-icons/io5";
+import { ArrowRight, CheckCircle as CheckCircle2, Circle as CircleDot, Info, Warning as CircleAlert } from "@phosphor-icons/react/ssr";
+
 import { cn } from "@/src/lib/utils";
 import type {
   AttentionItem,

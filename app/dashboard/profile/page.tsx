@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FcEditImage as PencilLine, FcGlobe as MapPin, FcPhone as Phone, FcPrivacy as ShieldCheck, FcSms as Mail } from "react-icons/fc";
+import { PencilSimple as PencilLine, Globe as MapPin, Phone, ShieldCheck, ChatText as Mail } from "@phosphor-icons/react/ssr";
+
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

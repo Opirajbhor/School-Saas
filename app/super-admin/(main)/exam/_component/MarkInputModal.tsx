@@ -13,7 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MdEditNote } from "react-icons/md";
+import { NotePencil as MdEditNote } from "@phosphor-icons/react/ssr";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FormProvider,

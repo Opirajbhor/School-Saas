@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { InstituteOutput } from "@/src/validation/auth.zod";
 import { Teacherlist } from "@/src/validation/teacher.zod";
 
-import { FcBarChart as BarChart3, FcBusinessman as UserRound, FcEditImage as PencilLine } from "react-icons/fc";
-import { IoAddOutline as Plus } from "react-icons/io5";
+import { ChartBar as BarChart3, GenderMale as UserRound, PencilSimple as PencilLine, Plus } from "@phosphor-icons/react/ssr";
+
 import Link from "next/link";
 
 interface ProfileComponentProps {

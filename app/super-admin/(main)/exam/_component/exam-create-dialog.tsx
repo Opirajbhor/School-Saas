@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IoAddOutline as Plus } from "react-icons/io5";
+import { Plus } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import {

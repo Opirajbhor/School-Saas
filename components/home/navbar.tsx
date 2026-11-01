@@ -1,10 +1,14 @@
 "use client";
 import Link from "next/link";
-import { IoCloseOutline as X, IoMenuOutline as Menu } from "react-icons/io5";
+import {
+  X,
+  List as Menu,
+  ShieldCheck as ShieldMark,
+} from "@phosphor-icons/react/ssr";
+
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { cn } from "@/src/lib/utils";
-import { PiShieldChevronBold } from "react-icons/pi";
 
 const menuItems = [
   { name: "Features", href: "#features" },
@@ -43,7 +47,7 @@ export const HeroHeader = () => {
                 aria-label="home"
                 className="flex gap-1 items-center space-x-2"
               >
-                <PiShieldChevronBold size={30} />
+                <ShieldMark size={30} />
                 Educare
               </Link>
 

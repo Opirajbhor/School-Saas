@@ -2,7 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/utils/utils";
-import { IoArrowForwardOutline as ArrowRight } from "react-icons/io5";
+import { ArrowRight } from "@phosphor-icons/react/ssr";
+
 import Link from "next/link";
 import {
   MarkEntryStatus,

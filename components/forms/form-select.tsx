@@ -15,13 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 
 type FormSelectOption = {
   label: string;
@@ -60,38 +54,21 @@ export function FormSelect<TFieldValues extends FieldValues>({
     <FormItem className={className}>
       <FormLabel>{label}</FormLabel>
 
-      <Select
-        value={field.value ?? ""}
-        onValueChange={(value) => {
-          const stringValue = value ?? "";
-          field.onChange(stringValue);
-          onChange?.(stringValue);
-        }}
-        disabled={disabled}
-      >
-        <FormControl>
-          <SelectTrigger>
-            <SelectValue placeholder={placeholder}>
-              {
-                options.find((item) => item.value === (field.value ?? ""))
-                  ?.label
-              }
-            </SelectValue>
-          </SelectTrigger>
-        </FormControl>
-
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem
-              className={"cursor-pointer"}
-              key={option.value}
-              value={option.value}
-            >
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FormControl>
+        <Combobox
+          options={options}
+          // the form stores "" for "nothing chosen", the combobox wants null
+          value={field.value ? String(field.value) : null}
+          onValueChange={(value) => {
+            const stringValue = value ?? "";
+            field.onChange(stringValue);
+            onChange?.(stringValue);
+          }}
+          placeholder={placeholder}
+          searchPlaceholder={`Search ${label.toLowerCase()}…`}
+          disabled={disabled}
+        />
+      </FormControl>
 
       {description && <FormDescription>{description}</FormDescription>}
 

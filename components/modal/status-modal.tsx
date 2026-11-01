@@ -13,7 +13,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { ReactNode, useState } from "react";
 import { toast } from "sonner";
-import { GrStatusInfo } from "react-icons/gr";
+import { Info as GrStatusInfo } from "@phosphor-icons/react/ssr";
+
 
 interface StatusModalProps {
   id: string;

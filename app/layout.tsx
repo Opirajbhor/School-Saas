@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Source_Serif_4, JetBrains_Mono, Geist } from "next/font/google";
+import { Source_Serif_4, JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/utils/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/src/tanstackQuery/provider";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+// design.md asks for Notion Sans, which is proprietary; Inter is its base
+// family, so proportions and metrics transfer.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 const fontSerif = Source_Serif_4({
   subsets: ["latin"],
@@ -41,7 +47,7 @@ export default function RootLayout({
         fontSerif.variable,
         fontMono.variable,
         "font-sans",
-        geist.variable,
+        inter.variable,
       )}
     >
       <body className="min-h-full flex flex-col">

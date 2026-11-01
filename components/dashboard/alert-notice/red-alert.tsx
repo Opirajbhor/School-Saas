@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { IoWarningOutline as TriangleAlertIcon } from "react-icons/io5";
+import { Warning as TriangleAlertIcon } from "@phosphor-icons/react/ssr";
+
 
 const RedAlert = ({
   title = "Something is Wrong",

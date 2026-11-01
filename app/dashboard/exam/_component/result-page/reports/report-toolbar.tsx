@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FcPrint as Printer } from "react-icons/fc";
-import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
+import { Printer, ArrowLeft } from "@phosphor-icons/react/ssr";
+
 import { Button } from "@/components/ui/button";
 
 // On-screen controls for a print report: go back to the results page, jump to

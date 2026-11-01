@@ -14,7 +14,6 @@ import { parseWithZod } from "../../validation/validator.zod";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { teachers, user } from "../../drizzle-DB/schema";
-import { createRecord } from "../crud-funtions/server-create-crud";
 import { currentUser } from "./currentUser.action";
 import { requireUserContext } from "../shared/get-user-context.action";
 

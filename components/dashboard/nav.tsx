@@ -1,16 +1,17 @@
 "use client";
 
 import { cn } from "@/src/lib/utils";
-import type { IconType } from "react-icons";
-import { FcApproval as ClipboardCheck, FcBarChart as BarChart3, FcBusinessContact as IdCard, FcBusinessman as UserRound, FcConferenceCall as Users, FcDepartment as School, FcDocument as FileText, FcEditImage as PencilLine, FcGraduationCap as GraduationCap, FcGrid as LayoutDashboard, FcLibrary as BookOpen, FcOrgUnit as Layers } from "react-icons/fc";
+import type { Icon } from "@phosphor-icons/react";
+import { SealCheck as ClipboardCheck, ChartBar as BarChart3, IdentificationCard as IdCard, GenderMale as UserRound, UsersThree as Users, Buildings as School, FileText, PencilSimple as PencilLine, GraduationCap, SquaresFour as LayoutDashboard, Books as BookOpen, TreeStructure as Layers } from "@phosphor-icons/react/ssr";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/src/better-auth/auth-client";
 
-// Flat Color Icons (react-icons/fc): full-colour glyphs, one distinct mark per
-// destination. Chrome-sized glyphs elsewhere in the app use react-icons/io5,
-// which stays legible at 12-16px where the flat set turns to mush.
-type NavItem = { name: string; link: string; icon: IconType };
+// Phosphor (regular weight) everywhere: monochrome, currentColor, one distinct
+// mark per destination. design.md wants quiet glyphs that let the purple carry
+// the emphasis, and a weight system (light/regular/bold) instead of a second set.
+type NavItem = { name: string; link: string; icon: Icon };
 
 export const navGroups: { group: string; items: NavItem[] }[] = [
   {

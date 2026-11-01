@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { IoArrowBackOutline as ArrowLeft } from "react-icons/io5";
+import { ArrowLeft, Sliders as Configuration, Checks as ActiveIcon, X as InactiveIcon } from "@phosphor-icons/react/ssr";
 
-import { FcDataConfiguration as Configuration } from "react-icons/fc";
-import { IoCheckmarkDoneOutline as ActiveIcon } from "react-icons/io5";
-import { IoCloseOutline as InactiveIcon } from "react-icons/io5";
+
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

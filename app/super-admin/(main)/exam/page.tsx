@@ -1,10 +1,6 @@
 import Link from "next/link";
-import {
-  FcDataConfiguration as Configuration,
-  FcRating as Rating,
-  FcSettings as Settings,
-} from "react-icons/fc";
-import { IoArrowForwardOutline as ArrowRight } from "react-icons/io5";
+import { Sliders as Configuration, Star as Rating, Gear as Settings, ArrowRight } from "@phosphor-icons/react/ssr";
+
 
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/dashboard/page-header";

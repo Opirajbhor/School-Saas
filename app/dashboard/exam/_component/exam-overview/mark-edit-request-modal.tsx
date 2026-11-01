@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FcEditImage as PenLine } from "react-icons/fc";
+import { PencilSimple as PenLine } from "@phosphor-icons/react/ssr";
+
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {

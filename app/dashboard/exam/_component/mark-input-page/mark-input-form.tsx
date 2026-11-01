@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FcConferenceCall as Users, FcEditImage as PenTool } from "react-icons/fc";
-import { IoChevronBackOutline as ChevronLeft, IoChevronForwardOutline as ChevronRight, IoPaperPlaneOutline as Send, IoSaveOutline as Save, IoSearchOutline as Search } from "react-icons/io5";
+import { UsersThree as Users, PencilSimple as PenTool, CaretLeft as ChevronLeft, CaretRight as ChevronRight, PaperPlaneTilt as Send, FloppyDisk as Save, MagnifyingGlass as Search } from "@phosphor-icons/react/ssr";
+
 import { toast } from "sonner";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

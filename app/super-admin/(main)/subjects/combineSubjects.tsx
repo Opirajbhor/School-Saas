@@ -4,7 +4,8 @@ import { useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { FcLink as Link2 } from "react-icons/fc";
+import { Link as Link2 } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import {

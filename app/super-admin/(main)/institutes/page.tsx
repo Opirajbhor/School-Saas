@@ -1,5 +1,5 @@
-import { FcDepartment as Building2, FcGlobe as MapPin } from "react-icons/fc";
-import { IoCheckmarkCircleOutline as CircleCheck, IoRemoveCircleOutline as CircleMinus } from "react-icons/io5";
+import { Buildings as Building2, Globe as MapPin, CheckCircle as CircleCheck, MinusCircle as CircleMinus } from "@phosphor-icons/react/ssr";
+
 
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/dashboard/page-header";

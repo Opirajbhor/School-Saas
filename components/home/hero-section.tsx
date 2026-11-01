@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import { IoArrowForwardOutline as ArrowRight, IoChevronForwardOutline as ChevronRight } from "react-icons/io5";
+import { ArrowRight, CaretRight as ChevronRight } from "@phosphor-icons/react/ssr";
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { TextEffect } from "@/components/motion-primitives/text-effect";

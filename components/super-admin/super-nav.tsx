@@ -1,12 +1,13 @@
 "use client";
 
 import { cn } from "@/src/lib/utils";
-import type { IconType } from "react-icons";
-import { FcDepartment as Building2, FcDepartment as School, FcDocument as FileText, FcLibrary as BookOpen, FcOrgUnit as Layers, FcPlanner as CalendarRange, FcPrivacy as ShieldCheck } from "react-icons/fc";
+import type { Icon } from "@phosphor-icons/react";
+import { Buildings as Building2, Buildings as School, FileText, Books as BookOpen, TreeStructure as Layers, CalendarCheck as CalendarRange, ShieldCheck } from "@phosphor-icons/react/ssr";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type NavItem = { name: string; link: string; icon: IconType };
+type NavItem = { name: string; link: string; icon: Icon };
 
 // Platform-wide defaults only. Every entry here writes rows with
 // institute_id = NULL, which is why this section is superadmin-only.

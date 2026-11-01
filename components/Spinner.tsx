@@ -1,4 +1,5 @@
-import { IoReloadOutline as LoaderIcon } from "react-icons/io5";
+import { ArrowClockwise as LoaderIcon } from "@phosphor-icons/react/ssr";
+
 
 import { cn } from "@/utils/utils";
 

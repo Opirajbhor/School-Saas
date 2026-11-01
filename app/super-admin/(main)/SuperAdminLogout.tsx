@@ -1,7 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { MdPowerSettingsNew } from "react-icons/md";
+import { Power as MdPowerSettingsNew } from "@phosphor-icons/react/ssr";
+
 import { authClient } from "@/src/better-auth/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { FcLibrary as BookOpen, FcLink as Link2 } from "react-icons/fc";
-import { IoCheckmarkCircleOutline as CircleCheck, IoRemoveCircleOutline as CircleMinus } from "react-icons/io5";
+import { Books as BookOpen, Link as Link2, CheckCircle as CircleCheck, MinusCircle as CircleMinus } from "@phosphor-icons/react/ssr";
+
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

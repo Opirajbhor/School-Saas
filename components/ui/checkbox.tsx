@@ -4,7 +4,8 @@ import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
 import { cn } from "@/utils/utils"
-import { IoCheckmarkOutline as CheckIcon } from "react-icons/io5";function Checkbox({
+import { Check as CheckIcon } from "@phosphor-icons/react/ssr";
+function Checkbox({
   className,
   ...props
 }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {

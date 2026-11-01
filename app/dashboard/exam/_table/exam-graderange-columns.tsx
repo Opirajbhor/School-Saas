@@ -2,7 +2,7 @@
 import { DataTableFeatures } from "@/components/table/tanstack/data-table-features";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-header";
-import { cn } from "@/utils/utils";
+import { StatusPill } from "@/components/dashboard/status-pill";
 import { OutputExamGradeRangeType } from "../_schema/exam.zod";
 
 // Use `accessor` for data columns and `display` for columns without one.
@@ -43,20 +43,6 @@ export const ExamGradeRangeColumn = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
-    cell: ({ getValue }) => {
-      const status = getValue<"ACTIVE" | "INACTIVE">();
-      return (
-        <span
-          className={cn(
-            "px-2 py-1 rounded text-xs font-medium",
-            status === "ACTIVE"
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground text-background",
-          )}
-        >
-          {status}
-        </span>
-      );
-    },
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
   }),
 ]);

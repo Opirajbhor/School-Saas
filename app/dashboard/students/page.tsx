@@ -1,8 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FcConferenceCall as Users, FcGrid as LayoutGrid } from "react-icons/fc";
-import { IoAddOutline as Plus, IoCheckmarkDoneOutline as UserCheck, IoPersonRemoveOutline as UserMinus } from "react-icons/io5";
+import { UsersThree as Users, SquaresFour as LayoutGrid, Plus, Checks as UserCheck, UserMinus, IdentificationCard as IdCard } from "@phosphor-icons/react/ssr";
+
 import { useState } from "react";
 import { StudentEnrollment } from "@/src/validation/student.zod";
 import type { ColumnFiltersState } from "@tanstack/react-table";
@@ -13,7 +13,6 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { studentColumns } from "./_table/columns";
-import { FcBusinessContact as IdCard } from "react-icons/fc";
 import {
   HIDDEN_FILTER_COLUMNS,
   StudentFilters,

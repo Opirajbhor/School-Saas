@@ -1,4 +1,5 @@
-import { FcBookmark as Tags, FcGraduationCap as GraduationCap } from "react-icons/fc";
+import { BookmarkSimple as Tags, GraduationCap } from "@phosphor-icons/react/ssr";
+
 
 import { Card } from "@/components/ui/card";
 import {

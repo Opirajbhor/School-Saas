@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { FcDepartment as School, FcGrid as LayoutGrid, FcOrgUnit as Layers } from "react-icons/fc";
+import { Buildings as School, SquaresFour as LayoutGrid, TreeStructure as Layers } from "@phosphor-icons/react/ssr";
+
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { getClasses } from "./_actions/classes.action";

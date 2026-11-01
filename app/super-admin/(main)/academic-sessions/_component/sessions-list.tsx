@@ -1,7 +1,8 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { FcPlanner as CalendarRange } from "react-icons/fc";
+import { CalendarCheck as CalendarRange } from "@phosphor-icons/react/ssr";
+
 
 import { Card } from "@/components/ui/card";
 import { StatusPill } from "@/components/dashboard/status-pill";

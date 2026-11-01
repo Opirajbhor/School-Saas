@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { IoSearchOutline as Search } from "react-icons/io5";
+import { MagnifyingGlass as Search } from "@phosphor-icons/react/ssr";
+
 import { DataTable } from "@/components/table/tanstack/data-table";
 import { classesTypeWithId } from "@/src/validation/classes.zod";
 import { columns } from "./columns";

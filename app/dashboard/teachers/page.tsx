@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { FcBusinessman as Mars, FcBusinesswoman as Venus, FcConferenceCall as Users } from "react-icons/fc";
-import { IoCheckmarkDoneOutline as UserCheck, IoSearchOutline as Search } from "react-icons/io5";
+import { GenderMale as Mars, GenderFemale as Venus, UsersThree as Users, Checks as UserCheck, MagnifyingGlass as Search } from "@phosphor-icons/react/ssr";
+
 
 import { Teacherlist, TeacherStatsResponse } from "@/src/validation/teacher.zod";
 import AddTeacher from "@/components/dashboard/teachers/add-teacher";

@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { FcDepartment as School, FcOrgUnit as Layers } from "react-icons/fc";
-import { IoCheckmarkCircleOutline as CircleCheck, IoWarningOutline as CircleAlert } from "react-icons/io5";
+import { Buildings as School, TreeStructure as Layers, CheckCircle as CircleCheck, Warning as CircleAlert } from "@phosphor-icons/react/ssr";
+
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { getDefaultGroupClasses } from "@/app/super-admin/(main)/groups/_actions/groups.action";

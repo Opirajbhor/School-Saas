@@ -5,7 +5,8 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/utils/utils"
 import { Button } from "@/components/ui/button"
-import { IoCloseOutline as XIcon } from "react-icons/io5";function Dialog({
+import { X as XIcon } from "@phosphor-icons/react/ssr";
+function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />

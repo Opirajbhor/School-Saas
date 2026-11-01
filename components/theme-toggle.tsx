@@ -1,6 +1,7 @@
 "use client";
 
-import { IoMoonOutline as Moon, IoSunnyOutline as Sun } from "react-icons/io5";
+import { Moon, Sun } from "@phosphor-icons/react/ssr";
+
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,

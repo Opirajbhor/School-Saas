@@ -2,11 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { FcTodoList as ClipboardList } from "react-icons/fc";
-import {
-  IoChevronBackOutline as ChevronLeft,
-  IoSearchOutline as Search,
-} from "react-icons/io5";
+import { ListChecks as ClipboardList, CaretLeft as ChevronLeft, MagnifyingGlass as Search } from "@phosphor-icons/react/ssr";
+
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -14,13 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Spinner } from "@/components/ui/spinner";
 import { FormSelect } from "@/components/forms/form-select";
 import { DataTable } from "@/components/table/tanstack/data-table";
@@ -128,14 +119,6 @@ export default function ResultForm() {
       : sheet.students
     : [];
 
-  const chosenSection = sections.find((row) => row.id === sectionChoice);
-  const sectionLabel =
-    sectionChoice === ALL_SECTIONS
-      ? "All sections"
-      : chosenSection
-        ? `Section ${chosenSection.name}`
-        : "All sections";
-
   const activeSection = sections.find((row) => row.id === sectionFilter);
   const activeSectionName =
     activeSection?.name ??
@@ -224,27 +207,20 @@ export default function ResultForm() {
               </ControlField>
 
               <ControlField label="Section" className="w-full sm:w-44">
-                <Select
-                  value={sectionChoice}
-                  onValueChange={(value) => setSectionChoice(value ?? ALL_SECTIONS)}
+                <Combobox
+                  options={sections.map((section) => ({
+                    label: `Section ${section.name}`,
+                    value: section.id,
+                  }))}
+                  value={sectionChoice === ALL_SECTIONS ? null : sectionChoice}
+                  onValueChange={(value) =>
+                    setSectionChoice(value ?? ALL_SECTIONS)
+                  }
+                  clearLabel="All sections"
+                  placeholder="All sections"
+                  searchPlaceholder="Search section…"
                   disabled={!classId || sections.length === 0}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    {/* radix only renders the item text once the menu has been
-                        opened, so the label is passed in explicitly */}
-                    <SelectValue placeholder="All sections">
-                      {sectionLabel}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL_SECTIONS}>All sections</SelectItem>
-                    {sections.map((section) => (
-                      <SelectItem key={section.id} value={section.id}>
-                        Section {section.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </ControlField>
 
               <Button

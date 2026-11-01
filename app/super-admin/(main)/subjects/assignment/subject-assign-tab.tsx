@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { IoAddOutline as Plus } from "react-icons/io5";
+import { Plus } from "@phosphor-icons/react/ssr";
+
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
