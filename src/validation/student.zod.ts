@@ -177,6 +177,8 @@ export type StudentEnrollment = {
     gender: string | null;
     phone: string | null;
     address: string | null;
+    /** Cloudinary URL from the upload route, null until a photo is added */
+    photoUrl: string | null;
     dateOfBirth: Date;
   };
 };

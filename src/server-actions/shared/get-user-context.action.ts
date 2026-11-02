@@ -1,4 +1,5 @@
 "use server";
+import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { currentUser } from "../auth/currentUser.action";
 import { teachers } from "@/src/drizzle-DB/schema";
@@ -7,7 +8,7 @@ import { redirect } from "next/navigation";
 
 // --------get user context -----------
 
-export async function getUserContext() {
+export const getUserContext = cache(async () => {
   const session = await currentUser();
 
   if (!session?.user?.id) {
@@ -46,7 +47,7 @@ export async function getUserContext() {
     instituteId: userInfo.instituteId,
     teacherId: userInfo.id,
   };
-}
+});
 
 // -------- verify authorization ---------
 export async function requireUserContext() {

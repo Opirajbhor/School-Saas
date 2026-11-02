@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PencilSimple as PencilLine, Globe as MapPin, Phone, ShieldCheck, ChatText as Mail } from "@phosphor-icons/react/ssr";
 
@@ -28,6 +28,10 @@ import {
 } from "@/src/server-actions/shared/get-user-profile.action";
 import { authClient } from "@/src/better-auth/auth-client";
 import { ChangePasswordDialog } from "./_components/change-password-card";
+import {
+  ImageUpload,
+  type ImageUploadHandle,
+} from "@/components/forms/image-upload";
 
 /** "BAJITPUR PILOT MODEL HIGH SCHOOL" -> "BP" */
 const initialsOf = (name: string) =>
@@ -40,7 +44,10 @@ const initialsOf = (name: string) =>
 
 // InstituteOutput is the onboarding form shape, so it does not carry the
 // status column that the row does
-type InstituteRecord = InstituteOutput & { status?: string };
+type InstituteRecord = InstituteOutput & {
+  status?: string;
+  signature?: string | null;
+};
 
 export default function InstituteProfilePage() {
   const [locked, setLocked] = useState(true);
@@ -67,10 +74,14 @@ export default function InstituteProfilePage() {
       nameEnglish: "",
       eiin: "",
       phone: "",
+      signature: "",
     },
   });
 
   const { isSubmitting } = form.formState;
+  const signatureUrl = useWatch({ control: form.control, name: "signature" });
+  const [signatureApi, setSignatureApi] =
+    useState<ImageUploadHandle | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -79,18 +90,28 @@ export default function InstituteProfilePage() {
         nameEnglish: profile.nameEnglish,
         eiin: profile.eiin,
         phone: profile.phone,
+        signature: profile.signature ?? "",
       });
     }
   }, [profile, form]);
 
   const onSubmit = async (data: InsituteProfileUpdateType) => {
-    await handleCrudAction(instituteProfileUpdate, data, {
+    // the signature is staged like any other photo and uploaded on save
+    const pending = signatureApi?.hasPending();
+    const uploaded = await signatureApi?.upload();
+    if (pending && !uploaded) return;
+
+    await handleCrudAction(
+      instituteProfileUpdate,
+      { ...data, signature: uploaded ?? data.signature },
+      {
       successMessage: "Institute profile updated",
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["profile", "institute"] });
         setLocked(true);
       },
-    });
+      },
+    );
   };
 
   const cancelEdit = () => {
@@ -100,6 +121,7 @@ export default function InstituteProfilePage() {
         nameEnglish: profile.nameEnglish,
         eiin: profile.eiin,
         phone: profile.phone,
+        signature: profile.signature ?? "",
       });
     }
     setLocked(true);
@@ -173,6 +195,21 @@ export default function InstituteProfilePage() {
                 <Phone className="size-3.5" />
                 {profile.phone}
               </span>
+              {profile.signature ? (
+                <span className="flex items-center gap-1">
+                  {/* the signature is printed on ID cards */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={profile.signature}
+                    alt="Head teacher signature"
+                    className="h-5 w-auto max-w-24 object-contain mix-blend-multiply dark:invert"
+                  />
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  No signature yet
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -234,6 +271,37 @@ export default function InstituteProfilePage() {
                 placeholder="01XXXXXXXXX"
                 disabled={locked}
               />
+
+              {/* printed on ID cards and result sheets, so it lives with the
+                  institute record rather than on one document */}
+              <div className={locked ? "hidden" : "sm:col-span-2"}>
+                <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/30 p-3">
+                  <ImageUpload
+                    register={setSignatureApi}
+                    value={signatureUrl}
+                    onChange={(url) =>
+                      form.setValue("signature", url, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    folder="institute"
+                    label="Head teacher signature"
+                    size="size-16"
+                    className="[&_p]:hidden"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Head teacher signature
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Used on student and teacher ID cards, and anywhere a
+                      signature line is printed. A square photo of the
+                      signature on white paper works best.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* location is captured at onboarding and not edited here */}
               <div className="sm:col-span-2">

@@ -19,6 +19,8 @@ export type CardInstitute = {
   nameBangla: string;
   eiin: string;
   logo: string | null;
+  /** head teacher signature image, printed above the signature line */
+  signature: string | null;
   phone: string;
   upazila: string;
   district: string;
@@ -72,6 +74,7 @@ const toInstitute = (
   nameBangla: profile.nameBangla,
   eiin: profile.eiin,
   logo: profile.logo,
+  signature: profile.signature,
   phone: profile.phone,
   upazila: profile.upazila,
   district: profile.district,

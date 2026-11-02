@@ -8,6 +8,7 @@ import Link from "next/link";
 import { PencilSimple as Pen, GraduationCap as IdCard, Eye } from "@phosphor-icons/react/ssr";
 
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { ToggleStudentStatus } from "../_actions/student.action";
@@ -34,17 +35,37 @@ export const studentColumns = columnHelper.columns([
     filterFn: "includesString",
     cell: ({ row }) => {
       const { student } = row.original;
+      const initials = student.englishName
+        .split(" ")
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+
       return (
-        <div>
-          <p className="font-medium text-foreground">{student.englishName}</p>
-          {student.banglaName && (
-            <p className="text-xs text-muted-foreground">
-              {student.banglaName}
+        <div className="flex items-center gap-2.5">
+          <Avatar className="size-8 shrink-0">
+            {student.photoUrl ? (
+              <AvatarImage src={student.photoUrl} alt={student.englishName} />
+            ) : null}
+            <AvatarFallback className="text-[10px] font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="min-w-0">
+            <p className="truncate font-medium text-foreground">
+              {student.englishName}
             </p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {student.fatherName ?? "—"} · {student.motherName ?? "—"}
-          </p>
+            {student.banglaName && (
+              <p className="truncate text-xs text-muted-foreground">
+                {student.banglaName}
+              </p>
+            )}
+            <p className="truncate text-xs text-muted-foreground">
+              {student.fatherName ?? "—"} · {student.motherName ?? "—"}
+            </p>
+          </div>
         </div>
       );
     },

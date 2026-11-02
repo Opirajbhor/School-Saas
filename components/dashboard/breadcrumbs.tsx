@@ -6,6 +6,7 @@ import { House, CaretRight as ChevronRight } from "@phosphor-icons/react/ssr";
 
 
 import { navGroups } from "./nav";
+import { useT } from "@/components/i18n/locale-provider";
 import { superNavGroups } from "../super-admin/super-nav";
 
 /** Routes that are not nav entries but still deserve a readable name. */
@@ -31,17 +32,24 @@ const prettify = (segment: string) => {
 
 export function Breadcrumbs() {
   const pathname = usePathname() ?? "";
+  const t = useT();
   const isPlatform = pathname.startsWith("/super-admin");
 
+  // items that carry a dictionary key are translated; the platform nav is not
+  // keyed yet and falls back to its English label
   const byLink = new Map(
     [...navGroups, ...superNavGroups]
       .flatMap((group) => group.items)
-      .map((item) => [item.link, item.name]),
+      .map((item) => {
+        const key =
+          (item as { key?: keyof typeof t.nav.items }).key ?? null;
+        return [item.link, key ? t.nav.items[key] : item.name];
+      }),
   );
 
   const root = isPlatform
     ? { label: "Platform", href: "/super-admin/institutes" }
-    : { label: "Dashboard", href: "/dashboard" };
+    : { label: t.nav.items.dashboard, href: "/dashboard" };
 
   const segments = pathname.split("/").filter(Boolean);
   // drop the first segment ("dashboard" | "super-admin"), it is the root crumb

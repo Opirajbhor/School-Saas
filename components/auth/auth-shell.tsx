@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { UsersThree as Users, GraduationCap, Lightbulb as Sparkles, ShieldCheck } from "@phosphor-icons/react/ssr";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 
 
 /**
@@ -48,6 +49,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
       <main className="flex flex-col justify-center px-5 py-10 sm:px-8">
         <div className="mx-auto w-full max-w-sm">
+          {/* language choice is available before sign-in too */}
+          <div className="mb-6 flex justify-end">
+            <LanguageSwitcher />
+          </div>
           <Link
             href="/"
             className="mb-8 flex items-center gap-2.5 lg:hidden"

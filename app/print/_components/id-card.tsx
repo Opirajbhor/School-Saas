@@ -120,7 +120,17 @@ export function StudentIdCard({ data }: { data: StudentCardData }) {
             {institute.phone}
           </p>
           <div className="text-center leading-tight">
-            <div className="h-[4mm] w-[20mm] border-b border-neutral-400" />
+            {institute.signature ? (
+              // the uploaded signature sits on the rule, like a stamp
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={institute.signature}
+                alt=""
+                className="mx-auto h-[6mm] w-auto max-w-[22mm] object-contain"
+              />
+            ) : (
+              <div className="h-[4mm] w-[20mm] border-b border-neutral-400" />
+            )}
             <p className="text-[5px] tracking-wide text-neutral-500 uppercase">
               Head teacher
             </p>
@@ -190,7 +200,17 @@ export function TeacherIdCard({ data }: { data: TeacherCardData }) {
             {institute.phone}
           </p>
           <div className="text-center leading-tight">
-            <div className="h-[4mm] w-[20mm] border-b border-neutral-400" />
+            {institute.signature ? (
+              // the uploaded signature sits on the rule, like a stamp
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={institute.signature}
+                alt=""
+                className="mx-auto h-[6mm] w-auto max-w-[22mm] object-contain"
+              />
+            ) : (
+              <div className="h-[4mm] w-[20mm] border-b border-neutral-400" />
+            )}
             <p className="text-[5px] tracking-wide text-neutral-500 uppercase">
               Head teacher
             </p>

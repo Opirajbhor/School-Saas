@@ -148,8 +148,10 @@ export async function getExamMonitoringSummaries() {
       requestCounts.map((row) => [row.examId, row.pending]),
     );
 
-    const summaries: ExamMonitoringSummaryType[] = [];
-    for (const row of rows) {
+    // one round trip per exam is fine in parallel, but waiting for exam N
+    // before starting N+1 turned five exams into fifteen serial queries
+    const results = await Promise.all(
+      rows.map(async (row) => {
       const unitScopes = await getExamUnitScopes(
         row.examId,
         auth.ctx.instituteId,
@@ -170,20 +172,21 @@ export async function getExamMonitoringSummaries() {
       ).length;
       const entered = enteredByExam.get(row.examId) ?? 0;
 
-      summaries.push(
-        buildExamSummary({
-          examId: row.examId,
-          examName: row.examName,
-          sessionName: row.sessionName,
-          assignedClasses: row.assignedClasses,
-          requiredMarks: required.requiredMarks,
-          enteredMarks: Math.min(entered, required.requiredMarks),
-          units: unitScopes.length,
-          completedUnits,
-          pendingRequests: pendingByExam.get(row.examId) ?? 0,
-        }),
-      );
-    }
+      return buildExamSummary({
+        examId: row.examId,
+        examName: row.examName,
+        sessionName: row.sessionName,
+        assignedClasses: row.assignedClasses,
+        requiredMarks: required.requiredMarks,
+        enteredMarks: Math.min(entered, required.requiredMarks),
+        units: unitScopes.length,
+        completedUnits,
+        pendingRequests: pendingByExam.get(row.examId) ?? 0,
+      });
+    }),
+  );
+
+    const summaries: ExamMonitoringSummaryType[] = results;
 
     return { success: true as const, data: summaries };
   } catch (error) {

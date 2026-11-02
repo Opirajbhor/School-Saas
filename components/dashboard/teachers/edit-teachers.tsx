@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PencilSimple as Pen } from "@phosphor-icons/react/ssr";
 
@@ -19,6 +19,10 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FormInput } from "@/components/forms/form-input";
+import {
+  ImageUpload,
+  type ImageUploadHandle,
+} from "@/components/forms/image-upload";
 import {
   NativeSelect,
   NativeSelectOption,
@@ -57,9 +61,20 @@ export default function EditTeachers({ user }: DeleteTeacherProps) {
     },
   });
   const { isSubmitting } = form.formState;
+  // useWatch keeps the avatar in step without the memoisation warning form.watch triggers
+  const teacherPhoto = useWatch({ control: form.control, name: "photoUrl" });
+  const [photoApi, setPhotoApi] = useState<ImageUploadHandle | null>(null);
 
   const submit = async (data: editTeacherType) => {
-    const res = await editTeacher(data.id, data);
+    // upload the staged photo first, so nothing is sent twice
+    const pending = photoApi?.hasPending();
+    const uploaded = await photoApi?.upload();
+    if (pending && !uploaded) return;
+
+    const res = await editTeacher(data.id, {
+      ...data,
+      photoUrl: uploaded ?? data.photoUrl,
+    });
     if (!res.success) {
       toast.error(res.error ?? "Something went wrong!");
       return;
@@ -108,11 +123,27 @@ export default function EditTeachers({ user }: DeleteTeacherProps) {
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(submit)}>
             <div className="max-h-[60vh] space-y-4 overflow-y-auto p-6">
-              <FormInput
-                control={form.control}
-                name="nameEnglish"
-                label="English name"
-              />
+              <div className="flex items-start gap-4">
+                <ImageUpload
+                  register={setPhotoApi}
+                  value={teacherPhoto}
+                  folder="teachers"
+                  size="size-20"
+                  onChange={(url) =>
+                    form.setValue("photoUrl", url, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                />
+                <div className="min-w-0 flex-1">
+                  <FormInput
+                    control={form.control}
+                    name="nameEnglish"
+                    label="English name"
+                  />
+                </div>
+              </div>
 
               <FormInput
                 control={form.control}

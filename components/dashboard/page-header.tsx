@@ -14,11 +14,11 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        <h1 className="font-heading text-xl font-semibold tracking-[-0.01em] text-foreground">
+        <h1 className="font-heading text-2xl font-semibold tracking-[-0.02em] text-foreground">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
       {actions && (

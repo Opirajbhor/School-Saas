@@ -14,6 +14,8 @@ export const instituteProfile = pgTable("institute_profile", {
   nameBangla: text("institute_name_bangla").notNull(),
   nameEnglish: text("institute_name_english").notNull(),
   logo: text("institute_logo"),
+  /** head teacher signature image, printed on ID cards and reports */
+  signature: text("institute_signature"),
   phone: text("admin_phone").notNull(),
   division: text("division").notNull(),
   district: text("district").notNull(),

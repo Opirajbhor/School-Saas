@@ -10,7 +10,7 @@
    silently dropped and every translucent surface rendered opaque. `:root`
    and `.dark` below override the same --color-* names to re-theme. */
 @theme {
-  --color-background: #ffffff;
+  --color-background: #f6f5f4;
   --color-foreground: #1a1a1a;
   --color-card: #ffffff;
   --color-card-foreground: #1a1a1a;
@@ -91,7 +91,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #f6f5f4;
   --foreground: #1a1a1a;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
@@ -141,6 +141,7 @@
   --shadow-lg: 0 12px 24px -6px rgb(15 15 15 / 0.12), 0 4px 8px -4px rgb(15 15 15 / 0.06);
   --shadow-xl: 0 24px 48px -8px rgb(15 15 15 / 0.18), 0 8px 16px -8px rgb(15 15 15 / 0.08);
   --shadow-2xl: 0 24px 48px -8px rgb(15 15 15 / 0.20);
+  --shadow-card: 0 1px 3px 0 rgb(16 24 40 / 0.08), 0 1px 2px 0 rgb(16 24 40 / 0.04);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 }
@@ -231,6 +232,7 @@
   --shadow-lg: 0 12px 24px -6px rgb(0 0 0 / 0.50), 0 4px 8px -4px rgb(0 0 0 / 0.35);
   --shadow-xl: 0 24px 48px -8px rgb(0 0 0 / 0.55), 0 8px 16px -8px rgb(0 0 0 / 0.40);
   --shadow-2xl: 0 24px 48px -8px rgb(0 0 0 / 0.60);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.40), 0 1px 2px 0 rgb(0 0 0 / 0.24);
 }
 
 @layer base {
@@ -246,12 +248,32 @@
   html {
     @apply font-sans;
   }
+  /* Bengali needs its own face (Inter has no Bengali glyphs) and a little more
+     leading — the script sits taller than Latin at the same size. */
+  html[lang="bn"] body {
+    font-family: var(--font-bangla), var(--font-sans);
+    line-height: 1.7;
+  }
+
   /* design.md headings: tightening letter-spacing is what makes it read Notion */
   h1,
   h2,
   h3,
   h4 {
     letter-spacing: -0.02em;
+  }
+  a,
+  button,
+  [role="button"],
+  [role="combobox"],
+  [role="option"],
+  [role="menuitem"] {
+    transition:
+      color 0.2s ease-in-out,
+      background-color 0.2s ease-in-out,
+      border-color 0.2s ease-in-out,
+      box-shadow 0.2s ease-in-out,
+      opacity 0.2s ease-in-out;
   }
   ::selection {
     background: #e6e0f5;

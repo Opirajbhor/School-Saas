@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +13,16 @@ import {
   addStudentZod,
 } from "@/src/validation/student.zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { FormSelect } from "@/components/forms/form-select";
 import { FormInput } from "@/components/forms/form-input";
 import { FormTextarea } from "@/components/forms/form-textarea";
+import {
+  ImageUpload,
+  type ImageUploadHandle,
+} from "@/components/forms/image-upload";
 import { handleCrudAction } from "@/src/server-actions/crud-funtions/client-post-action";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addStudent, getAcademicInfo } from "../_actions/student.action";
@@ -64,6 +67,8 @@ export default function AddStudent() {
   // state instead of being hardcoded in the field
   const studentId = useWatch({ control: form.control, name: "studentId" });
   const photoUrl = useWatch({ control: form.control, name: "photoUrl" });
+  // the picked file stays local until Add is pressed
+  const [photoApi, setPhotoApi] = useState<ImageUploadHandle | null>(null);
 
   // -----for selected sections------------
   const selectedClassData = activeSession?.classes?.find(
@@ -110,7 +115,12 @@ export default function AddStudent() {
 
   // ---------handle button------------
   const addBtn = async (data: AddStudentType) => {
-    await handleCrudAction(addStudent, data, {
+    // a chosen photo is uploaded here, not on file pick
+    const pending = photoApi?.hasPending();
+    const uploaded = await photoApi?.upload();
+    if (pending && !uploaded) return; // upload failed, keep the form open
+
+    await handleCrudAction(addStudent, { ...data, photoUrl: uploaded ?? data.photoUrl }, {
       successMessage: "Student Created Successfully",
       onSuccess: () => {
         // the list and its stat cards are cached under this prefix, so they
@@ -209,22 +219,18 @@ export default function AddStudent() {
                 {/*------------PHOTO----------- */}
 
                 <div className="flex w-full flex-col items-center gap-3 sm:w-44">
-                  <Avatar className="size-24">
-                    {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
-                    <AvatarFallback className="bg-muted text-xs text-muted-foreground">
-                      Photo
-                    </AvatarFallback>
-                  </Avatar>
-
-                  {/* the DB column holds a URL, so this is a URL field. The old
-                      <input type="file"> handed a File object to a string
-                      column and failed validation on every submit. */}
-                  <FormInput
-                    control={form.control}
-                    name="photoUrl"
-                    label="Photo URL"
-                    placeholder="https://..."
-                    className="w-full"
+                  {/* uploads to Cloudinary through /api/cloudinary/upload; the
+                      column still stores the returned URL */}
+                  <ImageUpload
+                    register={setPhotoApi}
+                    value={photoUrl}
+                    folder="students"
+                    onChange={(url) =>
+                      form.setValue("photoUrl", url, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
                   />
                 </div>
                 {/*------------STUDENT ID----------- */}

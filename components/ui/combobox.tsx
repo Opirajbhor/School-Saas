@@ -120,8 +120,8 @@ export function Combobox({
           aria-label={placeholder}
           disabled={disabled}
           className={cn(
-            "flex w-full cursor-pointer items-center justify-between gap-1.5 rounded-md border border-input bg-transparent px-2.5 text-left text-sm whitespace-nowrap transition-colors outline-none select-none",
-            "hover:bg-input/30 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            "flex w-full cursor-pointer items-center justify-between gap-1.5 rounded-md border border-input bg-card px-2.5 text-left text-sm whitespace-nowrap transition-colors outline-none select-none",
+            "hover:bg-input/30 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "dark:bg-input/30 dark:hover:bg-input/50",
             size === "sm" ? "h-7 rounded-[min(var(--radius-md),10px)] text-[13px]" : "h-8",
