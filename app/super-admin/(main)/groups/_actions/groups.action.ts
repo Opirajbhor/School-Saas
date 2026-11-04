@@ -1,4 +1,5 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
@@ -14,6 +15,9 @@ import { groupClasses, groups } from "@/src/drizzle-DB/schema";
 
 // get Default Groups and Classes
 export async function getDefaultGroupClasses() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     // not readMany(): that resolves a tenant teacher, which a superadmin does
     // not have
@@ -44,9 +48,10 @@ export async function getDefaultGroupClasses() {
       data: data as OutputGroupClassType[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -54,6 +59,9 @@ export async function getDefaultGroupClasses() {
 
 // create Groups
 export async function createAcademicGroups(data: inputGroupType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await CreateSuperAdmin(
       {
@@ -80,6 +88,9 @@ export async function createAcademicGroups(data: inputGroupType) {
 
 // change status of Groups
 export async function changeStatusGroups(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       const current = await tx.query.groups.findFirst({
@@ -111,6 +122,9 @@ export async function changeStatusGroups(id: string) {
 
 // delete Groups
 export async function deleteGroups(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       return await tx.delete(groups).where(eq(groups.id, id)).returning();
@@ -131,6 +145,9 @@ export async function deleteGroups(id: string) {
 
 // assign to class
 export async function assignGroupClasses(data: AssignGroupClassType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   const validation = assignGroupClassZod.safeParse(data);
   if (!validation.success) {
     return {

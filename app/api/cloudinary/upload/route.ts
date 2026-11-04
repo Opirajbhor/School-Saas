@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 
 import { AccessServer } from "@/src/server-actions/protected-routes/role-access-server";
+import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -29,9 +30,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // The client only picks a prefix. The path itself is derived server-side so
+  // one institute can never write into another's folder.
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Not authorized" }, { status: 401 });
+  }
+
   const incoming = await request.formData();
   const file = incoming.get("file");
-  const folder = String(incoming.get("folder") ?? "educare");
+  const prefix = String(incoming.get("folder") ?? "misc");
+  const PREFIXES = ["students", "teachers", "institute", "profile", "staff"];
+  if (!PREFIXES.includes(prefix)) {
+    return NextResponse.json({ error: "Unknown upload folder" }, { status: 400 });
+  }
+  const folder = `educare/${ctx.instituteId || "platform"}/${prefix}`;
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file received" }, { status: 400 });

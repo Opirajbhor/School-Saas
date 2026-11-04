@@ -556,7 +556,11 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
 
   try {
     const rows = await db
-      .select({ id: exams.id, markWorkflow: exams.markWorkflow })
+      .select({
+        id: exams.id,
+        markWorkflow: exams.markWorkflow,
+        instituteId: exams.instituteId,
+      })
       .from(exams)
       .where(
         and(
@@ -576,6 +580,33 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
         error: `The exam is already ${workflow.toLowerCase()}`,
         details: {},
       };
+    }
+
+    // A platform-default exam is shared by every institute, so the workflow
+    // row is shared too until per-tenant workflow state exists. At minimum the
+    // caller must actually run this exam: without an active class assignment
+    // any tenant could publish or reopen someone else's exam.
+    if (exam.instituteId === null) {
+      const [assignment] = await db
+        .select({ id: examClasses.id })
+        .from(examClasses)
+        .where(
+          and(
+            eq(examClasses.examId, examId),
+            eq(examClasses.instituteId, instituteId),
+            eq(examClasses.status, "ACTIVE"),
+          ),
+        )
+        .limit(1);
+
+      if (!assignment) {
+        return {
+          success: false as const,
+          error:
+            "Assign at least one class to this exam before changing its workflow",
+          details: {},
+        };
+      }
     }
     // a published result may only go back to FINALIZED (unpublish); OPEN would
     // let marks be edited under a result that was already announced
@@ -606,10 +637,37 @@ export async function setExamMarkWorkflow(data: InputSetExamWorkflowType) {
             : // reopening clears only the finalize stamp
               { finalizedAt: null, finalizedById: null };
 
+      // re-checked inside the transaction so a concurrent publish/open cannot
+      // slip between the read above and this write
+      const [current] = await tx
+        .select({ markWorkflow: exams.markWorkflow })
+        .from(exams)
+        .where(
+          and(
+            eq(exams.id, examId),
+            exam.instituteId === null
+              ? isNull(exams.instituteId)
+              : eq(exams.instituteId, instituteId),
+          ),
+        )
+        .for("update")
+        .limit(1);
+
+      if (!current || current.markWorkflow === workflow) {
+        throw new Error("The exam workflow changed while this request was open");
+      }
+
       await tx
         .update(exams)
         .set({ markWorkflow: workflow, ...patch, updatedAt: now })
-        .where(eq(exams.id, examId));
+        .where(
+          and(
+            eq(exams.id, examId),
+            exam.instituteId === null
+              ? isNull(exams.instituteId)
+              : eq(exams.instituteId, instituteId),
+          ),
+        );
 
       if (workflow === "PUBLISHED") {
         for (const planRow of snapshotPlan.plan) {

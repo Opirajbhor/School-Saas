@@ -38,6 +38,15 @@ export async function updateRecord<
       };
     }
     const { userId, instituteId, role } = ctx;
+    // teachers (role "user") hold a login but not administrative rights;
+    // the helper is a public RPC endpoint, so the role test lives here
+    if (role !== "admin" && role !== "superadmin") {
+      return {
+        success: false as const,
+        error: "Not authorized",
+        details: {},
+      };
+    }
     const isSuperAdmin = role === "superadmin";
 
     const parsed = config.zodSchema.safeParse(data);

@@ -1,4 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CalendarBlank } from "@phosphor-icons/react/ssr";
+
+import { Button } from "@/components/ui/button";
 import { eq, isNull, or } from "drizzle-orm";
 
 import { AccessServer } from "@/src/server-actions/protected-routes/role-access-server";
@@ -60,6 +64,14 @@ export default async function Page() {
       <PageHeader
         title="Exams"
         subtitle="Every exam, its mark-entry progress and the scale marks are graded on."
+        actions={
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/dashboard/exam/routine">
+              <CalendarBlank />
+              Exam routine
+            </Link>
+          </Button>
+        }
       />
 
       <ExamSettingsWidgets markTypes={markTypes} grades={grades} />

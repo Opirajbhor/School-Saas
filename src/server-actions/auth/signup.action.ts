@@ -15,7 +15,6 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { teachers, user } from "../../drizzle-DB/schema";
 import { currentUser } from "./currentUser.action";
-import { requireUserContext } from "../shared/get-user-context.action";
 
 // user creation
 export async function signUpAction(data: SignUpType) {
@@ -111,6 +110,22 @@ export async function instituteProfileAction(data: InstituteInput) {
     };
   }
   try {
+    // one institute per account: without this, re-running onboarding created a
+    // second row and every later lookup became ambiguous
+    const [existing] = await db
+      .select({ id: instituteProfile.id })
+      .from(instituteProfile)
+      .where(eq(instituteProfile.userId, profile?.user?.id as string))
+      .limit(1);
+
+    if (existing) {
+      return {
+        success: false as const,
+        error: "This account already has an institute",
+        details: {},
+      };
+    }
+
     await db.insert(instituteProfile).values({
       ...validation.data,
       userId: profile?.user?.id,
@@ -130,14 +145,35 @@ export async function instituteProfileAction(data: InstituteInput) {
 
 // --------- admin profile creation-----------
 export async function adminProfileAction(data: AdminProfileInput) {
-  const { role, instituteId, userId } = await requireUserContext();
-  if (role !== "admin") {
+  // Onboarding step ADMIN runs before the admin has a `teachers` row, so
+  // requireUserContext() would reject the very call that creates it and the
+  // flow looped between login and onboarding. Derive the institute from the
+  // profile row instead.
+  const session = await currentUser();
+  if (session?.user?.role !== "admin") {
     return {
       success: false as const,
       error: "UNAUTHORIZED",
       details: {},
     };
   }
+
+  const [institute] = await db
+    .select({ id: instituteProfile.id })
+    .from(instituteProfile)
+    .where(eq(instituteProfile.userId, session.user.id))
+    .limit(1);
+
+  if (!institute) {
+    return {
+      success: false as const,
+      error: "Finish the institute details first",
+      details: {},
+    };
+  }
+
+  const instituteId = institute.id;
+  const userId = session.user.id;
   // parse with zod-----------------
   const validatedFields = parseWithZod(adminProfileZod, data);
   if (!validatedFields.success) return validatedFields;

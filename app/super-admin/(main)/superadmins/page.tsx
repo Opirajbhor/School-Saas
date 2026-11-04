@@ -12,6 +12,7 @@ import {
   PromoteSuperAdminDialog,
 } from "./superadmin-dialogs";
 import { getSuperAdmins } from "./_actions/superadmin.action";
+import { formatDate } from "@/src/lib/date";
 
 export default async function Page() {
   const result = await getSuperAdmins();
@@ -80,13 +81,7 @@ export default async function Page() {
         <Metric
           label="First one added"
           value={
-            oldest
-              ? oldest.toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "—"
+            oldest ? formatDate(oldest) : "—"
           }
           icon={Oldest}
           footer={

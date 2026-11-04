@@ -4,6 +4,7 @@ import { db } from "@/src/drizzle-DB";
 import {
   enrollments,
   exams,
+  sectionDrizzle,
   subjectAssignSchema,
 } from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
@@ -47,7 +48,10 @@ export async function getSingleExamData(id: string) {
             with: {
               class: {
                 with: {
-                  sections: true,
+                  // exam -> class is platform-shared, sections are per tenant
+                  sections: {
+                    where: eq(sectionDrizzle.instituteId, instituteId),
+                  },
                 },
               },
             },

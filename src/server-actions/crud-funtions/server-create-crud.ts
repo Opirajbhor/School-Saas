@@ -35,7 +35,17 @@ export async function createRecord<T extends TableWithId>(
         details: {},
       };
     }
-    const { userId,  instituteId } = ctx;
+    const { userId, instituteId, role } = ctx;
+    // teachers (role "user") hold a login but not administrative rights;
+    // the helper is a public RPC endpoint, so the role test lives here
+    if (role !== "admin" && role !== "superadmin") {
+      return {
+        success: false as const,
+        error: "Not authorized",
+        details: {},
+      };
+    }
+
 
     // Validate input first
     const parsed = config.zodSchema.safeParse(data);

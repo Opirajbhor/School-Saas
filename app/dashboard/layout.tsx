@@ -1,5 +1,6 @@
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getOnboardingStep } from "@/src/server-actions/auth/signup.action";
+import { getInstituteBranding } from "./profile/_actions/get-institute-profile";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -22,5 +23,8 @@ export default async function DashboardLayout({
     redirect("/auth/onboarding/admin-profile");
   }
 
-  return <DashboardShell>{children}</DashboardShell>;
+  // the rail shows the school's own name and logo once they are set
+  const brand = await getInstituteBranding();
+
+  return <DashboardShell brand={brand}>{children}</DashboardShell>;
 }

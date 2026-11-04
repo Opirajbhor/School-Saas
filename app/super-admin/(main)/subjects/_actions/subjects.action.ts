@@ -1,4 +1,5 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
 import { CreateSuperAdmin } from "@/src/server-actions/crud-funtions/super-admin/super-admin-create-crud";
@@ -25,6 +26,9 @@ import { compareClassName } from "@/src/validation/classes.zod";
 
 // get Default Subjects
 export async function getDefaultSubjects() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     // direct read: readMany() needs a tenant teacher row, and a superadmin has
     // no institute to resolve one from
@@ -38,9 +42,10 @@ export async function getDefaultSubjects() {
       data: rows as OutputSubjectType[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -48,6 +53,9 @@ export async function getDefaultSubjects() {
 
 // create subjects
 export async function createAcademicsubjects(data: InputSubjectType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await CreateSuperAdmin(
       {
@@ -73,6 +81,9 @@ export async function createAcademicsubjects(data: InputSubjectType) {
 
 // change status of subjects
 export async function changeStatussubjects(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       const current = await tx.query.subjectDbSchema.findFirst({
@@ -104,6 +115,9 @@ export async function changeStatussubjects(id: string) {
 
 // delete subjects
 export async function deletesubjects(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       return await tx
@@ -167,6 +181,9 @@ function validatePair(
 // two papers become a pair: the second points at the first (the anchor) and
 // both carry the label the pair is shown under
 export async function combineSubjects(data: InputCombineSubjectsType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   const parsed = combineSubjectsZod.safeParse(data);
   if (!parsed.success) {
     return {
@@ -243,6 +260,9 @@ export async function combineSubjects(data: InputCombineSubjectsType) {
 
 // clears the pair. Safe when called on either paper.
 export async function uncombineSubject(data: { subjectId: string }) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   const parsed = uncombineSubjectZod.safeParse(data);
   if (!parsed.success) {
     return {
@@ -311,6 +331,9 @@ export async function uncombineSubject(data: { subjectId: string }) {
 
 // get Default class subjects
 export async function getDefaultClassSubjects() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await readMany({
       drizzleSchema: classesDrizzle,
@@ -327,9 +350,10 @@ export async function getDefaultClassSubjects() {
       data: (result.data as ClassSubjectsType[]).sort(compareClassName),
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -337,6 +361,9 @@ export async function getDefaultClassSubjects() {
 
 // get Default Assign Subjects
 export async function getDefaultAssignSubjects() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.query.subjectAssignSchema.findMany({
       where: isNull(subjectAssignSchema.instituteId),
@@ -367,7 +394,8 @@ export async function getDefaultAssignSubjects() {
 
     return { success: true as const, data: subjects };
   } catch (error) {
-    return { success: false as const, error: String(error), details: {} };
+    console.error("action failed:", error);
+    return { success: false as const, error: "Something went wrong. Please try again.", details: {} };
   }
 }
 
@@ -376,6 +404,9 @@ export async function unassignSubject(input: {
   classId: string;
   subjectId: string;
 }): Promise<ValidationResult<number>> {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   const ctx = await getUserContext();
   if (!ctx) {
     return {
@@ -420,6 +451,9 @@ export async function unassignSubject(input: {
 
 // ------------subject assignment *** custom server action-----------
 export async function subjectAssignment(data: inputSubAssignType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   const { subjectIds, ...rest } = data;
 
   if (!subjectIds.length) {

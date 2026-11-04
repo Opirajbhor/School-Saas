@@ -98,9 +98,10 @@ export async function readMany<T extends TableWithInstitute>(
       data: records,
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: error,
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }

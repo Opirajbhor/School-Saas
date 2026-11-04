@@ -13,7 +13,7 @@ import {
 } from "@/src/validation/teacher.zod";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { parseWithZod } from "@/src/validation/validator.zod";
-import { teachers } from "@/src/drizzle-DB/schema";
+import { teachers, user } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 import { updateRecord } from "@/src/server-actions/crud-funtions/server-update-crud";
@@ -33,7 +33,31 @@ export async function addTeacher(data: addTeacherType) {
   // parse with zod-----------------
   const validatedFields = parseWithZod(addTeacherZod, data);
   if (!validatedFields.success) return validatedFields;
+
+  // The login is created before the teacher row, so an email that is already
+  // taken in this institute would leave a live account with no teacher behind
+  // it. Check first and fail with something readable.
+  const [existingTeacher] = await db
+    .select({ id: teachers.id })
+    .from(teachers)
+    .where(
+      and(
+        eq(teachers.instituteId, instituteId),
+        eq(teachers.email, validatedFields.data.email),
+      ),
+    )
+    .limit(1);
+
+  if (existingTeacher) {
+    return {
+      success: false as const,
+      error: "A teacher with this email already exists in this institute",
+      details: { email: ["Already in use by another teacher"] },
+    };
+  }
+
   //--------- create user then teacher info---------
+  let createdUserId: string | null = null;
   try {
     const newUser = await auth.api.createUser({
       headers: await headers(),
@@ -41,7 +65,8 @@ export async function addTeacher(data: addTeacherType) {
         email: validatedFields.data.email,
         password: validatedFields.data.password,
         name: validatedFields.data.nameEnglish,
-        role: "user",
+        // no role: the plugin's default ("user") applies. Passing one would
+        // need the set-role permission that institute admins no longer hold.
       },
     });
     if (!newUser?.user) {
@@ -51,6 +76,7 @@ export async function addTeacher(data: addTeacherType) {
         details: {},
       };
     }
+    createdUserId = newUser.user.id;
     const dbTxn = await db.transaction(async (tx) => {
       const [teacher] = await tx
         .insert(teachers)
@@ -76,6 +102,17 @@ export async function addTeacher(data: addTeacherType) {
     };
   } catch (error) {
     console.error("Database error during teacher creation", error);
+
+    // Roll the login back: account and session rows cascade from user, so one
+    // delete leaves nothing behind and the email is free to use again.
+    if (createdUserId) {
+      try {
+        await db.delete(user).where(eq(user.id, createdUserId));
+      } catch (cleanupError) {
+        console.error("Failed to roll back the created login", cleanupError);
+      }
+    }
+
     return {
       success: false as const,
       error: "Failed to create teacher account due to a database failure.",
@@ -107,7 +144,7 @@ export async function getTeacher() {
     console.error("Database error in Teachers list:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }

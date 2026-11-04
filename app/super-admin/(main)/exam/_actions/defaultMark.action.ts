@@ -1,4 +1,6 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
+import { isNull } from "drizzle-orm";
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
 import { and, eq, notInArray, sql } from "drizzle-orm";
@@ -8,13 +10,20 @@ import {
   OutputSubjectMarkTemplateRowType,
   subjectMarkTemplateRowZod,
 } from "../_schema/markInput.zod";
-import { subjectMarkTemplates } from "@/src/drizzle-DB/schema";
+import {
+  subjectDbSchema,
+  subjectMarkTemplates,
+} from "@/src/drizzle-DB/schema";
 import { parseWithZod } from "@/src/validation/validator.zod";
 
 // get Default exam mark types
 export async function getDefaultSubjectMark() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.query.subjectDbSchema.findMany({
+      where: isNull(subjectDbSchema.instituteId),
       with: {
         markTemplates: {
           with: {
@@ -29,9 +38,10 @@ export async function getDefaultSubjectMark() {
       data: result,
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -39,6 +49,9 @@ export async function getDefaultSubjectMark() {
 
 // ==========post default subject mark ======================
 export async function postDefultSubjectMark(data: InputDefaultMarkType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   // 1. validate the whole payload (one subject + the enabled mark types)
   const parsed = parseWithZod(defaultMarkZod, data);
   if (!parsed.success) {

@@ -1,5 +1,6 @@
 import { OutputExamResultType } from "../../../_schema/exam.zod";
 import { workflowLabel } from "./report-utils";
+import { today } from "@/src/lib/date";
 
 // Shared masthead for every printed report: what document this is, which exam
 // and class it covers, and whether the figures are final. Repeated on each
@@ -33,7 +34,7 @@ export function ReportHeader({
             {published ? "Published result" : "Draft result"}
           </p>
           <p>{workflowLabel(sheet)}</p>
-          <p>Printed {new Date().toLocaleDateString()}</p>
+          <p>Printed {today()}</p>
         </div>
       </div>
 

@@ -133,12 +133,29 @@ export function ImageUpload({
     }
   }, [pending, folder, onChange, preview]);
 
-  // hand the upload back to the form so it can run on submit
+  // hand the upload back to the form so it can run on submit.
+  //
+  // The handle must be registered exactly once: `upload` changes identity
+  // whenever the parent re-renders (it closes over `onChange`, which is usually
+  // an inline arrow), and registering on every change made the parent setState
+  // -> re-render -> new `upload` -> cleanup registers null -> setState … an
+  // infinite render loop as soon as two uploaders shared a form.
+  const uploadRef = useRef(upload);
+  const pendingRef = useRef(pending);
+
+  useEffect(() => {
+    uploadRef.current = upload;
+    pendingRef.current = pending;
+  }, [upload, pending]);
+
   useEffect(() => {
     if (!register) return;
-    register({ upload, hasPending: () => Boolean(pending) });
+    register({
+      upload: () => uploadRef.current(),
+      hasPending: () => Boolean(pendingRef.current),
+    });
     return () => register(null);
-  }, [register, upload, pending]);
+  }, [register]);
 
   const shown = preview || value || "";
 

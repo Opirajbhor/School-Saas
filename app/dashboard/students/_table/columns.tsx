@@ -12,12 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import StatusToggleModal from "@/components/modal/status-modal";
 import { ToggleStudentStatus } from "../_actions/student.action";
+import { formatDate } from "@/src/lib/date";
 
 // Use `accessor` for data columns and `display` for columns without one.
 const columnHelper = createColumnHelper<DataTableFeatures, StudentEnrollment>();
-
-const formatDate = (value: Date | null) =>
-  value ? new Date(value).toLocaleDateString("en-GB") : "—";
 
 // Every field a student row carries, replacing the hand-rolled table this page
 // used to render underneath the DataTable.

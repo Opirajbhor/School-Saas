@@ -72,38 +72,49 @@ export default function InstituteProfilePage() {
     defaultValues: {
       nameBangla: "",
       nameEnglish: "",
-      eiin: "",
       phone: "",
+      logo: "",
       signature: "",
     },
   });
 
   const { isSubmitting } = form.formState;
   const signatureUrl = useWatch({ control: form.control, name: "signature" });
+  const logoUrl = useWatch({ control: form.control, name: "logo" });
   const [signatureApi, setSignatureApi] =
     useState<ImageUploadHandle | null>(null);
+  const [logoApi, setLogoApi] = useState<ImageUploadHandle | null>(null);
 
   useEffect(() => {
     if (profile) {
       form.reset({
         nameBangla: profile.nameBangla,
         nameEnglish: profile.nameEnglish,
-        eiin: profile.eiin,
         phone: profile.phone,
+        logo: profile.logo ?? "",
         signature: profile.signature ?? "",
       });
     }
   }, [profile, form]);
 
   const onSubmit = async (data: InsituteProfileUpdateType) => {
-    // the signature is staged like any other photo and uploaded on save
+    // the logo and the signature are staged like any other photo and only go
+    // to Cloudinary when the form is saved
+    const pendingLogo = logoApi?.hasPending();
+    const uploadedLogo = await logoApi?.upload();
+    if (pendingLogo && !uploadedLogo) return;
+
     const pending = signatureApi?.hasPending();
     const uploaded = await signatureApi?.upload();
     if (pending && !uploaded) return;
 
     await handleCrudAction(
       instituteProfileUpdate,
-      { ...data, signature: uploaded ?? data.signature },
+      {
+        ...data,
+        logo: uploadedLogo ?? data.logo,
+        signature: uploaded ?? data.signature,
+      },
       {
       successMessage: "Institute profile updated",
       onSuccess: () => {
@@ -119,8 +130,8 @@ export default function InstituteProfilePage() {
       form.reset({
         nameBangla: profile.nameBangla,
         nameEnglish: profile.nameEnglish,
-        eiin: profile.eiin,
         phone: profile.phone,
+        logo: profile.logo ?? "",
         signature: profile.signature ?? "",
       });
     }
@@ -258,19 +269,42 @@ export default function InstituteProfilePage() {
               />
               <FormInput
                 control={form.control}
-                name="eiin"
-                label="EIIN"
-                placeholder="6 digit EIIN"
-                maxLength={6}
-                disabled={locked}
-              />
-              <FormInput
-                control={form.control}
                 name="phone"
                 label="Phone"
                 placeholder="01XXXXXXXXX"
                 disabled={locked}
               />
+
+              {/* the logo is printed on ID cards, admit cards and routine
+                  sheets, so it belongs to the institute record */}
+              <div className={locked ? "hidden" : "sm:col-span-2"}>
+                <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/30 p-3">
+                  <ImageUpload
+                    register={setLogoApi}
+                    value={logoUrl}
+                    onChange={(url) =>
+                      form.setValue("logo", url, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    folder="institute"
+                    label="Institute logo"
+                    size="size-16"
+                    className="[&_p]:hidden"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Institute logo
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Shown in the sidebar and printed on ID cards, admit cards
+                      and exam routines. A square PNG with a transparent
+                      background looks best.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* printed on ID cards and result sheets, so it lives with the
                   institute record rather than on one document */}

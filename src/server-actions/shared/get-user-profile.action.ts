@@ -59,8 +59,15 @@ export async function getLoggedInTeacher() {
 // institute profile update
 export async function instituteProfileUpdate(data: InsituteProfileUpdateType) {
   try {
-    // 1. Auth — get institute ID from session
-    const { instituteId } = await requireUserContext();
+    // 1. Auth — an institute admin, and only that role, may edit the profile
+    const { role, instituteId } = await requireUserContext();
+    if (role !== "admin") {
+      return {
+        success: false as const,
+        error: "Not authorized",
+        details: {},
+      };
+    }
 
     // 2. Validate input
     const parsed = insituteProfileUpdateZod.safeParse(data);

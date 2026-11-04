@@ -303,6 +303,16 @@
   body {
     background: #fff !important;
     color: #000 !important;
+    /* by default browsers drop background fills on paper, which erased the
+       header bands on the routine and tabulation sheets */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* documents opt in explicitly, so only the sheets print their fills */
+  .print-exact {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   /* keep every table header with its body, and repeat it when a long table

@@ -1,4 +1,5 @@
 import type { CardInstitute, StudentCardData, TeacherCardData } from "../_actions/id-card.action";
+import { formatDate } from "@/src/lib/date";
 
 const initials = (name: string) =>
   name
@@ -7,15 +8,6 @@ const initials = (name: string) =>
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase())
     .join("");
-
-const formatDate = (value: Date | string | null | undefined) =>
-  value
-    ? new Date(value).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
 
 /** Shared chrome: institute band, body, footer note. */
 function CardShell({

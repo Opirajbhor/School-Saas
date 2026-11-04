@@ -1,4 +1,5 @@
 "use client";
+import { formatDateTime } from "@/src/lib/date";
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -186,12 +187,4 @@ function formatValue(mark: number | null, absent: boolean | null) {
   return mark === null ? "—" : String(mark);
 }
 
-function formatDateTime(value: Date | string) {
-  return new Date(value).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+

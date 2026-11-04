@@ -44,9 +44,10 @@ export async function getStudents() {
       data: result.data,
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }

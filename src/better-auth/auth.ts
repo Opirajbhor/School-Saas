@@ -4,15 +4,24 @@ import { db } from "../drizzle-DB";
 import * as schema from "../drizzle-DB/schema";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
-import { adminAc, userAc } from "better-auth/plugins/admin/access";
+import { adminAc, defaultAc, userAc } from "better-auth/plugins/admin/access";
+
+// Every /admin/* route under /api/auth/[...all] gates only on these permissions
+// (see better-auth's plugins/admin/routes.mjs), so binding institute admins to
+// the stock `adminAc` let any institute admin POST /admin/set-role on itself and
+// become superadmin. Institute admins therefore get a restricted controller:
+// only `user: [create]`, which is what addTeacher needs, and no session rights.
+const instituteAdminAc = defaultAc.newRole({
+  user: ["create"],
+  session: [],
+});
 
 // The admin plugin only knows "admin" and "user" out of the box. Registering the
 // institute roles alongside "superadmin" is what lets adminRoles below accept
-// it; without a `roles` map the plugin throws on startup. superadmin gets the
-// same permission set as an institute admin.
+// it; without a `roles` map the plugin throws on startup.
 const adminRoles = {
   superadmin: adminAc,
-  admin: adminAc,
+  admin: instituteAdminAc,
   user: userAc,
 };
 
@@ -38,13 +47,14 @@ export const auth = betterAuth({
       enabled: true, // Tells Better Auth to match token layouts cleanly
     },
   },
-  // "admin" must be listed explicitly: the plugin defaults to allowing only the
-  // "admin" role, so adding the "superadmin" role to the enum would otherwise
-  // take admin rights away from every existing institute admin.
+  // Only the platform role is a Better Auth "admin". Institute admins are
+  // regular users that happen to hold one application-level permission
+  // (`user: [create]`), so the plugin's admin-only handful of routes
+  // (set-role, set-password, list-users, impersonate, delete) stays closed.
   plugins: [
     admin({
       roles: adminRoles,
-      adminRoles: ["admin", "superadmin"],
+      adminRoles: ["superadmin"],
       defaultRole: "user",
     }),
     nextCookies(),

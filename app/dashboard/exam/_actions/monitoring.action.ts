@@ -157,7 +157,7 @@ export async function getExamMonitoringSummaries() {
         auth.ctx.instituteId,
       );
       const [required, unitCounts] = await Promise.all([
-        getRequiredCells(unitScopes),
+        getRequiredCells(unitScopes, auth.ctx.instituteId),
         getUnitCounts(row.examId, unitScopes, auth.ctx.instituteId),
       ]);
 
@@ -467,8 +467,23 @@ export async function getSubjectMonitoring(data: InputExamMarkColumnsType) {
     const entryStatus: "DRAFT" | "SUBMITTED" = submitted
       ? "SUBMITTED"
       : "DRAFT";
-    // admins always may edit; teachers only while draft or after an approval
-    const canEdit = role === "admin" || !submitted || approved;
+    // the exam-level lock outranks the workflow: a finalized or published exam
+    // is read-only for everyone, including admins, until it is reopened
+    const [workflowRow] = await db
+      .select({ markWorkflow: exams.markWorkflow })
+      .from(exams)
+      .where(
+        and(
+          eq(exams.id, examId),
+          or(isNull(exams.instituteId), eq(exams.instituteId, instituteId)),
+        ),
+      )
+      .limit(1);
+    const locked = (workflowRow?.markWorkflow ?? "OPEN") !== "OPEN";
+
+    // admins may edit unless the exam is locked; teachers only while draft or
+    // after an approval, and never on a locked exam
+    const canEdit = !locked && (role === "admin" || !submitted || approved);
 
     const requiredPerStudent = markTypeRows.length;
     const students = studentRows.map((studentRow) => {
@@ -605,6 +620,7 @@ async function getExamUnitScopes(
       and(
         eq(sectionDrizzle.classId, classesDrizzle.id),
         eq(sectionDrizzle.status, "ACTIVE"),
+        eq(sectionDrizzle.instituteId, instituteId),
       ),
     )
     .innerJoin(
@@ -612,6 +628,10 @@ async function getExamUnitScopes(
       and(
         eq(subjectAssignSchema.classId, classesDrizzle.id),
         eq(subjectAssignSchema.status, "ACTIVE"),
+        or(
+          isNull(subjectAssignSchema.instituteId),
+          eq(subjectAssignSchema.instituteId, instituteId),
+        ),
       ),
     )
     .innerJoin(
@@ -624,6 +644,7 @@ async function getExamUnitScopes(
         eq(sectionSubjectTeachers.sectionId, sectionDrizzle.id),
         eq(sectionSubjectTeachers.subjectId, subjectDbSchema.id),
         eq(sectionSubjectTeachers.status, "ACTIVE"),
+        eq(sectionSubjectTeachers.instituteId, instituteId),
       ),
     )
     .leftJoin(teachers, eq(teachers.id, sectionSubjectTeachers.teacherId))
@@ -663,7 +684,7 @@ async function getExamUnitScopes(
 // required cells = eligible students × configured mark types, summed per unit.
 // an unconfigured unit (no students or no mark types) yields 0 and is later
 // excluded so it can never inflate completion.
-async function getRequiredCells(scopes: UnitScope[]) {
+async function getRequiredCells(scopes: UnitScope[], instituteId: string) {
   const sectionIds = [...new Set(scopes.map((scope) => scope.sectionId))];
   if (sectionIds.length === 0) {
     return { requiredMarks: 0 };
@@ -679,6 +700,7 @@ async function getRequiredCells(scopes: UnitScope[]) {
       and(
         inArray(enrollments.sectionId, sectionIds),
         eq(enrollments.status, "ACTIVE"),
+        eq(enrollments.instituteId, instituteId),
       ),
     )
     .groupBy(enrollments.sectionId);

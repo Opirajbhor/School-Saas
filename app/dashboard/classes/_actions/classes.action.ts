@@ -1,5 +1,9 @@
 "use server";
-import { classesDrizzle, sectionDrizzle } from "@/src/drizzle-DB/schema";
+import {
+  classesDrizzle,
+  groupClasses,
+  sectionDrizzle,
+} from "@/src/drizzle-DB/schema";
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import {
   classesType,
@@ -28,7 +32,11 @@ export async function getClasses() {
             eq(classesDrizzle.instituteId, instituteId),
           ),
           with: {
-            sections: true,
+            // classes are global defaults, sections are not: without this the
+            // response carried every tenant's section names
+            sections: {
+              where: eq(sectionDrizzle.instituteId, instituteId),
+            },
           },
         }),
     });
@@ -37,9 +45,10 @@ export async function getClasses() {
       data: (result.data as classesTypeWithId[]).sort(compareClassName),
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -53,12 +62,15 @@ export async function getActiveClasses() {
       query: ({ db, instituteId }) =>
         db.query.classesDrizzle.findMany({
           where: and(
-            isNull(classesDrizzle.instituteId),
-            eq(classesDrizzle.instituteId, instituteId),
+            or(
+              isNull(classesDrizzle.instituteId),
+              eq(classesDrizzle.instituteId, instituteId),
+            ),
             eq(classesDrizzle.status, "ACTIVE"),
           ),
           with: {
             groupClasses: {
+              where: eq(groupClasses.instituteId, instituteId),
               with: {
                 group: true,
               },
@@ -71,9 +83,10 @@ export async function getActiveClasses() {
       data: (result.data as ClassesWithGroups[]).sort(compareClassName),
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -89,14 +102,21 @@ export async function getClassAndSection({
   try {
     const result = await readMany({
       drizzleSchema: classesDrizzle,
-      query: ({ db }) =>
+      query: ({ db, instituteId }) =>
         db.query.classesDrizzle.findMany({
-          where: and(eq(classesDrizzle.id, classId)),
+          where: and(
+            eq(classesDrizzle.id, classId),
+            or(
+              isNull(classesDrizzle.instituteId),
+              eq(classesDrizzle.instituteId, instituteId),
+            ),
+          ),
           with: {
             sections: {
               where: and(
                 eq(sectionDrizzle.status, "ACTIVE"),
                 eq(sectionDrizzle.id, sectionId),
+                eq(sectionDrizzle.instituteId, instituteId),
               ),
             },
           },
@@ -107,9 +127,10 @@ export async function getClassAndSection({
       data: result.data as classesTypeWithId[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -120,19 +141,25 @@ export async function getClassSectionGroups() {
   try {
     const result = await readMany({
       drizzleSchema: classesDrizzle,
-      query: ({ db }) =>
+      query: ({ db, instituteId }) =>
         db.query.classesDrizzle.findMany({
           where: and(
-            isNull(classesDrizzle.instituteId),
+            or(
+              isNull(classesDrizzle.instituteId),
+              eq(classesDrizzle.instituteId, instituteId),
+            ),
             eq(classesDrizzle.status, "ACTIVE"),
           ),
           with: {
             groupClasses: {
+              where: eq(groupClasses.instituteId, instituteId),
               with: {
                 group: true,
               },
             },
-            sections: true,
+            sections: {
+              where: eq(sectionDrizzle.instituteId, instituteId),
+            },
           },
         }),
     });
@@ -141,9 +168,10 @@ export async function getClassSectionGroups() {
       data: (result.data as ClassesWithGroups[]).sort(compareClassName),
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -159,12 +187,13 @@ export async function postClasses(data: classesType) {
       details: { field: ["message"] },
     };
   }
-  const { id } = session;
   return createRecord(
     {
       zodSchema: classesZod,
       drizzleSchema: classesDrizzle,
-      additionFields: { status: "ACTIVE", id },
+      // the class row gets its own id: reusing the session id made the primary
+      // key collide on the second class an institute ever created
+      additionFields: { status: "ACTIVE" },
       entity: "CLASS",
     },
     data,

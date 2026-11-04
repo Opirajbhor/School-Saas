@@ -3,6 +3,7 @@ import Link from "next/link";
 import { UsersThree as Users, Books as BookOpen, TreeStructure as Layers, ArrowLeft, ArrowRight } from "@phosphor-icons/react/ssr";
 
 import { getSingleExamData } from "../../_actions/examOverview.action";
+import { formatDateTime } from "@/src/lib/date";
 import { ExamOverViewType } from "../../_schema/exam.zod";
 import ExamDashboard from "./exam-dashboard";
 import { Alert, AlertTitle } from "@/components/ui/alert";
@@ -26,11 +27,7 @@ export default async function ExamOverview({ id }: { id: string }) {
   if (!result.success) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>
-          {result.error instanceof Error
-            ? result.error.message
-            : "Failed to load exam data"}
-        </AlertTitle>
+        <AlertTitle>{result.error ?? "Failed to load exam data"}</AlertTitle>
       </Alert>
     );
   }
@@ -226,13 +223,4 @@ export default async function ExamOverview({ id }: { id: string }) {
   );
 }
 
-function formatDateTime(value: Date | string | null | undefined) {
-  if (!value) return "—";
-  return new Date(value).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+

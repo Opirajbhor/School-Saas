@@ -46,9 +46,10 @@ export async function getSubjects() {
       data: result.data as OutputSubjectType[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }

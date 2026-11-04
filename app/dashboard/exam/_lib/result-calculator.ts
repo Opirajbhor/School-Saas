@@ -169,7 +169,14 @@ export function gradeFor(percentage: number, scales: GradeScale[]) {
   // Bands are written as integer ranges (70-79, 80-100), so a mark of 79.5
   // matches neither. Read the floor instead: the band with the highest minMark
   // the mark has reached. That also absorbs gaps and decimal marks.
-  const sorted = [...scales].sort((a, b) => a.minMark - b.minMark);
+  // ties are broken by the wider band, then by name, so two requests for the
+  // same mark can never disagree
+  const sorted = [...scales].sort(
+    (a, b) =>
+      a.minMark - b.minMark ||
+      b.maxMark - a.maxMark ||
+      a.name.localeCompare(b.name),
+  );
   const band = [...sorted].reverse().find((scale) => percentage >= scale.minMark);
 
   if (band) {

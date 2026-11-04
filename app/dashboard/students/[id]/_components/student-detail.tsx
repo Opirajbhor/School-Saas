@@ -12,10 +12,8 @@ import { SpinnerCustom } from "@/components/Spinner";
 import Title from "@/components/Title";
 import { StudentDetail } from "@/src/validation/student.zod";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { formatDate } from "@/src/lib/date";
 import { getStudentEnrollment } from "../../_actions/student.action";
-
-const formatDate = (value: Date | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-GB") : "—";
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (

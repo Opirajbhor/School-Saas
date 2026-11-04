@@ -2,7 +2,7 @@
 import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { currentUser } from "../auth/currentUser.action";
-import { teachers } from "@/src/drizzle-DB/schema";
+import { instituteProfile, teachers } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import { redirect } from "next/navigation";
 
@@ -38,6 +38,18 @@ export const getUserContext = cache(async () => {
       };
     }
 
+    return null;
+  }
+
+  // A deactivated institute must lose access everywhere, not only on the
+  // profile card: every action resolves its tenant through this helper.
+  const [institute] = await db
+    .select({ status: instituteProfile.status })
+    .from(instituteProfile)
+    .where(eq(instituteProfile.id, userInfo.instituteId))
+    .limit(1);
+
+  if (institute && institute.status !== "ACTIVE") {
     return null;
   }
 

@@ -11,6 +11,7 @@ import {
   InputExamType,
 } from "../_schema/exam.zod";
 import {
+  classesDrizzle,
   examClasses,
   examGradeRangeDrizzle,
   examMarkTypesDrizzle,
@@ -20,7 +21,7 @@ import { toggleStatus } from "@/src/server-actions/crud-funtions/server-status.a
 import { revalidatePath } from "next/cache";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { db } from "@/src/drizzle-DB";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 
 //===================  exam ===============
@@ -78,6 +79,47 @@ export async function assignExamClasses(data: InputExamAssignType) {
     };
   }
   const { examId, classId } = validation.data;
+
+  // Both ids come from the client. Pairing a foreign class with the caller's
+  // institute would otherwise create an assignment that leaks that class's
+  // sections and student counts into this tenant's monitoring view.
+  const [examRow] = await db
+    .select({ id: exams.id })
+    .from(exams)
+    .where(
+      and(
+        eq(exams.id, examId),
+        or(isNull(exams.instituteId), eq(exams.instituteId, instituteId)),
+      ),
+    )
+    .limit(1);
+  if (!examRow) {
+    return { success: false as const, error: "Exam not found", details: {} };
+  }
+
+  const allowedClasses = classId.length
+    ? await db
+        .select({ id: classesDrizzle.id })
+        .from(classesDrizzle)
+        .where(
+          and(
+            inArray(classesDrizzle.id, classId),
+            or(
+              isNull(classesDrizzle.instituteId),
+              eq(classesDrizzle.instituteId, instituteId),
+            ),
+          ),
+        )
+    : [];
+  const allowedIds = new Set(allowedClasses.map((row) => row.id));
+  const rejected = classId.filter((id) => !allowedIds.has(id));
+  if (rejected.length > 0) {
+    return {
+      success: false as const,
+      error: "One or more selected classes do not belong to this institute",
+      details: {},
+    };
+  }
 
   try {
     const result = await db.transaction(async (tx) => {

@@ -1,4 +1,5 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
 import { classesDrizzle } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
@@ -14,6 +15,9 @@ import {
 
 // get Default Classes
 export async function getDefaultClasses() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     // readMany() resolves the tenant through getUserContext(), which needs a
     // teachers row — a superadmin has none, so it returned success:false with
@@ -27,9 +31,10 @@ export async function getDefaultClasses() {
       data: (rows as classesTypeWithId[]).sort(compareClassName),
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -37,6 +42,9 @@ export async function getDefaultClasses() {
 
 // create Class
 export async function createAcademicClass(data: classesType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await CreateSuperAdmin(
       {
@@ -63,6 +71,9 @@ export async function createAcademicClass(data: classesType) {
 
 // change status of Class
 export async function changeStatusClass(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       const current = await tx.query.classesDrizzle.findFirst({
@@ -94,6 +105,9 @@ export async function changeStatusClass(id: string) {
 
 // delete Class
 export async function deleteClass(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       return await tx
@@ -117,6 +131,9 @@ export async function deleteClass(id: string) {
 
 // get Default class subjects
 export async function getClassWithGroups() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const rows = await db.query.classesDrizzle.findMany({
       where: isNull(classesDrizzle.instituteId),
@@ -134,9 +151,10 @@ export async function getClassWithGroups() {
       data: (rows as ClassesWithGroups[]).sort(compareClassName),
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }

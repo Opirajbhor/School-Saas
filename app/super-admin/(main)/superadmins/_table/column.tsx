@@ -7,6 +7,7 @@ import { DataTableColumnHeader } from "@/components/table/tanstack/sortable-head
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SuperAdminType } from "@/src/validation/superadmin.zod";
 import DemoteButton from "./demote-button";
+import { formatDate } from "@/src/lib/date";
 
 const columnHelper = createColumnHelper<DataTableFeatures, SuperAdminType>();
 
@@ -66,13 +67,7 @@ export const SuperAdminColumn = columnHelper.columns([
       const value = getValue<Date>();
       return (
         <span className="text-xs tabular-nums text-muted-foreground">
-          {value
-            ? new Date(value).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-            : "—"}
+          {value ? formatDate(value) : "—"}
         </span>
       );
     },

@@ -1,4 +1,5 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
 import { academicSessions } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import {
@@ -11,6 +12,9 @@ import { eq } from "drizzle-orm";
 
 // create session
 export async function createAcademicSession(data: academicSessionType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       if (data) {
@@ -44,6 +48,9 @@ export async function createAcademicSession(data: academicSessionType) {
 
 // change status of Session
 export async function changeStatusSession(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       await tx.update(academicSessions).set({ status: "INACTIVE" });
@@ -70,6 +77,9 @@ export async function changeStatusSession(id: string) {
 
 // delete session
 export async function deleteSession(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       return await tx

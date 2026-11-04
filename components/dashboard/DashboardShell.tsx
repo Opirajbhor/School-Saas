@@ -5,11 +5,14 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 
+type Brand = { name: string; nameBangla: string; logo: string | null } | null;
+
 type DashboardShellProps = {
   children: React.ReactNode;
+  brand?: Brand;
 };
 
-export function DashboardShell({ children }: DashboardShellProps) {
+export function DashboardShell({ children, brand = null }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   // the desktop sidebar is hidden below md, so phones get the same nav in a
   // sheet instead of having no navigation at all
@@ -20,7 +23,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
     // the content column scrolls. Relying on position: sticky on the rail left
     // it scrolling with the page.
     <div className="flex h-dvh overflow-hidden bg-background">
-      <Sidebar collapsed={collapsed} />
+      <Sidebar collapsed={collapsed} brand={brand} />
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent
@@ -28,7 +31,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
           className="dark gap-0 bg-sidebar p-0 text-sidebar-foreground data-[side=left]:w-72"
         >
           <SheetTitle className="sr-only">Main navigation</SheetTitle>
-          <Sidebar variant="mobile" onNavigate={() => setMobileOpen(false)} />
+          <Sidebar
+            variant="mobile"
+            brand={brand}
+            onNavigate={() => setMobileOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 

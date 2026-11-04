@@ -88,7 +88,30 @@ export async function getClassSectionOptions(classId: string) {
  * corrected afterwards.
  */
 
+
+// Results — including unpublished ones — are an institute-admin document. The
+// pages that render them already require "admin", but server actions are public
+// endpoints, so the role has to be checked here too.
+async function requireResultAccess() {
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return {
+      success: false as const,
+      error: "No User session found",
+      details: {},
+    };
+  }
+  if (ctx.role !== "admin" && ctx.role !== "superadmin") {
+    return { success: false as const, error: "Not authorized", details: {} };
+  }
+  return { success: true as const, data: ctx };
+}
+
 export async function getExamResult(data: InputResultQueryType) {
+  const auth = await requireResultAccess();
+  if (!auth.success) return auth;
+
+
   const parsed = parseWithZod(resultQueryZod, data);
   if (!parsed.success) {
     return {
@@ -249,6 +272,9 @@ export async function findLatestSnapshot(examId: string, classId: string) {
  * when the exam is not published or has no snapshot yet.
  */
 export async function getResultSnapshot(data: InputResultSnapshotScopeType) {
+  const auth = await requireResultAccess();
+  if (!auth.success) return auth;
+
   const parsed = parseWithZod(resultSnapshotScopeZod, data);
   if (!parsed.success) {
     return {
@@ -285,6 +311,9 @@ export async function getPublishReadiness(
   | { success: true; data: PublishReadinessType; details: object }
   | { success: false; error: string; details: object }
 > {
+  const auth = await requireResultAccess();
+  if (!auth.success) return auth;
+
   const parsed = parseWithZod(resultSnapshotScopeZod, data);
   if (!parsed.success) {
     return { success: false, error: parsed.error, details: parsed.details };
@@ -578,7 +607,9 @@ async function getMarks(
   return rows as MarkCell[];
 }
 
-// the grade scale: the institute's own rows when it has any, else the globals
+// The grade scale: the institute's own rows when it has any, else the globals.
+// A union of both would let a tenant band and a platform band with the same
+// floor compete, and the winner depended on row order.
 async function getGradeScales() {
   const result = await readMany({
     drizzleSchema: examGradeRangeDrizzle,
@@ -591,18 +622,31 @@ async function getGradeScales() {
             eq(examGradeRangeDrizzle.instituteId, instituteId),
           ),
         ),
-        columns: { name: true, minMark: true, maxMark: true, GPA: true },
+        columns: {
+          name: true,
+          minMark: true,
+          maxMark: true,
+          GPA: true,
+          instituteId: true,
+        },
+        orderBy: (scale, { asc, desc }) => [desc(scale.minMark), asc(scale.name)],
       }),
   });
 
-  return result.success
-    ? (result.data as {
-        name: string;
-        minMark: number;
-        maxMark: number;
-        GPA: number;
-      }[])
-    : [];
+  if (!result.success) return [];
+
+  const rows = result.data as {
+    name: string;
+    minMark: number;
+    maxMark: number;
+    GPA: number;
+    instituteId: string | null;
+  }[];
+
+  const own = rows.filter((row) => row.instituteId !== null);
+  return (own.length > 0 ? own : rows).map(
+    ({ name, minMark, maxMark, GPA }) => ({ name, minMark, maxMark, GPA }),
+  );
 }
 
 // ---------------------------------------------------------------- helpers

@@ -1,4 +1,5 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
 
 import { asc, desc, isNull } from "drizzle-orm";
 
@@ -42,6 +43,9 @@ export type PlatformExamOverview = {
  * directly — a superadmin has no teacher context, so readMany() cannot be used.
  */
 export async function getPlatformExamOverview() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const [examRows, markTypeRows, gradeRows, configured, subjectRows] =
       await Promise.all([

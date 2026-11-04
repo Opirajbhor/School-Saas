@@ -2,7 +2,7 @@
 
 import { cn } from "@/src/lib/utils";
 import type { Icon } from "@phosphor-icons/react";
-import { SealCheck as ClipboardCheck, ChartBar as BarChart3, IdentificationCard as IdCard, GenderMale as UserRound, UsersThree as Users, Buildings as School, FileText, PencilSimple as PencilLine, GraduationCap, SquaresFour as LayoutDashboard, Books as BookOpen, TreeStructure as Layers } from "@phosphor-icons/react/ssr";
+import { CalendarBlank, ClipboardText, Ticket, SealCheck as ClipboardCheck, ChartBar as BarChart3, IdentificationCard as IdCard, GenderMale as UserRound, UsersThree as Users, Buildings as School, FileText, PencilSimple as PencilLine, GraduationCap, SquaresFour as LayoutDashboard, Books as BookOpen, TreeStructure as Layers } from "@phosphor-icons/react/ssr";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -55,6 +55,24 @@ export const navGroups: { group: string; groupKey: GroupKey; items: NavItem[] }[
     items: [
       { key: "exams", name: "Exams", link: "/dashboard/exam", icon: FileText },
       {
+        key: "attendance",
+        name: "Attendance sheets",
+        link: "/dashboard/attendance",
+        icon: ClipboardText,
+      },
+      {
+        key: "admitCards",
+        name: "Admit cards",
+        link: "/dashboard/admit-cards",
+        icon: Ticket,
+      },
+      {
+        key: "routine",
+        name: "Exam routine",
+        link: "/dashboard/exam/routine",
+        icon: CalendarBlank,
+      },
+      {
         key: "marksEntry",
         name: "Marks entry",
         link: "/dashboard/exam/mark-input",
@@ -65,7 +83,13 @@ export const navGroups: { group: string; groupKey: GroupKey; items: NavItem[] }[
   },
 ];
 
-export function DashboardBrand({ collapsed = false }: { collapsed?: boolean }) {
+export function DashboardBrand({
+  collapsed = false,
+  brand = null,
+}: {
+  collapsed?: boolean;
+  brand?: { name: string; nameBangla: string; logo: string | null } | null;
+}) {
   const { data: session } = authClient.useSession();
 
   // the second line tells you which seat you are in — several people share one
@@ -86,12 +110,33 @@ export function DashboardBrand({ collapsed = false }: { collapsed?: boolean }) {
       href="/dashboard"
       className="flex h-16 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4"
     >
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <GraduationCap className="size-5" />
+      <div
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg",
+          brand?.logo
+            ? "border border-sidebar-border bg-white"
+            : "bg-primary text-primary-foreground",
+        )}
+      >
+        {brand?.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={brand.logo}
+            alt={brand.name}
+            className="size-full object-contain p-0.5"
+          />
+        ) : (
+          <GraduationCap className="size-5" />
+        )}
       </div>
       {!collapsed && (
         <div className="flex min-w-0 flex-col leading-tight">
-          <span className="text-sm font-semibold text-foreground">Educare</span>
+          <span
+            className="truncate text-sm font-semibold text-foreground"
+            title={brand?.name ?? "Educare"}
+          >
+            {brand?.name ?? "Educare"}
+          </span>
           <span className="truncate text-xs text-muted-foreground">
             {roleLabel}
           </span>

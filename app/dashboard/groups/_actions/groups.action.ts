@@ -39,9 +39,10 @@ export async function getGroups() {
       data: result.data as outputGroupType[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }

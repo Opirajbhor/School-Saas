@@ -3,12 +3,13 @@ import { Buildings as School, TreeStructure as Layers, CheckCircle as CircleChec
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
-import { getDefaultGroupClasses } from "@/app/super-admin/(main)/groups/_actions/groups.action";
+// the institute's own groups, not the platform defaults the super-admin sees
+import { getGroupClasses } from "./_actions/groups.action";
 import { OutputGroupClassType } from "@/src/validation/groups.zod";
 import { GroupsTable } from "./_table/groups-table";
 
 export default async function GroupsPage() {
-  const result = await getDefaultGroupClasses();
+  const result = await getGroupClasses();
 
   if (!result.success) {
     return (

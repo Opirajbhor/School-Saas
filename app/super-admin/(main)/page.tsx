@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Metric, metricValue } from "@/components/dashboard/metric";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { getPlatformOverview } from "./_actions/platform.action";
+import { formatDate } from "@/src/lib/date";
 
 const initialsOf = (name: string) =>
   name
@@ -15,13 +16,6 @@ const initialsOf = (name: string) =>
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase())
     .join("");
-
-const formatDate = (value: string | Date) =>
-  new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 
 export default async function SuperAdminPage() {
   const result = await getPlatformOverview();

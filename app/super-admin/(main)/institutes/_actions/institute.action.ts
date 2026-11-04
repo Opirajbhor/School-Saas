@@ -1,4 +1,5 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
 import { instituteProfile } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import { revalidatePath } from "next/cache";
@@ -6,6 +7,9 @@ import { eq } from "drizzle-orm";
 
 // change status of Institute
 export async function changeStatusInstitute(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       const current = await tx.query.instituteProfile.findFirst({
@@ -37,6 +41,9 @@ export async function changeStatusInstitute(id: string) {
 
 // delete Institute
 export async function deleteInstitute(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       return await tx

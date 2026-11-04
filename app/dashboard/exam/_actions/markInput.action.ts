@@ -206,6 +206,35 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
   }
   const { examId, classId, sectionId, subjectId } = parsed.data;
 
+  // reading is as sensitive as writing: a teacher must see only the sheets for
+  // sections and subjects they are assigned to, not any section in the institute
+  if (ctx.role !== "admin") {
+    if (!ctx.teacherId) {
+      return { success: false as const, error: "Not authorized", details: {} };
+    }
+    const [assigned] = await db
+      .select({ id: sectionSubjectTeachers.id })
+      .from(sectionSubjectTeachers)
+      .where(
+        and(
+          eq(sectionSubjectTeachers.instituteId, ctx.instituteId),
+          eq(sectionSubjectTeachers.sectionId, sectionId),
+          eq(sectionSubjectTeachers.subjectId, subjectId),
+          eq(sectionSubjectTeachers.teacherId, ctx.teacherId),
+          eq(sectionSubjectTeachers.status, "ACTIVE"),
+        ),
+      )
+      .limit(1);
+
+    if (!assigned) {
+      return {
+        success: false as const,
+        error: "You are not assigned to this section and subject",
+        details: {},
+      };
+    }
+  }
+
   try {
     const examResult = await readMany({
       drizzleSchema: exams,
@@ -513,8 +542,22 @@ export async function saveMarkInput(data: InputSaveMarkInputType) {
 
     const markTypeRows = markTypes.data as MarkTypeRow[];
     for (const row of rows) {
-      if (row.absent) continue;
+      // duplicates would make the upsert touch one row twice ("cannot affect
+      // row a second time"), so they are rejected before any write
+      const seenTypes = new Set<string>();
+      for (const entry of row.marks) {
+        if (seenTypes.has(entry.markTypeId)) {
+          return {
+            success: false as const,
+            error: "The same mark type was submitted twice for one student",
+            details: {},
+          };
+        }
+        seenTypes.add(entry.markTypeId);
+      }
 
+      // an absent student still has to carry valid mark types: their rows are
+      // written with mark 0, so they are validated exactly like the others
       for (const entry of row.marks) {
         const markType = markTypeRows.find(
           (type) => type.id === entry.markTypeId,

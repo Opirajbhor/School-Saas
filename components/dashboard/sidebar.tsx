@@ -11,12 +11,14 @@ type SidebarProps = {
   /** "mobile" renders inside the sheet, which supplies its own surface. */
   variant?: "desktop" | "mobile";
   onNavigate?: () => void;
+  brand?: { name: string; nameBangla: string; logo: string | null } | null;
 };
 
 export function Sidebar({
   collapsed = false,
   variant = "desktop",
   onNavigate,
+  brand = null,
 }: SidebarProps) {
   return (
     <aside
@@ -33,7 +35,7 @@ export function Sidebar({
         variant === "desktop" && (collapsed ? "w-19" : "w-64"),
       )}
     >
-      <DashboardBrand collapsed={collapsed} />
+      <DashboardBrand collapsed={collapsed} brand={brand} />
       <DashboardNav collapsed={collapsed} onNavigate={onNavigate} />
 
       <div className="border-t border-sidebar-border p-3">

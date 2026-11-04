@@ -9,19 +9,11 @@ import { StatusPill } from "@/components/dashboard/status-pill";
 import StatusToggleModal from "@/components/modal/status-modal";
 import DeleteModal from "@/components/modal/delete-modal";
 import { academicSessionType } from "@/src/validation/academicSessions.zod";
+import { formatDate } from "@/src/lib/date";
 import {
   changeStatusSession,
   deleteSession,
 } from "../_actions/academicSession.action";
-
-const formatDate = (value?: Date | string | null) =>
-  value
-    ? new Date(value).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
 
 /**
  * Sessions are a short, ordered list — a table with SL and an empty Actions

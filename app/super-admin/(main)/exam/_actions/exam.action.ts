@@ -1,4 +1,5 @@
 "use server";
+import { requireSuperAdmin } from "@/src/server-actions/shared/require-super-admin.action";
 import {
   examAssignZod,
   examClassSearchType,
@@ -33,6 +34,9 @@ import {
 
 // =============== Exam ================
 export async function getDefaultExams() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     // platform exams are the institute_id NULL rows; readMany() needs a user
     // context (and a teachers row), which a superadmin does not have
@@ -63,9 +67,10 @@ export async function getDefaultExams() {
       data: data as OutputExamType[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -73,6 +78,9 @@ export async function getDefaultExams() {
 
 // post exam
 export async function postExams(data: InputExamType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await CreateSuperAdmin(
       {
@@ -98,6 +106,9 @@ export async function postExams(data: InputExamType) {
 }
 
 export async function ToggleExamStatus(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       const current = await tx.query.exams.findFirst({
@@ -128,6 +139,9 @@ export async function ToggleExamStatus(id: string) {
 // =============== assign exams ==================
 // assign to class
 export async function assignExamToClasses(data: InputExamMarkType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   const validation = examAssignZod.safeParse(data);
   if (!validation.success) {
     return {
@@ -200,6 +214,9 @@ export async function assignExamToClasses(data: InputExamMarkType) {
 
 // get Default exam mark types
 export async function getDefaultMarkTypes() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const rows = await db.query.examMarkTypesDrizzle.findMany({
       where: isNull(examMarkTypesDrizzle.instituteId),
@@ -212,9 +229,10 @@ export async function getDefaultMarkTypes() {
       data: rows as OutputExamMarkTypes[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -222,6 +240,9 @@ export async function getDefaultMarkTypes() {
 //======== post exam mark types ========
 
 export async function postMarkTypes(data: InputExamMarkTypes) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await CreateSuperAdmin(
       {
@@ -249,6 +270,9 @@ export async function postMarkTypes(data: InputExamMarkTypes) {
 
 //======== toogleStatus exam mark types ========
 export async function ToggleExamtypeStatus(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       const current = await tx.query.examMarkTypesDrizzle.findFirst({
@@ -282,6 +306,9 @@ export async function ToggleExamtypeStatus(id: string) {
 
 // get Default exam mark types
 export async function getDefaultGradeRange() {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const rows = await db.query.examGradeRangeDrizzle.findMany({
       where: isNull(examGradeRangeDrizzle.instituteId),
@@ -294,9 +321,10 @@ export async function getDefaultGradeRange() {
       data: rows as OutputExamGradeRangeType[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -305,6 +333,9 @@ export async function getDefaultGradeRange() {
 //======== post exam Grade Ranges ========
 
 export async function postGradeRange(data: InputExamGradeRangeType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await CreateSuperAdmin(
       {
@@ -333,6 +364,9 @@ export async function postGradeRange(data: InputExamGradeRangeType) {
 //======== toogleStatus exam grade ranges ========
 
 export async function ToggleGradeRangeStatus(id: string) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const result = await db.transaction(async (tx) => {
       const current = await tx.query.examGradeRangeDrizzle.findFirst({
@@ -364,6 +398,9 @@ export async function ToggleGradeRangeStatus(id: string) {
 
 // server action — Fixed: remove the lying cast; let inference flow
 export async function getClassSubjectWithExamType(data: examClassSearchType) {
+  const auth = await requireSuperAdmin();
+  if (!auth.success) return auth;
+
   try {
     const [subjects, markTypesData] = await Promise.all([
       db.query.subjectAssignSchema.findMany({
@@ -405,6 +442,7 @@ export async function getClassSubjectWithExamType(data: examClassSearchType) {
 
     return { success: true as const, data: combined };
   } catch (error) {
-    return { success: false as const, error: String(error), details: {} };
+    console.error("action failed:", error);
+    return { success: false as const, error: "Something went wrong. Please try again.", details: {} };
   }
 }

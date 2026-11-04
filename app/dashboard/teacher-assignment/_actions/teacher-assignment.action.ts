@@ -108,9 +108,10 @@ export async function assignClassTeacher(data: InputClassTeacherType) {
         data: result.data,
       };
     } catch (error) {
+      console.error("action failed:", error);
       return {
         success: false as const,
-        error: String(error),
+        error: "Something went wrong. Please try again.",
         details: {},
       };
     }
@@ -143,9 +144,10 @@ export async function getassignedClassTeachers() {
       data: result.data as classTeacherType[],
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -192,9 +194,10 @@ export async function getActiveClassesSection() {
       data: (result.data as ClassSectionType[]).sort(compareClassName),
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
@@ -389,9 +392,10 @@ export async function getSingleClassSubjects(data: classSubjectGroupType) {
       },
     };
   } catch (error) {
+    console.error("action failed:", error);
     return {
       success: false as const,
-      error: String(error),
+      error: "Something went wrong. Please try again.",
       details: {},
     };
   }
