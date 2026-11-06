@@ -2,7 +2,7 @@
 
 import { cn } from "@/src/lib/utils";
 import type { Icon } from "@phosphor-icons/react";
-import { Buildings as Building2, Buildings as School, FileText, Books as BookOpen, TreeStructure as Layers, CalendarCheck as CalendarRange, ShieldCheck } from "@phosphor-icons/react/ssr";
+import { Buildings as Building2, Buildings as School, FileText, Books as BookOpen, TreeStructure as Layers, CalendarCheck as CalendarRange, ShieldCheck, Lifebuoy, Megaphone } from "@phosphor-icons/react/ssr";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -37,7 +37,11 @@ export const superNavGroups: { group: string; items: NavItem[] }[] = [
   },
   {
     group: "Assessment",
-    items: [{ name: "Exams", link: "/super-admin/exam", icon: FileText }],
+    items: [
+      { name: "Exams", link: "/super-admin/exam", icon: FileText },
+      { name: "Support", link: "/super-admin/support", icon: Lifebuoy },
+      { name: "Notices", link: "/super-admin/notices", icon: Megaphone },
+    ],
   },
   {
     group: "Access",

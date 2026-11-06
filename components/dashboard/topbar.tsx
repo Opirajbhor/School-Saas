@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 
-import { List as Menu, Bell, DotsSixVertical as PanelLeft } from "@phosphor-icons/react/ssr";
+import { List as Menu, DotsSixVertical as PanelLeft } from "@phosphor-icons/react/ssr";
 
 import { currentSession } from "@/src/lib/utils/current-session";
 import { authClient } from "@/src/better-auth/auth-client";
 import DashboardProfile from "./dashboard-profile";
+import { NotificationBell } from "./notification-bell";
 import { Breadcrumbs } from "./breadcrumbs";
 import { ModeToggle } from "../theme-toggle";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
@@ -58,14 +59,7 @@ export function Topbar({
       <div className="ml-auto flex items-center gap-1.5">
         <LanguageSwitcher />
         <ModeToggle />
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t.topbar.notifications}
-          className="text-muted-foreground"
-        >
-          <Bell className="size-5" />
-        </Button>
+        <NotificationBell />
 
         <Separator />
         <DashboardProfile user={session?.user} />

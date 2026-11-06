@@ -2,11 +2,14 @@
 
 import { cn } from "@/src/lib/utils";
 import type { Icon } from "@phosphor-icons/react";
-import { CalendarBlank, ClipboardText, Ticket, SealCheck as ClipboardCheck, ChartBar as BarChart3, IdentificationCard as IdCard, GenderMale as UserRound, UsersThree as Users, Buildings as School, FileText, PencilSimple as PencilLine, GraduationCap, SquaresFour as LayoutDashboard, Books as BookOpen, TreeStructure as Layers } from "@phosphor-icons/react/ssr";
+import { Books as BookOpen, Buildings as School, CalendarBlank, ChartBar as BarChart3, CheckSquare, ClipboardText, FileText, GenderMale as UserRound, GraduationCap, IdentificationCard as IdCard, Lifebuoy, Megaphone, PencilSimple as PencilLine, SealCheck as ClipboardCheck, SquaresFour as LayoutDashboard, Ticket, TreeStructure as Layers, UsersThree as Users } from "@phosphor-icons/react/ssr";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/src/better-auth/auth-client";
+import { useQuery } from "@tanstack/react-query";
+import { getNoticeBadge } from "@/app/dashboard/notices/_actions/notice.action";
+import { getPendingMarkSubmissionCount } from "@/app/dashboard/mark-approval/_actions/approval.action";
 
 // Phosphor (regular weight) everywhere: monochrome, currentColor, one distinct
 // mark per destination. design.md wants quiet glyphs that let the purple carry
@@ -78,7 +81,25 @@ export const navGroups: { group: string; groupKey: GroupKey; items: NavItem[] }[
         link: "/dashboard/exam/mark-input",
         icon: PencilLine,
       },
+      {
+        key: "markApproval",
+        name: "Mark approval",
+        link: "/dashboard/mark-approval",
+        icon: CheckSquare,
+      },
       { key: "results", name: "Results", link: "/dashboard/results", icon: BarChart3 },
+      {
+        key: "notices",
+        name: "Notices",
+        link: "/dashboard/notices",
+        icon: Megaphone,
+      },
+      {
+        key: "support",
+        name: "Support",
+        link: "/dashboard/support",
+        icon: Lifebuoy,
+      },
     ],
   },
 ];
@@ -156,6 +177,26 @@ export function DashboardNav({
   const pathname = usePathname();
   const t = useT();
 
+  const { data: session } = authClient.useSession();
+  const isAdmin = session?.user?.role === "admin";
+
+  // pending mark sheets, shown on the approval entry so nothing sits unseen
+  const { data: pendingMarks = 0 } = useQuery({
+    queryKey: ["mark-approval-badge"],
+    queryFn: () => getPendingMarkSubmissionCount(),
+    enabled: isAdmin,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  // unread platform notices, shown as a small count on the Notices entry
+  const { data: unreadNotices = 0 } = useQuery({
+    queryKey: ["notice-badge"],
+    queryFn: () => getNoticeBadge(),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
   return (
     <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
       {navGroups.map((section) => (
@@ -167,7 +208,15 @@ export function DashboardNav({
           )}
           <ul className="flex flex-col gap-0.5">
             {section.items.map((item) => {
+              if (item.key === "markApproval" && !isAdmin) return null;
+
               const active = pathname === item.link;
+              const badge =
+                item.key === "notices"
+                  ? unreadNotices
+                  : item.key === "markApproval"
+                    ? pendingMarks
+                    : 0;
               const label = t.nav.items[item.key] ?? item.name;
               return (
                 <li key={item.link}>
@@ -192,6 +241,16 @@ export function DashboardNav({
                     <item.icon
                       className="size-4 shrink-0"
                     />
+                    {badge > 0 && (
+                      <span
+                        className={cn(
+                          "ml-auto flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground tabular-nums",
+                          collapsed && "absolute top-1 right-1 ml-0 min-w-0 px-0.5 text-[9px]",
+                        )}
+                      >
+                        {badge > 99 ? "99+" : badge}
+                      </span>
+                    )}
                     {!collapsed && <span className="truncate">{label}</span>}
                   </Link>
                 </li>

@@ -21,3 +21,6 @@ export * from "./schema/exam-managment/exam-mark-correction.drizzle";
 export * from "./schema/exam-managment/exam-result-snapshot.drizzle";
 export * from "./schema/exam-managment/exam-routine.drizzle";
 export * from "./schema/exam-managment/exam-routine-notice.drizzle";
+export * from "./schema/support.drizzle";
+export * from "./schema/notice.drizzle";
+export * from "./schema/exam-managment/mark-submission.drizzle";

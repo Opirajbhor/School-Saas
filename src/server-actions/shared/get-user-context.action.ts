@@ -1,63 +1,40 @@
 "use server";
 import { cache } from "react";
-import { eq } from "drizzle-orm";
-import { currentUser } from "../auth/currentUser.action";
-import { instituteProfile, teachers } from "@/src/drizzle-DB/schema";
-import { db } from "@/src/drizzle-DB";
 import { redirect } from "next/navigation";
 
+import { getSessionContext } from "./get-session-context.action";
+
 // --------get user context -----------
-
+//
+// Thin view over getSessionContext(): one cached lookup per request resolves the
+// session, the teachers row and the institute together, instead of three
+// helpers each paying their own round trip to Neon.
 export const getUserContext = cache(async () => {
-  const session = await currentUser();
+  const ctx = await getSessionContext();
+  if (!ctx) return null;
 
-  if (!session?.user?.id) {
-    return null;
-  }
-  const userId = session.user.id;
-  const role = session.user.role;
-  const userInfo = await db.query.teachers.findFirst({
-    where: eq(teachers.userId, userId),
-    columns: {
-      id: true,
-      instituteId: true,
-    },
-  });
+  if (!ctx.teacherId && ctx.role !== "superadmin") return null;
 
-  if (!userInfo) {
-    // A superadmin governs platform-wide defaults and belongs to no institute,
-    // so it has no teachers row. It still needs a context: the CRUD helpers
-    // branch on `role` and scope it to `institute_id IS NULL` rows, which keeps
-    // institute data out of reach.
-    if (role === "superadmin") {
-      return {
-        userId,
-        role,
-        instituteId: "",
-        teacherId: "",
-      };
-    }
-
+  // a deactivated institute loses access everywhere, not only on the profile
+  // card: every action resolves its tenant through this helper
+  if (ctx.institute && ctx.institute.status !== "ACTIVE" && ctx.role !== "superadmin") {
     return null;
   }
 
-  // A deactivated institute must lose access everywhere, not only on the
-  // profile card: every action resolves its tenant through this helper.
-  const [institute] = await db
-    .select({ status: instituteProfile.status })
-    .from(instituteProfile)
-    .where(eq(instituteProfile.id, userInfo.instituteId))
-    .limit(1);
-
-  if (institute && institute.status !== "ACTIVE") {
-    return null;
+  if (ctx.role === "superadmin" && !ctx.teacherId) {
+    return {
+      userId: ctx.userId,
+      role: ctx.role,
+      instituteId: "",
+      teacherId: "",
+    };
   }
 
   return {
-    userId,
-    role,
-    instituteId: userInfo.instituteId,
-    teacherId: userInfo.id,
+    userId: ctx.userId,
+    role: ctx.role,
+    instituteId: ctx.instituteId,
+    teacherId: ctx.teacherId,
   };
 });
 

@@ -43,7 +43,10 @@ export const bn: Dictionary = {
       admitCards: "প্রবেশপত্র",
       routine: "পরীক্ষার রুটিন",
       marksEntry: "নম্বর এন্ট্রি",
+      markApproval: "মার্ক অনুমোদন",
       results: "ফলাফল",
+      support: "সহায়তা",
+      notices: "নোটিশ",
     },
   },
 };

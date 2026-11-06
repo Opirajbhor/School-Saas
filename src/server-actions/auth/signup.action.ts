@@ -1,4 +1,5 @@
 "use server";
+import { getSessionContext } from "@/src/server-actions/shared/get-session-context.action";
 import { auth } from "../../../auth";
 import {
   AdminProfileInput,
@@ -54,41 +55,17 @@ export async function signUpAction(data: SignUpType) {
 // =========on boarding Steps============
 
 export async function getOnboardingStep() {
-  const session = await currentUser();
+  // the same cached context the shell uses: no extra queries per page load
+  const ctx = await getSessionContext();
+  if (!ctx) return "UNAUTHORIZED";
 
-  // -------step-1 check user exist -----------------
-  if (!session?.user?.id) return "UNAUTHORIZED";
+  if (ctx.role === "superadmin") return "SUPERADMIN";
+  if (ctx.role === "user") return "USER";
+  if (ctx.role !== "admin") return "UNAUTHORIZED";
 
-  const role = session.user.role;
-
-  // a superadmin governs platform-wide defaults and belongs to no institute, so
-  // there is no onboarding to complete; send it to its own area instead of the
-  // tenant dashboard.
-  if (role === "superadmin") {
-    return "SUPERADMIN";
-  }
-
-  if (role === "user") {
-    return "USER";
-  }
-  // -------step-2 check institute profile -----------------
-
-  if (role === "admin") {
-    const institute = await db.query.instituteProfile.findFirst({
-      where: eq(instituteProfile.userId, session?.user?.id),
-    });
-    if (!institute) return "INSTITUTE";
-
-    // -------step-3 check teacher profile -----------------
-
-    const teacher = await db.query.teachers.findFirst({
-      where: eq(teachers.userId, session?.user?.id),
-    });
-    if (!teacher) return "ADMIN";
-
-    // ------------step-4 complete --------------------
-    return "COMPLETE";
-  }
+  if (!ctx.institute) return "INSTITUTE";
+  if (!ctx.teacherId) return "ADMIN";
+  return "COMPLETE";
 }
 
 // ------------------institute profile ---------------

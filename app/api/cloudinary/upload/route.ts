@@ -14,7 +14,9 @@ const MAX_BYTES = 5 * 1024 * 1024;
  * sorted alphabetically followed by the secret: `folder=…&timestamp=…<secret>`.
  */
 export async function POST(request: Request) {
-  const { allowed } = await AccessServer("admin");
+  // teachers attach screenshots to support tickets, superadmins attach images
+  // to notices — the exact-admin gate broke both (it 401'd them)
+  const { allowed } = await AccessServer(["admin", "superadmin", "user"]);
   if (!allowed) {
     return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   }
@@ -40,7 +42,15 @@ export async function POST(request: Request) {
   const incoming = await request.formData();
   const file = incoming.get("file");
   const prefix = String(incoming.get("folder") ?? "misc");
-  const PREFIXES = ["students", "teachers", "institute", "profile", "staff"];
+  const PREFIXES = [
+    "students",
+    "teachers",
+    "institute",
+    "profile",
+    "staff",
+    "support",
+    "notices",
+  ];
   if (!PREFIXES.includes(prefix)) {
     return NextResponse.json({ error: "Unknown upload folder" }, { status: 400 });
   }

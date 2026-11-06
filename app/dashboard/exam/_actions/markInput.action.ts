@@ -9,6 +9,10 @@ import { parseWithZod } from "@/src/validation/validator.zod";
 import { compareClassName } from "@/src/validation/classes.zod";
 import { db } from "@/src/drizzle-DB";
 import {
+  assertMarkSubmissionAllowed,
+  recordMarkSubmission,
+} from "@/app/dashboard/mark-approval/_lib/mark-submission.internal";
+import {
   classesDrizzle,
   enrollments,
   examClasses,
@@ -371,6 +375,16 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
       teacherId: ctx.teacherId,
     });
     const lock = await checkMarkLock(examId, ctx.instituteId);
+
+    // the institute's approval queue is a second gate on the same save: fold it
+    // in here, or the UI offers an editable sheet that the server then refuses
+    const approvalGate = await assertMarkSubmissionAllowed({
+      examId,
+      sectionId,
+      subjectId,
+      instituteId: ctx.instituteId,
+    });
+
     const latestRequest = await getLatestEditRequest({
       examId,
       sectionId,
@@ -402,8 +416,12 @@ export async function getExamMarkSheet(data: InputExamMarkColumnsType) {
       markTypes: markTypeRows,
       totalMarks: markTypeRows.reduce((sum, type) => sum + type.fullMark, 0),
       entryStatus,
-      canEdit: permission.allowed,
-      lockReason: permission.allowed ? null : permission.error,
+      canEdit: permission.allowed && approvalGate.allowed,
+      lockReason: permission.allowed
+        ? approvalGate.allowed
+          ? null
+          : approvalGate.error
+        : permission.error,
       markWorkflow: lock.workflow,
       combined,
       editRequest: latestRequest
@@ -491,6 +509,18 @@ export async function saveMarkInput(data: InputSaveMarkInputType) {
     });
     if (!lock.allowed) {
       return { success: false as const, error: lock.error, details: {} };
+    }
+
+    // institute approval workflow: a sheet that is pending review or already
+    // approved cannot be written, and a resubmission is refused while pending
+    const approval = await assertMarkSubmissionAllowed({
+      examId,
+      sectionId,
+      subjectId,
+      instituteId,
+    });
+    if (!approval.allowed) {
+      return { success: false as const, error: approval.error, details: {} };
     }
 
     const [markTypes, enrolled] = await Promise.all([
@@ -753,6 +783,33 @@ export async function saveMarkInput(data: InputSaveMarkInputType) {
         },
       });
     });
+
+    // submitting hands the sheet to the institute for approval
+    if (intent === "SUBMITTED") {
+      // the form may omit the class; the section always knows it
+      const submissionClassId =
+        classId ??
+        (
+          await db
+            .select({ classId: sectionDrizzle.classId })
+            .from(sectionDrizzle)
+            .where(eq(sectionDrizzle.id, sectionId))
+            .limit(1)
+        )[0]?.classId;
+
+      if (submissionClassId) {
+        await recordMarkSubmission({
+        instituteId,
+        examId,
+        classId: submissionClassId,
+        sectionId,
+        subjectId,
+        userId,
+        role: ctx.role ?? "teacher",
+        });
+        revalidatePath("/dashboard/mark-approval");
+      }
+    }
 
     revalidatePath("/dashboard/exam/mark-input");
     revalidatePath(`/dashboard/exam/mark-entry/${examId}`);

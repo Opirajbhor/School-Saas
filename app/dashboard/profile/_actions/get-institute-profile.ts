@@ -4,6 +4,7 @@ import { asc, eq } from "drizzle-orm";
 import { instituteProfile } from "@/src/drizzle-DB/schema";
 import { db } from "@/src/drizzle-DB";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
+import { getSessionContext } from "@/src/server-actions/shared/get-session-context.action";
 
 // ================Temporary File ===================
 
@@ -67,18 +68,11 @@ export async function requireInstitute() {
  * request, so the shell does not add a second round trip to every page.
  */
 export const getInstituteBranding = cache(async () => {
-  const ctx = await getUserContext();
-  if (!ctx?.instituteId) return null;
-
-  const [row] = await db
-    .select({
-      name: instituteProfile.nameEnglish,
-      nameBangla: instituteProfile.nameBangla,
-      logo: instituteProfile.logo,
-    })
-    .from(instituteProfile)
-    .where(eq(instituteProfile.id, ctx.instituteId))
-    .limit(1);
-
-  return row ?? null;
+  const ctx = await getSessionContext();
+  if (!ctx?.institute) return null;
+  return {
+    name: ctx.institute.name,
+    nameBangla: ctx.institute.nameBangla,
+    logo: ctx.institute.logo,
+  };
 });

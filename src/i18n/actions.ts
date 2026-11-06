@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+import { currentUser } from "@/src/server-actions/auth/currentUser.action";
 import { LOCALE_COOKIE, isLocale, type Locale } from "./config";
 
 /**
@@ -11,6 +12,10 @@ import { LOCALE_COOKIE, isLocale, type Locale } from "./config";
  */
 export async function setLocale(locale: Locale) {
   if (!isLocale(locale)) return { success: false as const };
+
+  // a public action: without a session it is a free global-cache-busting button
+  const session = await currentUser();
+  if (!session?.user) return { success: false as const };
 
   const store = await cookies();
   store.set(LOCALE_COOKIE, locale, {

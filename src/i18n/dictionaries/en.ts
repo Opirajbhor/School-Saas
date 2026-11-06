@@ -41,7 +41,10 @@ export const en = {
       admitCards: "Admit cards",
       routine: "Exam routine",
       marksEntry: "Marks entry",
+      markApproval: "Mark approval",
       results: "Results",
+      support: "Support",
+      notices: "Notices",
     },
   },
 };
