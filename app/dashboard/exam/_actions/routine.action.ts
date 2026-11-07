@@ -10,7 +10,7 @@
  * across the top.
  */
 
-import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or, lt, gt, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/src/drizzle-DB";
@@ -436,14 +436,15 @@ export async function saveRoutineSlot(data: InputExamRoutineSlotType) {
       eq(examRoutines.examId, slot.examId),
       eq(examRoutines.classId, slot.classId),
       eq(examRoutines.examDate, slot.examDate),
-      sql`${examRoutines.startsAt} < ${slot.endsAt} AND ${examRoutines.endsAt} > ${slot.startsAt}`,
+      lt(examRoutines.startsAt, slot.endsAt),
+      gt(examRoutines.endsAt, slot.startsAt),
       slot.sectionId
         ? or(
             eq(examRoutines.sectionId, slot.sectionId),
             isNull(examRoutines.sectionId),
           )
         : undefined,
-      slot.id ? sql`${examRoutines.id} <> ${slot.id}` : undefined,
+      slot.id ? ne(examRoutines.id, slot.id) : undefined,
     );
 
     const [overlap] = await db

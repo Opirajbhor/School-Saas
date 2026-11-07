@@ -357,3 +357,18 @@
     page: landscape-page;
   }
 }
+
+
+/* Line tabs: preview the active rule on hover. The ::after bar already exists
+   on every trigger with opacity 0, so this only has to raise it — the active
+   selector is repeated last so the current tab keeps its full-strength line. */
+[data-variant="line"] [data-slot="tabs-trigger"]::after {
+  transition: opacity 150ms ease;
+}
+[data-variant="line"] [data-slot="tabs-trigger"]:hover::after {
+  opacity: 0.45;
+}
+[data-variant="line"] [data-slot="tabs-trigger"][data-active]::after,
+[data-variant="line"] [data-slot="tabs-trigger"][data-state="active"]::after {
+  opacity: 1;
+}

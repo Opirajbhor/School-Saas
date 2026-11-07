@@ -10,7 +10,7 @@ import {
 import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { parseWithZod } from "@/src/validation/validator.zod";
-import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, count } from "drizzle-orm";
 import { examIdZod, sortAssignedClasses } from "../_schema/exam.zod";
 
 export async function getSingleExamData(id: string) {
@@ -95,8 +95,11 @@ export async function getSingleExamData(id: string) {
   const classIds = (currentExam?.assignClasses ?? []).map((row) => row.classId);
 
   if (classIds.length > 0) {
-    const subjectCounts = await getSubjectCounts(classIds, instituteId);
-    const studentCounts = await getStudentCounts(classIds, instituteId);
+    // independent lookups — run them in one wave
+    const [subjectCounts, studentCounts] = await Promise.all([
+      getSubjectCounts(classIds, instituteId),
+      getStudentCounts(classIds, instituteId),
+    ]);
 
     for (const row of currentExam.assignClasses) {
       // the overview only reads `.length` on both, so a placeholder array of
@@ -115,7 +118,7 @@ async function getSubjectCounts(classIds: string[], instituteId: string) {
   const rows = await db
     .select({
       classId: subjectAssignSchema.classId,
-      count: sql<number>`count(*)`.mapWith(Number),
+      count: count(),
     })
     .from(subjectAssignSchema)
     .where(
@@ -142,7 +145,7 @@ async function getStudentCounts(classIds: string[], instituteId: string) {
   const rows = await db
     .select({
       classId: enrollments.classId,
-      count: sql<number>`count(*)`.mapWith(Number),
+      count: count(),
     })
     .from(enrollments)
     .where(

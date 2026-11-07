@@ -1,7 +1,7 @@
 "use server";
 
 import { cache } from "react";
-import { asc, eq } from "drizzle-orm";
+import { eq, type InferSelectModel } from "drizzle-orm";
 
 import { db } from "@/src/drizzle-DB";
 import { instituteProfile, teachers } from "@/src/drizzle-DB/schema";
@@ -20,6 +20,13 @@ export type SessionContext = {
     nameBangla: string;
     logo: string | null;
   } | null;
+  /**
+   * The same two rows, unprojected. The dashboard used to call
+   * getInstituteProfile() for these, which read the identical rows a second
+   * time (~110 ms) right after the layout had already loaded them.
+   */
+  instituteRecord: InferSelectModel<typeof instituteProfile> | null;
+  teacherRecord: InferSelectModel<typeof teachers> | null;
 };
 
 /**
@@ -41,26 +48,17 @@ export const getSessionContext = cache(
 
     const role = (session?.user as { role?: string } | undefined)?.role ?? null;
 
-    const [teacherRow, instituteRow] = await Promise.all([
+    const [teacherRow, instituteRecord] = await Promise.all([
       db.query.teachers.findFirst({
         where: eq(teachers.userId, userId),
-        columns: { id: true, instituteId: true },
       }),
-      db
-        .select({
-          id: instituteProfile.id,
-          status: instituteProfile.status,
-          name: instituteProfile.nameEnglish,
-          nameBangla: instituteProfile.nameBangla,
-          logo: instituteProfile.logo,
-        })
-        .from(instituteProfile)
-        .where(eq(instituteProfile.userId, userId))
-        .orderBy(asc(instituteProfile.createdAt))
-        .limit(1),
+      db.query.instituteProfile.findFirst({
+        where: eq(instituteProfile.userId, userId),
+        orderBy: (table, { asc: orderAsc }) => [orderAsc(table.createdAt)],
+      }),
     ]);
 
-    const institute = instituteRow[0] ?? null;
+    const institute = instituteRecord ?? null;
 
     // a superadmin governs platform defaults and belongs to no institute, so it
     // has no teachers row — it still needs a context for the CRUD helpers
@@ -73,11 +71,13 @@ export const getSessionContext = cache(
         institute: institute
           ? {
               status: institute.status,
-              name: institute.name,
+              name: institute.nameEnglish,
               nameBangla: institute.nameBangla,
               logo: institute.logo,
             }
           : null,
+        instituteRecord: institute,
+        teacherRecord: teacherRow ?? null,
       };
     }
 
@@ -89,11 +89,13 @@ export const getSessionContext = cache(
       institute: institute
         ? {
             status: institute.status,
-            name: institute.name,
+            name: institute.nameEnglish,
             nameBangla: institute.nameBangla,
             logo: institute.logo,
           }
         : null,
+      instituteRecord: institute,
+      teacherRecord: teacherRow ?? null,
     };
   },
 );

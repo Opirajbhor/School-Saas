@@ -12,18 +12,7 @@
  * the author's name and email, so nothing is orphaned.
  */
 
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gte,
-  ilike,
-  inArray,
-  lte,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, lte, or, sql, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/src/drizzle-DB";
@@ -360,9 +349,6 @@ export async function listTickets(filters: InputTicketFilterType) {
           resolvedAt: supportTickets.resolvedAt,
           createdByName: supportTickets.createdByName,
           assignedToName: supportTickets.assignedToName,
-          messageCount: sql<number>`(
-            select count(*)::int from support_messages m where m.ticket_id = ${supportTickets.id}
-          )`,
         })
         .from(supportTickets)
         .where(where)
@@ -374,14 +360,38 @@ export async function listTickets(filters: InputTicketFilterType) {
         .limit(f.perPage)
         .offset(offset),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(supportTickets)
         .where(where),
     ]);
 
+    // message counts for the page, in one grouped query instead of a
+    // correlated subquery per row
+    const messageCounts =
+      rows.length > 0
+        ? await db
+            .select({
+              ticketId: supportMessages.ticketId,
+              count: count(),
+            })
+            .from(supportMessages)
+            .where(
+              inArray(
+                supportMessages.ticketId,
+                rows.map((row) => row.id),
+              ),
+            )
+            .groupBy(supportMessages.ticketId)
+        : [];
+
+    const messageCountById = new Map(
+      messageCounts.map((row) => [row.ticketId, row.count]),
+    );
+
     const now = Date.now();
     const items: TicketListItem[] = rows.map((row) => ({
       ...row,
+      messageCount: messageCountById.get(row.id) ?? 0,
       overdue:
         Boolean(row.dueAt) &&
         row.status !== "RESOLVED" &&
@@ -933,13 +943,13 @@ export async function getSupportCounters() {
 
     const [open, overdue, resolvedWeek, mine] = await Promise.all([
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(supportTickets)
         .where(
           and(scopeWhere, inArray(supportTickets.status, ["OPEN", "IN_PROGRESS"])),
         ),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(supportTickets)
         .where(
           and(
@@ -949,11 +959,11 @@ export async function getSupportCounters() {
           ),
         ),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(supportTickets)
         .where(and(scopeWhere, gte(supportTickets.resolvedAt, weekAgo))),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(supportTickets)
         .where(and(scopeWhere, eq(supportTickets.assignedToId, ctx.userId))),
     ]);

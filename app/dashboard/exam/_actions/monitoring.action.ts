@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql, count, countDistinct } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { parseWithZod } from "@/src/validation/validator.zod";
@@ -90,7 +90,7 @@ export async function getExamMonitoringSummaries() {
         examName: exams.name,
         sessionName: academicSessions.year,
         assignedClasses:
-          sql<number>`count(distinct ${examClasses.classId})`.mapWith(Number),
+          countDistinct(examClasses.classId),
       })
       .from(exams)
       .leftJoin(
@@ -117,7 +117,7 @@ export async function getExamMonitoringSummaries() {
     const cellCounts = await db
       .select({
         examId: examMarks.examId,
-        enteredMarks: sql<number>`count(*)`.mapWith(Number),
+        enteredMarks: count(),
       })
       .from(examMarks)
       .where(
@@ -134,7 +134,7 @@ export async function getExamMonitoringSummaries() {
     const requestCounts = await db
       .select({
         examId: examMarkEditRequests.examId,
-        pending: sql<number>`count(*)`.mapWith(Number),
+        pending: count(),
       })
       .from(examMarkEditRequests)
       .where(
@@ -693,7 +693,7 @@ async function getRequiredCells(scopes: UnitScope[], instituteId: string) {
   const students = await db
     .select({
       sectionId: enrollments.sectionId,
-      count: sql<number>`count(*)`.mapWith(Number),
+      count: count(),
     })
     .from(enrollments)
     .where(
@@ -712,7 +712,7 @@ async function getRequiredCells(scopes: UnitScope[], instituteId: string) {
   const markTypes = await db
     .select({
       subjectId: subjectMarkTemplates.subjectId,
-      count: sql<number>`count(*)`.mapWith(Number),
+      count: count(),
     })
     .from(subjectMarkTemplates)
     .innerJoin(
@@ -786,7 +786,7 @@ async function getSectionStudentCounts(
   const rows = await db
     .select({
       sectionId: enrollments.sectionId,
-      count: sql<number>`count(*)`.mapWith(Number),
+      count: count(),
     })
     .from(enrollments)
     .where(
@@ -817,12 +817,12 @@ async function getSectionMarkCounts(
     .select({
       sectionId: enrollments.sectionId,
       subjectId: examMarks.subjectId,
-      enteredMarks: sql<number>`count(*)`.mapWith(Number),
+      enteredMarks: count(),
       submittedRows:
         sql<number>`count(*) filter (where ${examMarks.entryStatus} = 'SUBMITTED')`.mapWith(
           Number,
         ),
-      totalRows: sql<number>`count(*)`.mapWith(Number),
+      totalRows: count(),
     })
     .from(examMarks)
     .innerJoin(enrollments, eq(enrollments.id, examMarks.enrollmentId))
@@ -857,7 +857,7 @@ async function getMarkTypesPerSubject(subjectIds: string[]) {
   const rows = await db
     .select({
       subjectId: subjectMarkTemplates.subjectId,
-      count: sql<number>`count(*)`.mapWith(Number),
+      count: count(),
     })
     .from(subjectMarkTemplates)
     .innerJoin(

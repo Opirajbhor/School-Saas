@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, count } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/src/drizzle-DB";
@@ -40,7 +40,7 @@ export const getUnreadNotificationCount = cache(async () => {
 
   try {
     const [row] = await db
-      .select({ count: sql<number>`count(*)`.mapWith(Number) })
+      .select({ count: count() })
       .from(notifications)
       .where(
         and(eq(notifications.userId, ctx.userId), isNull(notifications.readAt)),

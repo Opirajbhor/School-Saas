@@ -7,7 +7,7 @@
  * whole school (whoever opened it is recorded for the audit trail).
  */
 
-import { and, desc, eq, gte, ilike, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, isNotNull, isNull, lte, or, sql, count } from "drizzle-orm";
 
 import { db } from "@/src/drizzle-DB";
 import {
@@ -40,7 +40,7 @@ async function requireInstitute() {
 /** Live = published, due, not archived, not expired. */
 const liveNotice = () =>
   and(
-    sql`${notices.publishedAt} is not null`,
+    isNotNull(notices.publishedAt),
     lte(notices.publishAt, new Date()),
     isNull(notices.archivedAt),
     or(isNull(notices.expiresAt), gte(notices.expiresAt, new Date())),
@@ -70,7 +70,7 @@ export async function listNotices(filters: InputInstituteNoticeFilterType) {
       );
     }
     if (f.priority !== "ALL") conditions.push(eq(notices.priority, f.priority));
-    if (f.read === "READ") conditions.push(sql`${noticeReads.readAt} is not null`);
+    if (f.read === "READ") conditions.push(isNotNull(noticeReads.readAt));
     if (f.read === "UNREAD") conditions.push(isNull(noticeReads.readAt));
     if (f.from) conditions.push(gte(notices.publishAt, new Date(f.from)));
     if (f.to) {
@@ -112,7 +112,7 @@ export async function listNotices(filters: InputInstituteNoticeFilterType) {
         .limit(f.perPage)
         .offset(offset),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(noticeTargets)
         .innerJoin(notices, eq(notices.id, noticeTargets.noticeId))
         .leftJoin(
@@ -152,7 +152,7 @@ export async function listNotices(filters: InputInstituteNoticeFilterType) {
 async function unreadCount(instituteId: string) {
   try {
     const [row] = await db
-      .select({ count: sql<number>`count(*)`.mapWith(Number) })
+      .select({ count: count() })
       .from(noticeTargets)
       .innerJoin(notices, eq(notices.id, noticeTargets.noticeId))
       .leftJoin(

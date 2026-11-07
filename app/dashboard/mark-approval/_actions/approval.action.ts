@@ -10,18 +10,7 @@
  * submitted — `roster_hash` is captured at submit time.
  */
 
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gte,
-  ilike,
-  inArray,
-  lte,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, lte, or, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
 
@@ -167,7 +156,7 @@ export async function listMarkSubmissions(filters: InputSubmissionFilter) {
         .limit(f.perPage)
         .offset(offset),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(markSubmissions)
         .innerJoin(exams, eq(exams.id, markSubmissions.examId))
         .innerJoin(
@@ -180,7 +169,7 @@ export async function listMarkSubmissions(filters: InputSubmissionFilter) {
         )
         .where(where),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(markSubmissions)
         .where(
           and(
@@ -222,7 +211,7 @@ export async function getPendingMarkSubmissionCount() {
 
   try {
     const [row] = await db
-      .select({ count: sql<number>`count(*)`.mapWith(Number) })
+      .select({ count: count() })
       .from(markSubmissions)
       .where(
         and(
@@ -513,7 +502,7 @@ export async function approveMarkSubmissions(ids: string[]) {
 
         // every active mark row for this scope must still be there
         const [markRow] = await tx
-          .select({ count: sql<number>`count(*)`.mapWith(Number) })
+          .select({ count: count() })
           .from(examMarks)
           .where(
             and(
@@ -658,9 +647,13 @@ export async function rejectMarkSubmissions(ids: string[], reason: string) {
               eq(examMarks.examId, submission.examId),
               eq(examMarks.subjectId, submission.subjectId),
               eq(examMarks.entryStatus, "SUBMITTED"),
-              sql`${examMarks.enrollmentId} in (
-                select id from enrollments where section_id = ${submission.sectionId}
-              )`,
+              inArray(
+                examMarks.enrollmentId,
+                tx
+                  .select({ id: enrollments.id })
+                  .from(enrollments)
+                  .where(eq(enrollments.sectionId, submission.sectionId)),
+              ),
             ),
           );
 
@@ -746,9 +739,13 @@ export async function reopenMarkSubmissions(ids: string[]) {
             eq(examMarks.examId, locked.examId),
             eq(examMarks.subjectId, locked.subjectId),
             eq(examMarks.entryStatus, "SUBMITTED"),
-            sql`${examMarks.enrollmentId} in (
-              select id from enrollments where section_id = ${locked.sectionId}
-            )`,
+            inArray(
+              examMarks.enrollmentId,
+              tx
+                .select({ id: enrollments.id })
+                .from(enrollments)
+                .where(eq(enrollments.sectionId, locked.sectionId)),
+            ),
           ),
         );
 

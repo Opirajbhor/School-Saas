@@ -9,7 +9,7 @@
  * cases.
  */
 
-import { and, asc, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNull, or, count, isNotNull, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/src/drizzle-DB";
@@ -232,10 +232,10 @@ export async function listNotices(filters: InputSuperNoticeFilterType) {
       conditions.push(and(isNull(notices.publishedAt), isNull(notices.archivedAt)));
     }
     if (f.status === "LIVE") {
-      conditions.push(and(sql`${notices.publishedAt} is not null`, isNull(notices.archivedAt)));
+      conditions.push(and(isNotNull(notices.publishedAt), isNull(notices.archivedAt)));
     }
     if (f.status === "ARCHIVED") {
-      conditions.push(sql`${notices.archivedAt} is not null`);
+      conditions.push(isNotNull(notices.archivedAt));
     }
 
     const where = conditions.length ? and(...conditions) : undefined;
@@ -254,13 +254,6 @@ export async function listNotices(filters: InputSuperNoticeFilterType) {
           pinned: notices.pinned,
           archivedAt: notices.archivedAt,
           createdAt: notices.createdAt,
-          delivered:
-            sql<number>`(select count(*)::int from notice_targets t where t.notice_id = notices.id)`.mapWith(
-              Number,
-            ),
-          read: sql<number>`(select count(*)::int from notice_reads r where r.notice_id = notices.id)`.mapWith(
-            Number,
-          ),
         })
         .from(notices)
         .where(where)
@@ -268,10 +261,34 @@ export async function listNotices(filters: InputSuperNoticeFilterType) {
         .limit(f.perPage)
         .offset(offset),
       db
-        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .select({ count: count() })
         .from(notices)
         .where(where),
     ]);
+
+    // delivery and read counters for the page, as two grouped counts rather
+    // than a correlated subquery per row
+    const ids = rows.map((row) => row.id);
+    const [deliveryRows, readRows] =
+      ids.length > 0
+        ? await Promise.all([
+            db
+              .select({ noticeId: noticeTargets.noticeId, count: count() })
+              .from(noticeTargets)
+              .where(inArray(noticeTargets.noticeId, ids))
+              .groupBy(noticeTargets.noticeId),
+            db
+              .select({ noticeId: noticeReads.noticeId, count: count() })
+              .from(noticeReads)
+              .where(inArray(noticeReads.noticeId, ids))
+              .groupBy(noticeReads.noticeId),
+          ])
+        : [[], []];
+
+    const deliveredById = new Map(
+      deliveryRows.map((row) => [row.noticeId, row.count]),
+    );
+    const readById = new Map(readRows.map((row) => [row.noticeId, row.count]));
 
     const total = countRows[0]?.count ?? 0;
 
@@ -286,6 +303,8 @@ export async function listNotices(filters: InputSuperNoticeFilterType) {
               : row.publishedAt === null
                 ? "SCHEDULED"
                 : "LIVE",
+          delivered: deliveredById.get(row.id) ?? 0,
+          read: readById.get(row.id) ?? 0,
         })),
         total,
         page: f.page,

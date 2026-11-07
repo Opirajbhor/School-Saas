@@ -4,7 +4,7 @@
 // the action module it would be a public endpoint that anyone could call to
 // publish (and notify) every scheduled notice, bypassing the cron secret.
 
-import { and, eq, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, lte, count } from "drizzle-orm";
 
 import { db } from "@/src/drizzle-DB";
 import {
@@ -152,7 +152,7 @@ export async function sweepNotices() {
 /** Unused today, kept for callers that want the row count of a scope. */
 export async function countPublishedNotices(instituteId: string) {
   const [row] = await db
-    .select({ count: sql<number>`count(*)`.mapWith(Number) })
+    .select({ count: count() })
     .from(noticeTargets)
     .where(eq(noticeTargets.instituteId, instituteId));
   return row?.count ?? 0;

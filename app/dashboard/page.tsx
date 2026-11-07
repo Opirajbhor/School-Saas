@@ -8,7 +8,7 @@ import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { ResultsTable } from "@/components/dashboard/result-table";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { Welcome } from "@/components/dashboard/welcome";
-import { getInstituteProfile } from "@/src/server-actions/shared/get-user-profile.action";
+import { getSessionContext } from "@/src/server-actions/shared/get-session-context.action";
 import {
   getClassDistribution,
   getDashboardCounts,
@@ -23,11 +23,14 @@ import {
 } from "./_lib/attention";
 
 export default async function page() {
-  const profile = await getInstituteProfile();
-  if (!profile) {
+  // the layout already resolved these two rows and cache() keeps the result
+  // for this request, so reading them here is free
+  const ctx = await getSessionContext();
+  const institute = ctx?.instituteRecord ?? null;
+  const teacher = ctx?.teacherRecord ?? null;
+  if (!institute) {
     return <PageSkeleton />;
   }
-  const { institute, teacher } = profile;
 
   // every query is institute-scoped inside its action, so the page never sees
   // another tenant's rows

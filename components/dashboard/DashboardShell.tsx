@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { authClient } from "@/src/better-auth/auth-client";
 
 type Brand = { name: string; nameBangla: string; logo: string | null } | null;
 
@@ -17,6 +18,27 @@ export function DashboardShell({ children, brand = null }: DashboardShellProps) 
   // the desktop sidebar is hidden below md, so phones get the same nav in a
   // sheet instead of having no navigation at all
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // The cached session cookie can only be written by the auth API — never by a
+  // page render — so it is rolled over here: once on mount and again whenever
+  // the tab regains focus, at most every five minutes.
+  useEffect(() => {
+    let last = 0;
+
+    const refresh = () => {
+      if (Date.now() - last < 5 * 60_000) return;
+      last = Date.now();
+      void authClient.getSession();
+    };
+
+    refresh();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
 
   return (
     // The shell owns the viewport: the rail and the topbar stay put and only

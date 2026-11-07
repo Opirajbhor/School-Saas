@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/src/drizzle-DB";
 import { user } from "@/src/drizzle-DB/schema";
 import { teachers } from "@/src/drizzle-DB/schema";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, ne, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { currentUser } from "@/src/server-actions/auth/currentUser.action";
 import { parseWithZod } from "@/src/validation/validator.zod";
@@ -44,7 +44,7 @@ async function requireSuperAdmin() {
 // again and the only way back in is a manual UPDATE on the database.
 async function countOtherSuperAdmins(excludeId: string) {
   const [row] = await db
-    .select({ count: sql<number>`count(*)::int` })
+    .select({ count: count() })
     .from(user)
     .where(and(eq(user.role, "superadmin"), ne(user.id, excludeId)));
   return row?.count ?? 0;

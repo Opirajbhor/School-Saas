@@ -44,11 +44,14 @@ export const auth = betterAuth({
   },
   session: {
     // The session is signed into a cookie, so the common case (dashboard,
-    // every action) validates without a database round trip. Without maxAge the
-    // cache is ignored and every request re-reads the session row.
+    // every action) validates without a database round trip. A page render
+    // cannot write a cookie, so the window has to be long enough that a normal
+    // browsing session never falls back to the database with every page load:
+    // measured at 5 minutes, every request past that paid 4 extra round trips
+    // (~210 ms). The shell refreshes this cookie while the user browses.
     cookieCache: {
       enabled: true,
-      maxAge: 5 * 60,
+      maxAge: 60 * 60 * 24,
     },
   },
   // Only the platform role is a Better Auth "admin". Institute admins are
