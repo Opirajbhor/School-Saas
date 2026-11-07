@@ -41,11 +41,14 @@ function inline(text: string, keyPrefix: string): ReactNode[] {
       }
 
       const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
-      if (link) {
+      // only real web links: data: and javascript: must not reach an anchor
+      const safeHref =
+        link && /^https?:\/\//i.test(link[2].trim()) ? link[2].trim() : null;
+      if (link && safeHref) {
         return (
           <a
             key={key}
-            href={link[2]}
+            href={safeHref}
             target="_blank"
             rel="noreferrer"
             className="text-primary underline underline-offset-2"

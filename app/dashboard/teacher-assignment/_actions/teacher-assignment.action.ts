@@ -40,6 +40,7 @@ import { readMany } from "@/src/server-actions/crud-funtions/server-read-crud";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
 import { getActiveSession } from "../../_actions/session.action";
 import { revalidatePath } from "next/cache";
+import { requireInstituteAdmin } from "@/src/server-actions/shared/require-institute-admin.action";
 
 // ---------------- class teacher ---------------
 
@@ -68,6 +69,9 @@ export async function getClassWithTeacher() {
 
 // --------- assign class Teacher --------------
 export async function assignClassTeacher(data: InputClassTeacherType) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   const session = await getActiveSession();
   if (!session) {
     return {
@@ -155,6 +159,9 @@ export async function getassignedClassTeachers() {
 
 // ---------------- delete assign class teacher --------
 export async function deleteAssignTeacher(id: string) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   return deleteRecord(
     {
       drizzleSchema: sectionClassTeachers,
@@ -205,6 +212,9 @@ export async function getActiveClassesSection() {
 
 // --------- assign new subject Teacher --------------
 export async function assignSubjectTeacher(data: InputSubjectTeacherType) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   const ctx = await getUserContext();
 
   if (!ctx) {

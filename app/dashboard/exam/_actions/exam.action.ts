@@ -23,6 +23,7 @@ import { getUserContext } from "@/src/server-actions/shared/get-user-context.act
 import { db } from "@/src/drizzle-DB";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
+import { requireInstituteAdmin } from "@/src/server-actions/shared/require-institute-admin.action";
 
 //===================  exam ===============
 // post exam
@@ -59,6 +60,9 @@ export async function ToggleExamStatus(id: string) {
 // ============ exam assign to class =============
 // assign to class
 export async function assignExamClasses(data: InputExamAssignType) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   const ctx = await getUserContext();
 
   if (!ctx) {

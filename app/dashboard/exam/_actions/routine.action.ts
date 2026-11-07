@@ -10,7 +10,7 @@
  * across the top.
  */
 
-import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/src/drizzle-DB";
@@ -266,7 +266,12 @@ export async function getExamRoutine(data: { examId: string }) {
           )
           .leftJoin(
             sectionDrizzle,
-            eq(sectionDrizzle.id, examRoutines.sectionId),
+            and(
+              eq(sectionDrizzle.id, examRoutines.sectionId),
+              // sections are per-institute; an id from another tenant must not
+              // leak its name onto this timetable
+              eq(sectionDrizzle.instituteId, instituteId),
+            ),
           )
           .where(
             and(
@@ -397,6 +402,61 @@ export async function saveRoutineSlot(data: InputExamRoutineSlotType) {
       return {
         success: false as const,
         error: "That subject is not assigned to this class",
+        details: {},
+      };
+    }
+
+    // a section must belong to this institute and to the chosen class
+    if (slot.sectionId) {
+      const [section] = await db
+        .select({ id: sectionDrizzle.id })
+        .from(sectionDrizzle)
+        .where(
+          and(
+            eq(sectionDrizzle.id, slot.sectionId),
+            eq(sectionDrizzle.classId, slot.classId),
+            eq(sectionDrizzle.instituteId, instituteId),
+          ),
+        )
+        .limit(1);
+
+      if (!section) {
+        return {
+          success: false as const,
+          error: "That section does not belong to this class",
+          details: {},
+        };
+      }
+    }
+
+    // no two sittings for the same class at once. A class-wide slot (no
+    // section) also clashes with a section-level one.
+    const overlapWhere = and(
+      eq(examRoutines.instituteId, instituteId),
+      eq(examRoutines.examId, slot.examId),
+      eq(examRoutines.classId, slot.classId),
+      eq(examRoutines.examDate, slot.examDate),
+      sql`${examRoutines.startsAt} < ${slot.endsAt} AND ${examRoutines.endsAt} > ${slot.startsAt}`,
+      slot.sectionId
+        ? or(
+            eq(examRoutines.sectionId, slot.sectionId),
+            isNull(examRoutines.sectionId),
+          )
+        : undefined,
+      slot.id ? sql`${examRoutines.id} <> ${slot.id}` : undefined,
+    );
+
+    const [overlap] = await db
+      .select({ id: examRoutines.id, startsAt: examRoutines.startsAt })
+      .from(examRoutines)
+      .where(overlapWhere)
+      .limit(1);
+
+    if (overlap) {
+      return {
+        success: false as const,
+        error:
+          "Another paper is already scheduled for this class in that time slot",
         details: {},
       };
     }

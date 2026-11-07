@@ -9,7 +9,7 @@
  * passed in from the browser except the ids, which are scope-checked.
  */
 
-import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 
 import { db } from "@/src/drizzle-DB";
 import {
@@ -184,6 +184,7 @@ export async function getAdmitCards(input: {
       .where(
         and(
           eq(exams.id, examId),
+          eq(exams.status, "ACTIVE"),
           or(isNull(exams.instituteId), eq(exams.instituteId, instituteId)),
         ),
       )

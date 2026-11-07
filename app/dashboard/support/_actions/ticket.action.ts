@@ -124,6 +124,49 @@ async function authorIdentity(ctx: {
   return { name: account?.name ?? "Unknown", email: account?.email ?? null };
 }
 
+
+/**
+ * Attachments are uploaded by the browser, so the stored metadata is untrusted.
+ * Only accept files that live in this tenant's own support folder: otherwise a
+ * member could attach an arbitrary external URL (phishing, tracking pixel) or
+ * another institute's asset, which the ticket view renders directly.
+ */
+function validateAttachments(
+  files: { url: string; name: string; mime?: string; size?: number }[],
+  instituteId: string,
+) {
+  if (files.length === 0) return { ok: true as const };
+
+  const cloud = process.env.CLOUDINARY_CLOUD_NAME;
+  if (!cloud) {
+    return {
+      ok: false as const,
+      error: "Attachments are not configured on this server",
+    };
+  }
+
+  const base = `https://res.cloudinary.com/${cloud}/`;
+  const folder = instituteId ? `/educare/${instituteId}/support/` : "/educare/";
+  const allowedMime = /^(image\/(png|jpe?g|webp)|application\/pdf)$/i;
+
+  for (const file of files) {
+    if (!file.url.startsWith(base) || !file.url.includes(folder)) {
+      return {
+        ok: false as const,
+        error: "Attachment was not uploaded from this institute's folder",
+      };
+    }
+    if (file.size != null && file.size > 5 * 1024 * 1024) {
+      return { ok: false as const, error: "An attachment is larger than 5 MB" };
+    }
+    if (file.mime && !allowedMime.test(file.mime)) {
+      return { ok: false as const, error: "Only images and PDFs can be attached" };
+    }
+  }
+
+  return { ok: true as const };
+}
+
 /** Where a ticket lives, for links in notifications and the UI. */
 function ticketHref(ticketId: string, isSuper: boolean) {
   return `${isSuper ? "/super-admin/support" : "/dashboard/support"}/${ticketId}`;
@@ -152,6 +195,11 @@ export async function createTicket(data: unknown) {
     : ctx.isAdmin
       ? input.scope
       : "INSTITUTE";
+
+  const attachmentCheck = validateAttachments(input.attachments, ctx.instituteId);
+  if (!attachmentCheck.ok) {
+    return { success: false as const, error: attachmentCheck.error, details: {} };
+  }
 
   try {
     const author = await authorIdentity(ctx);
@@ -482,6 +530,11 @@ export async function replyToTicket(data: unknown) {
   }
   const input = parsed.data;
 
+  const replyAttachments = validateAttachments(input.attachments, ctx.instituteId);
+  if (!replyAttachments.ok) {
+    return { success: false as const, error: replyAttachments.error, details: {} };
+  }
+
   try {
     const [ticket] = await db
       .select()
@@ -594,10 +647,14 @@ export async function changeTicketStatus(data: unknown) {
   const { ticketId, status } = parsed.data;
 
   try {
-    const [ticket] = await db
+    const result = await db.transaction(async (tx) => {
+    // lock the row: two staff members clicking at once used to both pass the
+    // JS transition check and both append "Status changed"
+    const [ticket] = await tx
       .select()
       .from(supportTickets)
       .where(eq(supportTickets.id, ticketId))
+      .for("update")
       .limit(1);
 
     if (!ticket) {
@@ -607,8 +664,7 @@ export async function changeTicketStatus(data: unknown) {
     const mine = ticket.createdById === ctx.userId;
     const allowed = ctx.isSuper
       ? true
-      : ticket.instituteId === ctx.instituteId &&
-        (ctx.isAdmin || (mine && ticket.assignedToId === ctx.userId) || mine);
+      : ticket.instituteId === ctx.instituteId && (ctx.isAdmin || mine);
 
     if (!allowed) {
       return { success: false as const, error: "Not authorized", details: {} };
@@ -637,19 +693,34 @@ export async function changeTicketStatus(data: unknown) {
     }
 
     const now = new Date();
-    await db
+    const updated = await tx
       .update(supportTickets)
       .set({
         status,
         resolvedAt: status === "RESOLVED" ? now : status === "OPEN" ? null : ticket.resolvedAt,
         closedAt: status === "CLOSED" ? now : status === "OPEN" ? null : ticket.closedAt,
+        // a read-modify-write here lost increments under concurrency
         reopenedCount:
           status === "OPEN" && ticket.status !== "OPEN"
-            ? ticket.reopenedCount + 1
-            : ticket.reopenedCount,
+            ? sql`${supportTickets.reopenedCount} + 1`
+            : sql`${supportTickets.reopenedCount}`,
         updatedAt: now,
       })
-      .where(eq(supportTickets.id, ticketId));
+      .where(
+        and(
+          eq(supportTickets.id, ticketId),
+          eq(supportTickets.status, ticket.status),
+        ),
+      )
+      .returning({ id: supportTickets.id });
+
+    if (updated.length === 0) {
+      return {
+        success: false as const,
+        error: "Someone else changed this ticket — reload and try again",
+        details: {},
+      };
+    }
 
     await db.insert(supportMessages).values({
       ticketId,
@@ -672,11 +743,14 @@ export async function changeTicketStatus(data: unknown) {
       href: ticketHref(ticket.id, ticket.scope === "PLATFORM"),
     });
 
+    return { success: true as const, data: null };
+    });
+
     revalidatePath(`/dashboard/support/${ticketId}`);
     revalidatePath(`/super-admin/support/${ticketId}`);
     revalidatePath("/dashboard/support");
     revalidatePath("/super-admin/support");
-    return { success: true as const, data: null };
+    return result;
   } catch (error) {
     console.error("changeTicketStatus failed:", error);
     return FAILED;

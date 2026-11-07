@@ -9,19 +9,7 @@
  * cases.
  */
 
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gte,
-  ilike,
-  inArray,
-  isNull,
-  lte,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/src/drizzle-DB";
@@ -33,7 +21,6 @@ import {
   user,
 } from "@/src/drizzle-DB/schema";
 import { currentUser } from "@/src/server-actions/auth/currentUser.action";
-import { notifyUsers } from "@/src/server-actions/shared/notification.internal";
 import { notifyInstitutes, resolveAudience } from "../_lib/notice.internal";
 import {
   createNoticeZod,
@@ -231,7 +218,6 @@ export async function listNotices(filters: InputSuperNoticeFilterType) {
     return { success: false as const, error: "Invalid filters", details: {} };
   }
   const f = parsed.data;
-  const now = new Date();
 
   try {
     const conditions = [];

@@ -43,7 +43,6 @@ import {
   teachers,
 } from "@/src/drizzle-DB/schema";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
-import { currentUser } from "@/src/server-actions/auth/currentUser.action";
 import {
   actorName,
   hashOf,
@@ -455,7 +454,7 @@ export async function getMarkSubmissionDetail(id: string) {
 }
 
 // ---------------------------------------------------------------- decisions
-const idsZod = z.array(z.uuid()).min(1);
+const idsZod = z.array(z.uuid()).min(1).max(100);
 const rejectZod = z.object({
   ids: idsZod,
   reason: z

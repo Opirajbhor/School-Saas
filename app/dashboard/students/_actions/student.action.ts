@@ -20,6 +20,7 @@ import { getActiveSession } from "../../_actions/session.action";
 import { getClassSectionGroups } from "../../classes/_actions/classes.action";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 import { getUserContext } from "@/src/server-actions/shared/get-user-context.action";
+import { requireInstituteAdmin } from "@/src/server-actions/shared/require-institute-admin.action";
 
 // get student
 export async function getStudents() {
@@ -98,6 +99,9 @@ export async function getStudentStats() {
 
 // toogle Status
 export async function ToggleStudentStatus(id: string) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   return toggleStatus(
     {
       drizzleSchema: enrollments,
@@ -175,6 +179,9 @@ export async function getAcademicInfo() {
 // register student
 
 export async function addStudent(data: AddStudentType) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   try {
     // Validate data
     const validated = addStudentZod.safeParse(data);
@@ -312,6 +319,9 @@ export async function getStudentEnrollment(id: string) {
 
 // update a student and their enrollment together
 export async function updateStudent(id: string, data: EditStudentType) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   try {
     if (!UUID_RE.test(id)) {
       return {

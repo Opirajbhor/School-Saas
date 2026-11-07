@@ -18,9 +18,13 @@ import { db } from "@/src/drizzle-DB";
 import { createAuditLog } from "@/src/server-actions/audit-logs/createAuditLog.action";
 import { updateRecord } from "@/src/server-actions/crud-funtions/server-update-crud";
 import { deleteRecord } from "@/src/server-actions/crud-funtions/server-delete-crud";
+import { requireInstituteAdmin } from "@/src/server-actions/shared/require-institute-admin.action";
 
 // add teacher
 export async function addTeacher(data: addTeacherType) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   const ctx = await getUserContext();
   if (!ctx) {
     return {
@@ -199,6 +203,9 @@ export async function getTeacherStats() {
 
 // delete teacher
 export async function deleteTeacher(teacherId: string) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
   return await deleteRecord(
     {
       drizzleSchema: teachers,
@@ -211,6 +218,9 @@ export async function deleteTeacher(teacherId: string) {
 // edit teacher
 
 export async function editTeacher(id: string, data: editTeacherType) {
+  const guard = await requireInstituteAdmin();
+  if (!guard.success) return guard;
+
 
   return await updateRecord(
     {

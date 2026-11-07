@@ -7,7 +7,7 @@
  * whole school (whoever opened it is recorded for the audit trail).
  */
 
-import { and, desc, eq, gte, ilike, isNull, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 
 import { db } from "@/src/drizzle-DB";
 import {
@@ -204,7 +204,15 @@ export async function getNotice(id: string) {
       .from(noticeTargets)
       .innerJoin(notices, eq(notices.id, noticeTargets.noticeId))
       .where(
-        and(eq(noticeTargets.noticeId, id), eq(noticeTargets.instituteId, instituteId)),
+        and(
+          eq(noticeTargets.noticeId, id),
+          eq(noticeTargets.instituteId, instituteId),
+          // the same window the list uses: a direct id must not reach an
+          // expired, archived or not-yet-published notice
+          isNotNull(notices.publishedAt),
+          isNull(notices.archivedAt),
+          lte(notices.publishAt, new Date()),
+        ),
       )
       .limit(1);
 
